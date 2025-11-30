@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>歷史訂單查詢</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    /* 整體限制寬度，避免看起來很空 */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: #f5f5f5;
+    }
+
+    .page {
+      max-width: 480px;         /* 手機寬度 */
+      margin: 0 auto;
+      min-height: 100vh;        /* 讓畫面吃滿可視高度 */
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 12px 16px;
+      background: #48a2e8;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    #root {
+      flex: 1;
+      padding: 12px 12px 60px;  /* 預留下面 footer 空間 */
+      box-sizing: border-box;
+    }
+
+    .order-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .order-id {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .order-meta {
+      color: #666;
+      margin-bottom: 2px;
+    }
+
+    .deposit-text {
+      color: #c37b00;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-top: 1px solid #e5e5e5;
+      padding: 6px 12px;
+      box-sizing: border-box;
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+    }
+  </style>
+
+  <!-- LIFF SDK（官方） -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <div class="page">
+    <header>歷史訂單查詢</header>
+    <div id="root">載入中...</div>
+    <footer>若資料有問題，歡迎私訊快樂小狗 Pinyu 🐾</footer>
+  </div>
+
+  <script>
+    const LIFF_ID = '2008567730';
+    const API_BASE = 'https://script.google.com/macros/s/AKfycbxrhqvOfF7ZC-NGnZNJFrK0PFDgYCTt8pItAtx-mtVU0PRikPtv5g3F7nHK4-67avnSvQ/exec';
+
+    async function init() {
+      try {
+        // 1. 初始化 LIFF
+        await liff.init({ liffId: LIFF_ID });
+
+        // 2. 判斷是否在 LINE 內打開
+        if (!liff.isInClient()) {
+          document.getElementById('root').innerText =
+            '請從 LINE 官方帳號內的選單開啟此畫面唷～';
+          return;
+        }
+
+        // 3. 取得 userId（需要在 LIFF 設定裡勾選 openid）
+        const decoded = liff.getDecodedIDToken();
+        const lineUserId = decoded ? decoded.sub : '';
+
+        if (!lineUserId) {
+          document.getElementById('root').innerText =
+            '無法取得您的帳號資訊，請通知 pinyu 幫忙查看設定～';
+          return;
+        }
+
+        // 4. 呼叫 Apps Script Web App
+        const url = `${API_BASE}?action=history&lineUserId=${encodeURIComponent(lineUserId)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        console.log('API 回傳：', data); // 先看瀏覽器 Console 方便 debug
+
+        if (!data.success) {
+          document.getElementById('root').innerText =
+            '查詢失敗，請稍後再試或通知 pinyu～';
+          return;
+        }
+
+        // 5. 把訂單畫出來
+        renderOrders(data.orders || []);
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('root').innerText =
+          '系統發生錯誤，請稍後再試或通知 pinyu～';
+      }
+    }
+
+    function renderOrders(orders) {
+      const root = document.getElementById('root');
+
+      if (!orders || orders.length === 0) {
+        root.innerText = '目前查不到您的歷史訂單唷～';
+        return;
+      }
+
+      root.innerHTML = orders.map(o => {
+        const status = o.status || '—';
+        const dateText = o.serviceDate || o.dateText || '—';
+        const serviceText = o.serviceText || (o.services && o.services.join('、')) || '—';
+        const depositText = o.depositText || '';
+
+        return `
+          <div class="order-card">
+            <div class="order-id">訂單編號：${o.orderId}</div>
+            <div class="order-meta">狀態：${status}</div>
+            <div class="order-meta">服務日期：${dateText}</div>
+            <div class="order-meta">服務內容：${serviceText}</div>
+            <div class="order-meta">總金額：${o.total} 元</div>
+            ${depositText ? `<div class="deposit-text">${depositText}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    init();
+  </script>
+</body>
+</html>
