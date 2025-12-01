@@ -260,28 +260,26 @@
       text-align: center;
     }
 
-    /* 載入動畫 */
-    .loading {
-      text-align: center;
-      padding: 20px 0;
-      font-size: 13px;
-      color: #666;
-    }
+  .cat-running {
+  width: 60px;
+  height: 40px;
+  margin: 0 auto 8px;
+  position: relative;
+}
 
-    .loading-spinner {
-      width: 20px;
-      height: 20px;
-      margin: 0 auto 6px;
-      border-radius: 50%;
-      border: 3px solid #ddd;
-      border-top-color: #48a2e8;
-      animation: spin 0.8s linear infinite;
-    }
+.cat-running .cat {
+  width: 60px;
+  height: 40px;
+  background-image: url('https://i.imgur.com/0TKm1Mf.png');
+  background-size: cover;
+  animation: run-cycle 0.6s steps(6) infinite;
+}
 
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
+@keyframes run-cycle {
+  0% { background-position: 0 0; }
+  100% { background-position: -360px 0; }
+}
+
     }
   </style>
 
@@ -401,11 +399,14 @@
       if (!listEl) return;
 
       listEl.innerHTML = `
-        <div class="loading">
-          <div class="loading-spinner"></div>
-          <div>查詢中，請稍候...</div>
-        </div>
-      `;
+  <div class="loading">
+    <div class="cat-running">
+      <div class="cat"></div>
+    </div>
+    <div>貓咪奔跑中，請稍候...</div>
+  </div>
+`;
+
     }
 
     // -----------------------------
