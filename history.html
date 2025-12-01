@@ -308,45 +308,54 @@ async function init() {
     // -----------------------------
     // 畫出搜尋列 + 列表容器
     // -----------------------------
-    function buildLayout() {
-      const root = document.getElementById('root');
-      root.innerHTML = `
-        <div class="filter-bar">
-          <div class="filter-row">
-            <span class="filter-label">起訖日期</span>
-            <div class="filter-input">
-              <input type="date" id="dateFrom" />
-            </div>
-            <span style="font-size:12px;color:#888;">～</span>
-            <div class="filter-input">
-              <input type="date" id="dateTo" />
-            </div>
-          </div>
-          <div class="filter-actions">
-            <button class="btn btn-secondary" id="btnClear">清除</button>
-            <button class="btn btn-primary" id="btnSearch">搜尋</button>
-          </div>
+function buildLayout() {
+  const root = document.getElementById('root');
+  root.innerHTML = `
+    <div class="filter-bar">
+      <div class="filter-row">
+        <span class="filter-label">服務日期</span>
+        <div class="filter-input">
+          <input type="date" id="datePick" />
         </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-secondary" id="btnClear">清除</button>
+        <button class="btn btn-primary" id="btnSearch">搜尋</button>
+      </div>
+    </div>
 
-        <div class="list-header">
-          <span>服務日期</span>
-          <span>總金額</span>
-        </div>
+    <div class="list-header">
+      <span>服務日期</span>
+      <span>總金額</span>
+    </div>
 
-        <div id="orderList">載入中...</div>
-      `;
+    <div id="orderList">載入中...</div>
+  `;
 
-      // 綁定按鈕事件
-      document.getElementById('btnSearch').addEventListener('click', () => {
-        fetchAndRenderOrders();
-      });
+  document.getElementById('btnSearch').addEventListener('click', () => {
+    filterOrdersBySingleDate();
+  });
 
-      document.getElementById('btnClear').addEventListener('click', () => {
-        document.getElementById('dateFrom').value = '';
-        document.getElementById('dateTo').value = '';
-        fetchAndRenderOrders();
-      });
-    }
+  document.getElementById('btnClear').addEventListener('click', () => {
+    document.getElementById('datePick').value = '';
+    renderOrders(gOrdersAll);
+  });
+}
+
+function filterOrdersBySingleDate() {
+  const pick = document.getElementById('datePick').value;
+  if (!pick) {
+    renderOrders(gOrdersAll);
+    return;
+  }
+
+  const filtered = gOrdersAll.filter(o => {
+    const dateText = o.serviceDate || o.dateText || '';
+    return dateText.includes(pick);   // 例如：2025-01-20
+  });
+
+  renderOrders(filtered);
+}
 
     // -----------------------------
     // 從 Apps Script 取得資料
@@ -435,7 +444,7 @@ async function fetchAndRenderOrders_byFamily(familyId) {
         const dateText = o.serviceDate || o.dateText || '—';
         const serviceText =
           o.serviceText ||
-          (o.services && o.services.join('、')) ||
+          (o.services && o.services.join('、')) ||        
           '—';
         const depositText = o.depositText || '';
         const total = (o.total != null) ? o.total : '—';
