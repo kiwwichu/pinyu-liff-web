@@ -379,6 +379,37 @@
         listEl.innerText = '查詢失敗，請稍後再試或通知 pinyu～';
       }
     }
+async function fetchAndRenderOrders_byFamily(familyId) {
+  const listEl = document.getElementById('orderList');
+  listEl.innerText = '查詢中…';
+
+  const dateFrom = document.getElementById('dateFrom').value || '';
+  const dateTo   = document.getElementById('dateTo').value   || '';
+
+  const params = new URLSearchParams();
+  params.set('action', 'history');
+  params.set('familyId', familyId);
+  if (dateFrom) params.set('dateFrom', dateFrom);
+  if (dateTo)   params.set('dateTo', dateTo);
+
+  const url = `${API_BASE}?${params.toString()}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    console.log('API 回傳：', data);
+
+    if (!data.success) {
+      listEl.innerText = '查詢失敗，請稍後再試或通知 pinyu～';
+      return;
+    }
+
+    renderOrders(data.orders || []);
+  } catch (err) {
+    console.error(err);
+    listEl.innerText = '查詢失敗，請稍後再試或通知 pinyu～';
+  }
+}
 
     // -----------------------------
     // 把訂單列表畫出來
