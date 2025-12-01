@@ -295,333 +295,349 @@
     <footer>若資料有疑問，歡迎私訊快樂小狗 Pinyu 🐾</footer>
   </div>
 
-  <script>
-    const LIFF_ID = '2008600048-jMAZkVpW';
-    const API_BASE =
-      'https://script.google.com/macros/s/AKfycbyuQ7j_w5kNi2dVee9DUK68dl5ZTw508yL9mAlgyyEc1c9-XOkDEKVK8VCHALBF2Ovq2A/exec';
+<script>
+  const LIFF_ID = '2008600048-jMAZkVpW';
+  const API_BASE =
+    'https://script.google.com/macros/s/AKfycbyuQ7j_w5kNi2dVee9DUK68dl5ZTw508yL9mAlgyyEc1c9-XOkDEKVK8VCHALBF2Ovq2A/exec';
 
-    let gLineUserId = '';
-    let gOrdersAll  = [];
+  let gLineUserId = '';
+  let gOrdersAll  = [];
 
-async function init() {
-  try {
-    await liff.init({ liffId: LIFF_ID });
+  // -----------------------------
+  // 初始化
+  // -----------------------------
+  async function init() {
+    try {
+      // 1) 不是在 LINE 內，就不要跑 liff.init，直接顯示提示
+      if (!liff.isInClient()) {
+        document.getElementById('root').innerText =
+          '請從 LINE 官方帳號內的選單開啟此畫面唷～';
+        return;
+      }
 
-    if (!liff.isInClient()) {
+      // 2) 在 LINE 內才初始化 LIFF
+      await liff.init({ liffId: LIFF_ID });
+
+      // 3) 優先用 getContext 拿 userId
+      const ctx = liff.getContext();
+      gLineUserId = ctx && ctx.userId ? ctx.userId : '';
+
+      // 4) 備案：再試一次用 ID Token 拿
+      if (!gLineUserId) {
+        const decoded = liff.getDecodedIDToken();
+        gLineUserId = decoded && decoded.sub ? decoded.sub : '';
+      }
+
+      if (!gLineUserId) {
+        document.getElementById('root').innerText =
+          '目前無法取得您的帳號資訊，請關閉此頁面後再從快樂小狗 Pinyu 官方帳號的選單重新開啟一次～';
+        return;
+      }
+
+      // 5) 畫畫面＋抓歷史訂單
+      buildLayout();
+      await fetchOrdersFromServer();
+
+    } catch (err) {
+      console.error('init error:', err);
+      const msg = (err && err.message) ? err.message : String(err);
       document.getElementById('root').innerText =
-        '請從 LINE 官方帳號內的選單開啟此畫面唷～';
-      return;
+        '初始化發生錯誤：' + msg + '\n請稍後再試或通知 pinyu～';
     }
-
- // 先確認在 LINE 內打開
-if (!liff.isInClient()) {
-  document.getElementById('root').innerText =
-    '請從 LINE 官方帳號內的選單開啟此畫面唷～';
-  return;
-}
-
-// 優先用 getContext 拿 userId（聊天室內一定會有）
-const ctx = liff.getContext();
-gLineUserId = ctx && ctx.userId ? ctx.userId : '';
-
-// 如果還是拿不到，再嘗試用 ID Token 當備案
-if (!gLineUserId) {
-  const decoded = liff.getDecodedIDToken();
-  gLineUserId = decoded && decoded.sub ? decoded.sub : '';
-}
-
-if (!gLineUserId) {
-  document.getElementById('root').innerText =
-    '目前無法取得您的帳號資訊，請關閉此頁面後再從快樂小狗 Pinyu 官方帳號的選單重新開啟一次～';
-  return;
-}
-
-
-    buildLayout();
-    await fetchOrdersFromServer();
-
-  } catch (err) {
-    console.error('init error:', err);
-    const msg = (err && err.message) ? err.message : String(err);
-    document.getElementById('root').innerText =
-      '初始化發生錯誤：' + msg + '\n請稍後再試或通知 pinyu～';
   }
-}
 
+  // -----------------------------
+  // 畫出搜尋列 + 列表骨架
+  // -----------------------------
+  function buildLayout() {
+    const root = document.getElementById('root');
+    root.innerHTML = `
+      <div style="font-size:10px;color:#aaa;margin-bottom:4px;">
+        Debug userId：${gLineUserId}
+      </div>
 
-    function buildLayout() {
-      const root = document.getElementById('root');
-      root.innerHTML = `
-       <div style="font-size:10px;color:#aaa;margin-bottom:4px;">
-      Debug userId：${gLineUserId}
-        <div class="filter-bar">
-          <div class="filter-row">
-            <span class="filter-label">搜尋日期</span>
-            <div class="filter-input">
-              <input
-                type="text"
-                id="keyword"
-                placeholder="例如：01、01/28、2025-01-28"
-              />
-            </div>
+      <div class="filter-bar">
+        <div class="filter-row">
+          <span class="filter-label">搜尋日期</span>
+          <div class="filter-input">
+            <input
+              type="text"
+              id="keyword"
+              placeholder="例如：01、01/28、2025-01-28"
+            />
           </div>
-          <div class="filter-actions">
-            <button class="btn btn-secondary" id="btnClear">清除</button>
-            <button class="btn btn-primary" id="btnSearch">搜尋</button>
-          </div>
-          <div class="quick-dates" id="quickDates"></div>
         </div>
-
-        <div class="list-header">
-          <span>服務日期</span>
-          <span>總金額</span>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" id="btnClear">清除</button>
+          <button class="btn btn-primary" id="btnSearch">搜尋</button>
         </div>
+        <div class="quick-dates" id="quickDates"></div>
+      </div>
 
-        <div id="orderList">載入中...</div>
-      `;
+      <div class="list-header">
+        <span>服務日期</span>
+        <span>總金額</span>
+      </div>
 
-      document.getElementById('btnSearch').addEventListener('click', () => {
-        applyFilter();
-      });
+      <div id="orderList">載入中...</div>
+    `;
 
-      document.getElementById('btnClear').addEventListener('click', () => {
-        const input = document.getElementById('keyword');
-        input.value = '';
-        renderOrders(gOrdersAll);
-      });
-
-      document.getElementById('keyword').addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') applyFilter();
-      });
-    }
-
-    function showLoading() {
-      const listEl = document.getElementById('orderList');
-      if (!listEl) return;
-
-      listEl.innerHTML = `
-        <div class="loading">
-          <div class="cat-running">
-            <div class="cat"></div>
-          </div>
-          <div>貓咪奔跑中，請稍候...</div>
-        </div>
-      `;
-    }
-
-async function fetchOrdersFromServer() {
-  const listEl = document.getElementById('orderList');
-  showLoading();
-
-  const params = new URLSearchParams();
-  params.set('action', 'history');
-  params.set('lineUserId', gLineUserId);
-
-  const url = `${API_BASE}?${params.toString()}`;
-
-  try {
-    const res = await fetch(url);
-
-    // 若 HTTP status 不是 200，先看一下
-    if (!res.ok) {
-      const text = await res.text();
-      console.error('API HTTP Error:', res.status, text);
-      listEl.innerText = `查詢失敗（HTTP ${res.status}），請通知 pinyu 看後台～`;
-      return;
-    }
-
-    const data = await res.json();
-    console.log('API 回傳：', data);
-
-    if (!data.success) {
-      listEl.innerText = '查詢失敗（success=false），請稍後再試或通知 pinyu～';
-      return;
-    }
-
-    gOrdersAll = data.orders || [];
-
-    gOrdersAll.sort((a, b) => {
-      const da = (a.serviceDate || a.dateText || '').toString();
-      const db = (b.serviceDate || b.dateText || '').toString();
-      return da.localeCompare(db);
+    document.getElementById('btnSearch').addEventListener('click', () => {
+      applyFilter();
     });
 
-    renderOrders(gOrdersAll);
-    buildQuickDates();
-
-  } catch (err) {
-    console.error('fetchOrdersFromServer error:', err);
-    const msg = (err && err.message) ? err.message : String(err);
-    listEl.innerText = '查詢失敗（例外）：' + msg + '，請稍後再試或通知 pinyu～';
-  }
-}
-
-    function applyFilter() {
+    document.getElementById('btnClear').addEventListener('click', () => {
       const input = document.getElementById('keyword');
-      const kwRaw = (input.value || '').trim();
+      input.value = '';
+      renderOrders(gOrdersAll);
+    });
 
-      if (!kwRaw) {
-        renderOrders(gOrdersAll);
+    document.getElementById('keyword').addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') applyFilter();
+    });
+  }
+
+  // -----------------------------
+  // Loading 畫面
+  // -----------------------------
+  function showLoading() {
+    const listEl = document.getElementById('orderList');
+    if (!listEl) return;
+
+    listEl.innerHTML = `
+      <div class="loading">
+        <div class="cat-running">
+          <div class="cat"></div>
+        </div>
+        <div>貓咪奔跑中，請稍候...</div>
+      </div>
+    `;
+  }
+
+  // -----------------------------
+  // 從 Apps Script 抓歷史訂單
+  // -----------------------------
+  async function fetchOrdersFromServer() {
+    const listEl = document.getElementById('orderList');
+    showLoading();
+
+    const params = new URLSearchParams();
+    params.set('action', 'history');
+    params.set('lineUserId', gLineUserId);
+
+    const url = `${API_BASE}?${params.toString()}`;
+
+    try {
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('API HTTP Error:', res.status, text);
+        listEl.innerText = `查詢失敗（HTTP ${res.status}），請通知 pinyu 看後台～`;
         return;
       }
 
-      const kw = kwRaw.replace(/\s/g, '');
+      const data = await res.json();
+      console.log('API 回傳：', data);
 
-      const filtered = gOrdersAll.filter((o) => {
-        const dateText = (o.serviceDate || o.dateText || '').toString();
-        const normalizedDate = dateText.replace(/\s/g, '');
-        return normalizedDate.includes(kw);
-      });
-
-      renderOrders(filtered);
-    }
-
-    function buildQuickDates() {
-      const container = document.getElementById('quickDates');
-      if (!container) return;
-
-      const allDates = gOrdersAll
-        .map((o) => o.serviceDate || o.dateText || '')
-        .filter((d) => !!d);
-
-      const uniqueDates = Array.from(new Set(allDates));
-      uniqueDates.sort();
-
-      if (uniqueDates.length === 0) {
-        container.innerHTML = '';
+      if (!data.success) {
+        listEl.innerText = '查詢失敗（success=false），請稍後再試或通知 pinyu～';
         return;
       }
 
-      container.innerHTML = uniqueDates
-        .map((d) => `<button class="quick-date-chip" data-date="${d}">${d}</button>`)
-        .join('');
+      gOrdersAll = data.orders || [];
 
-      container.querySelectorAll('.quick-date-chip').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const date = btn.getAttribute('data-date') || '';
-          const input = document.getElementById('keyword');
-          input.value = date;
-          applyFilter();
-        });
+      gOrdersAll.sort((a, b) => {
+        const da = (a.serviceDate || a.dateText || '').toString();
+        const db = (b.serviceDate || b.dateText || '').toString();
+        return da.localeCompare(db);
       });
+
+      renderOrders(gOrdersAll);
+      buildQuickDates();
+
+    } catch (err) {
+      console.error('fetchOrdersFromServer error:', err);
+      const msg = (err && err.message) ? err.message : String(err);
+      listEl.innerText = '查詢失敗（例外）：' + msg + '，請稍後再試或通知 pinyu～';
+    }
+  }
+
+  // -----------------------------
+  // 模糊搜尋功能
+  // -----------------------------
+  function applyFilter() {
+    const input = document.getElementById('keyword');
+    const kwRaw = (input.value || '').trim();
+
+    if (!kwRaw) {
+      renderOrders(gOrdersAll);
+      return;
     }
 
-    function renderOrders(orders) {
-      const listEl = document.getElementById('orderList');
+    const kw = kwRaw.replace(/\s/g, '');
 
-      if (!orders || orders.length === 0) {
-        listEl.innerText = '目前查不到符合條件的歷史訂單唷～';
-        return;
+    const filtered = gOrdersAll.filter((o) => {
+      const dateText = (o.serviceDate || o.dateText || '').toString();
+      const normalizedDate = dateText.replace(/\s/g, '');
+      return normalizedDate.includes(kw);
+    });
+
+    renderOrders(filtered);
+  }
+
+  // -----------------------------
+  // 自動產生「日期快速選單」
+  // -----------------------------
+  function buildQuickDates() {
+    const container = document.getElementById('quickDates');
+    if (!container) return;
+
+    const allDates = gOrdersAll
+      .map((o) => o.serviceDate || o.dateText || '')
+      .filter((d) => !!d);
+
+    const uniqueDates = Array.from(new Set(allDates));
+    uniqueDates.sort();
+
+    if (uniqueDates.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = uniqueDates
+      .map((d) => `<button class="quick-date-chip" data-date="${d}">${d}</button>`)
+      .join('');
+
+    container.querySelectorAll('.quick-date-chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const date = btn.getAttribute('data-date') || '';
+        const input = document.getElementById('keyword');
+        input.value = date;
+        applyFilter();
+      });
+    });
+  }
+
+  // -----------------------------
+  // 畫訂單列表
+  // -----------------------------
+  function renderOrders(orders) {
+    const listEl = document.getElementById('orderList');
+
+    if (!orders || orders.length === 0) {
+      listEl.innerText = '目前查不到符合條件的歷史訂單唷～';
+      return;
+    }
+
+    listEl.innerHTML = '';
+
+    orders.forEach((o) => {
+      const status = o.status || '—';
+      const dateText = o.serviceDate || o.dateText || '—';
+      const serviceText =
+        o.serviceText ||
+        (o.services && o.services.join('、')) ||
+        '—';
+      const depositText = o.depositText || '';
+      const total = o.total != null ? o.total : '—';
+
+      const card = document.createElement('div');
+      card.className = 'order-card';
+
+      const summaryRow = document.createElement('div');
+      summaryRow.className = 'order-summary-row';
+
+      const summaryLeft = document.createElement('div');
+      summaryLeft.className = 'order-summary-left';
+
+      const dateSpan = document.createElement('div');
+      dateSpan.className = 'summary-date';
+      dateSpan.textContent = dateText;
+
+      const serviceSpan = document.createElement('div');
+      serviceSpan.className = 'summary-service';
+      serviceSpan.textContent = serviceText;
+
+      summaryLeft.appendChild(dateSpan);
+      summaryLeft.appendChild(serviceSpan);
+
+      const summaryRight = document.createElement('div');
+      summaryRight.className = 'order-summary-right';
+
+      const totalSpan = document.createElement('div');
+      totalSpan.className = 'summary-total';
+      totalSpan.textContent = total + ' 元';
+
+      const statusSpan = document.createElement('div');
+      statusSpan.className = 'summary-status';
+      statusSpan.textContent = status;
+
+      summaryRight.appendChild(totalSpan);
+      summaryRight.appendChild(statusSpan);
+
+      const expandIcon = document.createElement('div');
+      expandIcon.className = 'expand-icon';
+      expandIcon.textContent = '⌵';
+
+      summaryRow.appendChild(summaryLeft);
+      summaryRow.appendChild(summaryRight);
+      summaryRow.appendChild(expandIcon);
+
+      card.appendChild(summaryRow);
+
+      const detail = document.createElement('div');
+      detail.className = 'order-detail';
+
+      const idRow = document.createElement('div');
+      idRow.className = 'detail-row order-id';
+      idRow.textContent = '訂單編號：' + (o.orderId || '—');
+
+      const dateRow = document.createElement('div');
+      dateRow.className = 'detail-row';
+      dateRow.innerHTML =
+        `<span class="detail-label">服務日期</span>${dateText}`;
+
+      const serviceRow = document.createElement('div');
+      serviceRow.className = 'detail-row';
+      serviceRow.innerHTML =
+        `<span class="detail-label">服務內容</span>${serviceText}`;
+
+      const totalRow = document.createElement('div');
+      totalRow.className = 'detail-row';
+      totalRow.innerHTML =
+        `<span class="detail-label">總金額</span>${total} 元`;
+
+      const statusRow = document.createElement('div');
+      statusRow.className = 'detail-row';
+      statusRow.innerHTML =
+        `<span class="detail-label">狀態</span>${status}`;
+
+      detail.appendChild(idRow);
+      detail.appendChild(dateRow);
+      detail.appendChild(serviceRow);
+      detail.appendChild(totalRow);
+      detail.appendChild(statusRow);
+
+      if (depositText) {
+        const depRow = document.createElement('div');
+        depRow.className = 'detail-row deposit-text';
+        depRow.textContent = depositText;
+        detail.appendChild(depRow);
       }
 
-      listEl.innerHTML = '';
+      card.appendChild(detail);
 
-      orders.forEach((o) => {
-        const status = o.status || '—';
-        const dateText = o.serviceDate || o.dateText || '—';
-        const serviceText =
-          o.serviceText ||
-          (o.services && o.services.join('、')) ||
-          '—';
-        const depositText = o.depositText || '';
-        const total = o.total != null ? o.total : '—';
-
-        const card = document.createElement('div');
-        card.className = 'order-card';
-
-        const summaryRow = document.createElement('div');
-        summaryRow.className = 'order-summary-row';
-
-        const summaryLeft = document.createElement('div');
-        summaryLeft.className = 'order-summary-left';
-
-        const dateSpan = document.createElement('div');
-        dateSpan.className = 'summary-date';
-        dateSpan.textContent = dateText;
-
-        const serviceSpan = document.createElement('div');
-        serviceSpan.className = 'summary-service';
-        serviceSpan.textContent = serviceText;
-
-        summaryLeft.appendChild(dateSpan);
-        summaryLeft.appendChild(serviceSpan);
-
-        const summaryRight = document.createElement('div');
-        summaryRight.className = 'order-summary-right';
-
-        const totalSpan = document.createElement('div');
-        totalSpan.className = 'summary-total';
-        totalSpan.textContent = total + ' 元';
-
-        const statusSpan = document.createElement('div');
-        statusSpan.className = 'summary-status';
-        statusSpan.textContent = status;
-
-        summaryRight.appendChild(totalSpan);
-        summaryRight.appendChild(statusSpan);
-
-        const expandIcon = document.createElement('div');
-        expandIcon.className = 'expand-icon';
-        expandIcon.textContent = '⌵';
-
-        summaryRow.appendChild(summaryLeft);
-        summaryRow.appendChild(summaryRight);
-        summaryRow.appendChild(expandIcon);
-
-        card.appendChild(summaryRow);
-
-        const detail = document.createElement('div');
-        detail.className = 'order-detail';
-
-        const idRow = document.createElement('div');
-        idRow.className = 'detail-row order-id';
-        idRow.textContent = '訂單編號：' + (o.orderId || '—');
-
-        const dateRow = document.createElement('div');
-        dateRow.className = 'detail-row';
-        dateRow.innerHTML =
-          `<span class="detail-label">服務日期</span>${dateText}`;
-
-        const serviceRow = document.createElement('div');
-        serviceRow.className = 'detail-row';
-        serviceRow.innerHTML =
-          `<span class="detail-label">服務內容</span>${serviceText}`;
-
-        const totalRow = document.createElement('div');
-        totalRow.className = 'detail-row';
-        totalRow.innerHTML =
-          `<span class="detail-label">總金額</span>${total} 元`;
-
-        const statusRow = document.createElement('div');
-        statusRow.className = 'detail-row';
-        statusRow.innerHTML =
-          `<span class="detail-label">狀態</span>${status}`;
-
-        detail.appendChild(idRow);
-        detail.appendChild(dateRow);
-        detail.appendChild(serviceRow);
-        detail.appendChild(totalRow);
-        detail.appendChild(statusRow);
-
-        if (depositText) {
-          const depRow = document.createElement('div');
-          depRow.className = 'detail-row deposit-text';
-          depRow.textContent = depositText;
-          detail.appendChild(depRow);
-        }
-
-        card.appendChild(detail);
-
-        card.addEventListener('click', () => {
-          const expanded = card.classList.toggle('expanded');
-          expandIcon.textContent = expanded ? '⌃' : '⌵';
-        });
-
-        listEl.appendChild(card);
+      card.addEventListener('click', () => {
+        const expanded = card.classList.toggle('expanded');
+        expandIcon.textContent = expanded ? '⌃' : '⌵';
       });
-    }
 
-    init();
-  </script>
-</body>
-</html>
+      listEl.appendChild(card);
+    });
+  }
+
+  // 啟動！
+  init();
+</script>
+
