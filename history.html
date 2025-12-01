@@ -296,7 +296,7 @@
   </div>
 
 <script>
-  const LIFF_ID = '2008600048-jMAZkVpW';
+  const LIFF_ID = '2008600048-jMAZkVpW';  // 這裡等一下再確認一次
   const API_BASE =
     'https://script.google.com/macros/s/AKfycbyuQ7j_w5kNi2dVee9DUK68dl5ZTw508yL9mAlgyyEc1c9-XOkDEKVK8VCHALBF2Ovq2A/exec';
 
@@ -308,7 +308,7 @@
   // -----------------------------
   async function init() {
     try {
-      // 1) 不是在 LINE 內，就不要跑 liff.init，直接顯示提示
+      // 1) 不是在 LINE 內，就不要跑 liff.init
       if (!liff.isInClient()) {
         document.getElementById('root').innerText =
           '請從 LINE 官方帳號內的選單開啟此畫面唷～';
@@ -464,7 +464,7 @@
   }
 
   // -----------------------------
-  // 模糊搜尋功能
+  // 模糊搜尋
   // -----------------------------
   function applyFilter() {
     const input = document.getElementById('keyword');
@@ -487,7 +487,7 @@
   }
 
   // -----------------------------
-  // 自動產生「日期快速選單」
+  // 日期快速選單
   // -----------------------------
   function buildQuickDates() {
     const container = document.getElementById('quickDates');
