@@ -303,34 +303,36 @@
     let gLineUserId = '';
     let gOrdersAll  = [];
 
-    async function init() {
-      try {
-        await liff.init({ liffId: LIFF_ID });
+async function init() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
 
-        if (!liff.isInClient()) {
-          document.getElementById('root').innerText =
-            '請從 LINE 官方帳號內的選單開啟此畫面唷～';
-          return;
-        }
-
-        const decoded = liff.getDecodedIDToken();
-        gLineUserId = decoded ? decoded.sub : '';
-
-        if (!gLineUserId) {
-          document.getElementById('root').innerText =
-            '無法取得您的帳號資訊，請通知 pinyu 幫忙查看設定～';
-          return;
-        }
-
-        buildLayout();
-        await fetchOrdersFromServer();
-
-      } catch (err) {
-        console.error(err);
-        document.getElementById('root').innerText =
-          '系統發生錯誤，請稍後再試或通知 pinyu～';
-      }
+    if (!liff.isInClient()) {
+      document.getElementById('root').innerText =
+        '請從 LINE 官方帳號內的選單開啟此畫面唷～';
+      return;
     }
+
+    const decoded = liff.getDecodedIDToken();
+    gLineUserId = decoded ? decoded.sub : '';
+
+    if (!gLineUserId) {
+      document.getElementById('root').innerText =
+        '無法取得您的帳號資訊，請通知 pinyu 幫忙查看設定～';
+      return;
+    }
+
+    buildLayout();
+    await fetchOrdersFromServer();
+
+  } catch (err) {
+    console.error('init error:', err);
+    const msg = (err && err.message) ? err.message : String(err);
+    document.getElementById('root').innerText =
+      '初始化發生錯誤：' + msg + '\n請稍後再試或通知 pinyu～';
+  }
+}
+
 
     function buildLayout() {
       const root = document.getElementById('root');
@@ -390,42 +392,52 @@
       `;
     }
 
-    async function fetchOrdersFromServer() {
-      const listEl = document.getElementById('orderList');
-      showLoading();
+async function fetchOrdersFromServer() {
+  const listEl = document.getElementById('orderList');
+  showLoading();
 
-      const params = new URLSearchParams();
-      params.set('action', 'history');
-      params.set('lineUserId', gLineUserId);
+  const params = new URLSearchParams();
+  params.set('action', 'history');
+  params.set('lineUserId', gLineUserId);
 
-      const url = `${API_BASE}?${params.toString()}`;
+  const url = `${API_BASE}?${params.toString()}`;
 
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        console.log('API 回傳：', data);
+  try {
+    const res = await fetch(url);
 
-        if (!data.success) {
-          listEl.innerText = '查詢失敗，請稍後再試或通知 pinyu～';
-          return;
-        }
-
-        gOrdersAll = data.orders || [];
-
-        gOrdersAll.sort((a, b) => {
-          const da = (a.serviceDate || a.dateText || '').toString();
-          const db = (b.serviceDate || b.dateText || '').toString();
-          return da.localeCompare(db);
-        });
-
-        renderOrders(gOrdersAll);
-        buildQuickDates();
-
-      } catch (err) {
-        console.error(err);
-        listEl.innerText = '查詢失敗，請稍後再試或通知 pinyu～';
-      }
+    // 若 HTTP status 不是 200，先看一下
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('API HTTP Error:', res.status, text);
+      listEl.innerText = `查詢失敗（HTTP ${res.status}），請通知 pinyu 看後台～`;
+      return;
     }
+
+    const data = await res.json();
+    console.log('API 回傳：', data);
+
+    if (!data.success) {
+      listEl.innerText = '查詢失敗（success=false），請稍後再試或通知 pinyu～';
+      return;
+    }
+
+    gOrdersAll = data.orders || [];
+
+    gOrdersAll.sort((a, b) => {
+      const da = (a.serviceDate || a.dateText || '').toString();
+      const db = (b.serviceDate || b.dateText || '').toString();
+      return da.localeCompare(db);
+    });
+
+    renderOrders(gOrdersAll);
+    buildQuickDates();
+
+  } catch (err) {
+    console.error('fetchOrdersFromServer error:', err);
+    const msg = (err && err.message) ? err.message : String(err);
+    listEl.innerText = '查詢失敗（例外）：' + msg + '，請稍後再試或通知 pinyu～';
+  }
+}
 
     function applyFilter() {
       const input = document.getElementById('keyword');
