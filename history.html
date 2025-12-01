@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    /* 整體限制寬度，避免看起來很空 */
+    /* 整體版型：鎖定在手機寬度，不會太空 */
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -14,124 +14,274 @@
     }
 
     .page {
-      max-width: 480px;         /* 手機寬度 */
+      max-width: 480px;           /* 手機寬度 */
       margin: 0 auto;
-      min-height: 100vh;        /* 讓畫面吃滿可視高度 */
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
+      background-color: #f5f5f5;
     }
 
     header {
-      padding: 12px 16px;
+      padding: 10px 16px;
       background: #48a2e8;
-      color: white;
-      font-weight: bold;
+      color: #ffffff;
+      font-weight: 700;
       font-size: 18px;
       text-align: center;
+      letter-spacing: 2px;
     }
 
     #root {
       flex: 1;
-      padding: 12px 12px 60px;  /* 預留下面 footer 空間 */
+      padding: 10px 10px 16px;
       box-sizing: border-box;
     }
 
-    .order-card {
+    /* 上方日期搜尋列 */
+    .filter-bar {
       background: #ffffff;
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin-bottom: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-      font-size: 14px;
-      line-height: 1.4;
+      border-radius: 10px;
+      padding: 8px 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      margin-bottom: 10px;
+      font-size: 12px;
     }
 
-    .order-id {
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .filter-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .filter-label {
+      white-space: nowrap;
+      color: #555;
+      font-size: 12px;
+    }
+
+    .filter-input {
+      flex: 1;
+    }
+
+    .filter-input input[type="date"] {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 12px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .filter-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 16px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #48a2e8;
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background-color: #e5e5e5;
+      color: #444;
+    }
+
+    /* 列表標題列（服務日期／總金額） */
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 2px 4px;
+      font-size: 13px;
+      color: #555;
       font-weight: 600;
-      color: #333;
+      border-bottom: 1px solid #e0e0e0;
       margin-bottom: 4px;
     }
 
-    .order-meta {
+    .list-header span {
+      flex: 1;
+    }
+
+    .list-header span:last-child {
+      text-align: right;
+    }
+
+    /* 訂單卡片 (縮起來時只是一行摘要，點開才顯示內容) */
+    .order-card {
+      background: #ffffff;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      padding: 8px 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      font-size: 13px;
+      line-height: 1.4;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .order-card:hover {
+      background-color: #f9fbff;
+    }
+
+    /* 上半部：一行摘要（服務日期＋總金額＋狀態） */
+    .order-summary-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .order-summary-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .summary-date {
+      font-weight: 600;
+      color: #222;
+    }
+
+    .summary-service {
       color: #666;
-      margin-bottom: 2px;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .order-summary-right {
+      text-align: right;
+      min-width: 80px;
+    }
+
+    .summary-total {
+      font-weight: 700;
+      color: #333;
+    }
+
+    .summary-status {
+      font-size: 11px;
+      color: #48a2e8;
+      margin-top: 2px;
+    }
+
+    /* 展開收合的小箭頭 */
+    .expand-icon {
+      font-size: 16px;
+      color: #999;
+      margin-left: 4px;
+    }
+
+    /* 下半部：詳細區域（預設隱藏） */
+    .order-detail {
+      display: none;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed #e0e0e0;
+    }
+
+    .order-card.expanded .order-detail {
+      display: block;
+    }
+
+    .detail-row {
+      margin-bottom: 4px;
+      color: #555;
+    }
+
+    .detail-label {
+      color: #888;
+      font-size: 12px;
+      margin-right: 4px;
     }
 
     .deposit-text {
       color: #c37b00;
-      font-size: 13px;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .order-id {
+      font-size: 12px;
+      color: #999;
       margin-top: 4px;
     }
 
     footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      max-width: 480px;
-      margin: 0 auto;
-      background: #ffffff;
-      border-top: 1px solid #e5e5e5;
-      padding: 6px 12px;
+      padding: 6px 10px 10px;
       box-sizing: border-box;
-      font-size: 12px;
-      color: #666;
+      font-size: 11px;
+      color: #888;
       text-align: center;
     }
   </style>
 
-  <!-- LIFF SDK（官方） -->
+  <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
   <div class="page">
-    <header>歷史訂單查詢</header>
+    <header>歷史訂單</header>
     <div id="root">載入中...</div>
-    <footer>若資料有問題，歡迎私訊快樂小狗 Pinyu 🐾</footer>
+    <footer>若資料有疑問，歡迎私訊快樂小狗 Pinyu 🐾</footer>
   </div>
 
   <script>
+    // ★ 這裡放你的 LIFF ID
     const LIFF_ID = '2008567730';
-    const API_BASE = 'https://script.google.com/macros/s/AKfycbxrhqvOfF7ZC-NGnZNJFrK0PFDgYCTt8pItAtx-mtVU0PRikPtv5g3F7nHK4-67avnSvQ/exec';
+    // ★ 這裡放你的 Apps Script Web App URL
+    const API_BASE =
+      'https://script.google.com/macros/s/AKfycbxrhqvOfF7ZC-NGnZNJFrK0PFDgYCTt8pItAtx-mtVU0PRikPtv5g3F7nHK4-67avnSvQ/exec';
 
+    let gLineUserId = '';
+    let gOrdersAll = []; // 目前查回來的訂單（之後還可以在前端篩）
+
+    // -----------------------------
+    // 初始化流程
+    // -----------------------------
     async function init() {
       try {
-        // 1. 初始化 LIFF
         await liff.init({ liffId: LIFF_ID });
 
-        // 2. 判斷是否在 LINE 內打開
+        // 若不是在 LINE 內打開，就給提示
         if (!liff.isInClient()) {
           document.getElementById('root').innerText =
             '請從 LINE 官方帳號內的選單開啟此畫面唷～';
           return;
         }
 
-        // 3. 取得 userId（需要在 LIFF 設定裡勾選 openid）
         const decoded = liff.getDecodedIDToken();
-        const lineUserId = decoded ? decoded.sub : '';
+        gLineUserId = decoded ? decoded.sub : '';
 
-        if (!lineUserId) {
+        if (!gLineUserId) {
           document.getElementById('root').innerText =
             '無法取得您的帳號資訊，請通知 pinyu 幫忙查看設定～';
           return;
         }
 
-        // 4. 呼叫 Apps Script Web App
-        const url = `${API_BASE}?action=history&lineUserId=${encodeURIComponent(lineUserId)}`;
-        const res = await fetch(url);
-        const data = await res.json();
+        // 先把版面骨架畫出來（搜尋列 + 空的列表）
+        buildLayout();
 
-        console.log('API 回傳：', data); // 先看瀏覽器 Console 方便 debug
-
-        if (!data.success) {
-          document.getElementById('root').innerText =
-            '查詢失敗，請稍後再試或通知 pinyu～';
-          return;
-        }
-
-        // 5. 把訂單畫出來
-        renderOrders(data.orders || []);
-
+        // 初次載入：不帶日期 → 顯示全部歷史訂單
+        await fetchAndRenderOrders();
       } catch (err) {
         console.error(err);
         document.getElementById('root').innerText =
@@ -139,33 +289,210 @@
       }
     }
 
-    function renderOrders(orders) {
+    // -----------------------------
+    // 畫出搜尋列 + 列表容器
+    // -----------------------------
+    function buildLayout() {
       const root = document.getElementById('root');
+      root.innerHTML = `
+        <div class="filter-bar">
+          <div class="filter-row">
+            <span class="filter-label">起訖日期</span>
+            <div class="filter-input">
+              <input type="date" id="dateFrom" />
+            </div>
+            <span style="font-size:12px;color:#888;">～</span>
+            <div class="filter-input">
+              <input type="date" id="dateTo" />
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-secondary" id="btnClear">清除</button>
+            <button class="btn btn-primary" id="btnSearch">搜尋</button>
+          </div>
+        </div>
+
+        <div class="list-header">
+          <span>服務日期</span>
+          <span>總金額</span>
+        </div>
+
+        <div id="orderList">載入中...</div>
+      `;
+
+      // 綁定按鈕事件
+      document.getElementById('btnSearch').addEventListener('click', () => {
+        fetchAndRenderOrders();
+      });
+
+      document.getElementById('btnClear').addEventListener('click', () => {
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        fetchAndRenderOrders();
+      });
+    }
+
+    // -----------------------------
+    // 從 Apps Script 取得資料
+    // -----------------------------
+    async function fetchAndRenderOrders() {
+      const listEl = document.getElementById('orderList');
+      listEl.innerText = '查詢中…';
+
+      const dateFrom = document.getElementById('dateFrom').value || '';
+      const dateTo   = document.getElementById('dateTo').value   || '';
+
+      // 組 URL：action=history & lineUserId & (可選)日期
+      const params = new URLSearchParams();
+      params.set('action', 'history');
+      params.set('lineUserId', gLineUserId);
+      if (dateFrom) params.set('dateFrom', dateFrom);
+      if (dateTo)   params.set('dateTo', dateTo);
+
+      const url = `${API_BASE}?${params.toString()}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        console.log('API 回傳：', data);
+
+        if (!data.success) {
+          listEl.innerText = '查詢失敗，請稍後再試或通知 pinyu～';
+          return;
+        }
+
+        const orders = data.orders || [];
+        gOrdersAll = orders;  // 先存起來
+        renderOrders(orders);
+      } catch (err) {
+        console.error(err);
+        listEl.innerText = '查詢失敗，請稍後再試或通知 pinyu～';
+      }
+    }
+
+    // -----------------------------
+    // 把訂單列表畫出來
+    // -----------------------------
+    function renderOrders(orders) {
+      const listEl = document.getElementById('orderList');
 
       if (!orders || orders.length === 0) {
-        root.innerText = '目前查不到您的歷史訂單唷～';
+        listEl.innerText = '目前查不到符合條件的歷史訂單唷～';
         return;
       }
 
-      root.innerHTML = orders.map(o => {
+      listEl.innerHTML = ''; // 清空
+
+      orders.forEach((o, index) => {
         const status = o.status || '—';
         const dateText = o.serviceDate || o.dateText || '—';
-        const serviceText = o.serviceText || (o.services && o.services.join('、')) || '—';
+        const serviceText =
+          o.serviceText ||
+          (o.services && o.services.join('、')) ||
+          '—';
         const depositText = o.depositText || '';
+        const total = (o.total != null) ? o.total : '—';
 
-        return `
-          <div class="order-card">
-            <div class="order-id">訂單編號：${o.orderId}</div>
-            <div class="order-meta">狀態：${status}</div>
-            <div class="order-meta">服務日期：${dateText}</div>
-            <div class="order-meta">服務內容：${serviceText}</div>
-            <div class="order-meta">總金額：${o.total} 元</div>
-            ${depositText ? `<div class="deposit-text">${depositText}</div>` : ''}
-          </div>
-        `;
-      }).join('');
+        const card = document.createElement('div');
+        card.className = 'order-card';
+
+        // summary 區塊（服務日期＋總金額）
+        const summaryRow = document.createElement('div');
+        summaryRow.className = 'order-summary-row';
+
+        const summaryLeft = document.createElement('div');
+        summaryLeft.className = 'order-summary-left';
+
+        const dateSpan = document.createElement('div');
+        dateSpan.className = 'summary-date';
+        dateSpan.textContent = dateText;
+
+        const serviceSpan = document.createElement('div');
+        serviceSpan.className = 'summary-service';
+        serviceSpan.textContent = serviceText;
+
+        summaryLeft.appendChild(dateSpan);
+        summaryLeft.appendChild(serviceSpan);
+
+        const summaryRight = document.createElement('div');
+        summaryRight.className = 'order-summary-right';
+
+        const totalSpan = document.createElement('div');
+        totalSpan.className = 'summary-total';
+        totalSpan.textContent = total + ' 元';
+
+        const statusSpan = document.createElement('div');
+        statusSpan.className = 'summary-status';
+        statusSpan.textContent = status;
+
+        summaryRight.appendChild(totalSpan);
+        summaryRight.appendChild(statusSpan);
+
+        const expandIcon = document.createElement('div');
+        expandIcon.className = 'expand-icon';
+        expandIcon.textContent = '⌵';   // 折疊箭頭
+
+        summaryRow.appendChild(summaryLeft);
+        summaryRow.appendChild(summaryRight);
+        summaryRow.appendChild(expandIcon);
+
+        card.appendChild(summaryRow);
+
+        // 詳細內容區塊（展開後出現）
+        const detail = document.createElement('div');
+        detail.className = 'order-detail';
+
+        // 訂單編號
+        const idRow = document.createElement('div');
+        idRow.className = 'detail-row order-id';
+        idRow.textContent = '訂單編號：' + o.orderId;
+
+        // 狀態 & 服務內容
+        const statusRow = document.createElement('div');
+        statusRow.className = 'detail-row';
+        statusRow.innerHTML =
+          `<span class="detail-label">狀態</span>${status}`;
+
+        const serviceRow = document.createElement('div');
+        serviceRow.className = 'detail-row';
+        serviceRow.innerHTML =
+          `<span class="detail-label">服務內容</span>${serviceText}`;
+
+        const dateRow = document.createElement('div');
+        dateRow.className = 'detail-row';
+        dateRow.innerHTML =
+          `<span class="detail-label">服務日期</span>${dateText}`;
+
+        const totalRow = document.createElement('div');
+        totalRow.className = 'detail-row';
+        totalRow.innerHTML =
+          `<span class="detail-label">總金額</span>${total} 元`;
+
+        detail.appendChild(idRow);
+        detail.appendChild(dateRow);
+        detail.appendChild(serviceRow);
+        detail.appendChild(totalRow);
+
+        if (depositText) {
+          const depRow = document.createElement('div');
+          depRow.className = 'detail-row deposit-text';
+          depRow.textContent = depositText;
+          detail.appendChild(depRow);
+        }
+
+        card.appendChild(detail);
+
+        // 點整張卡片 → 展開 / 收合
+        card.addEventListener('click', () => {
+          const expanded = card.classList.toggle('expanded');
+          expandIcon.textContent = expanded ? '⌃' : '⌵';
+        });
+
+        listEl.appendChild(card);
+      });
     }
 
+    // 啟動！
     init();
   </script>
 </body>
