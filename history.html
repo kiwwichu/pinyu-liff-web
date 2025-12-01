@@ -150,7 +150,7 @@
       text-align: right;
     }
 
-    /* 訂單卡片 (縮起來時只是一行摘要，點開才顯示內容) */
+    /* 訂單卡片 */
     .order-card {
       background: #ffffff;
       border-radius: 10px;
@@ -167,7 +167,6 @@
       background-color: #f9fbff;
     }
 
-    /* 上半部：一行摘要（服務日期＋總金額＋狀態） */
     .order-summary-row {
       display: flex;
       align-items: center;
@@ -210,14 +209,12 @@
       margin-top: 2px;
     }
 
-    /* 展開收合的小箭頭 */
     .expand-icon {
       font-size: 16px;
       color: #999;
       margin-left: 4px;
     }
 
-    /* 下半部：詳細區域（預設隱藏） */
     .order-detail {
       display: none;
       margin-top: 6px;
@@ -260,35 +257,35 @@
       text-align: center;
     }
 
-  .cat-running {
-  width: 60px;
-  height: 40px;
-  margin: 0 auto 8px;
-  position: relative;
-}
+    /* Loading 動畫 */
+    .loading {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      padding: 16px 0;
+    }
 
-.cat-running .cat {
-  width: 60px;
-  height: 40px;
-  background-image: url('https://i.imgur.com/0TKm1Mf.png');
-  background-size: cover;
-  animation: run-cycle 0.6s steps(6) infinite;
-}
-.loading {
-  text-align: center;
-  font-size: 12px;
-  color: #666;
-  padding: 16px 0;
-}
-@keyframes run-cycle {
-  0% { background-position: 0 0; }
-  100% { background-position: -360px 0; }
-}
+    .cat-running {
+      width: 60px;
+      height: 40px;
+      margin: 0 auto 8px;
+      position: relative;
+    }
 
-    
+    .cat-running .cat {
+      width: 60px;
+      height: 40px;
+      background-image: url('https://i.imgur.com/0TKm1Mf.png');
+      background-size: cover;
+      animation: run-cycle 0.6s steps(6) infinite;
+    }
+
+    @keyframes run-cycle {
+      0% { background-position: 0 0; }
+      100% { background-position: -360px 0; }
+    }
   </style>
 
-  <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
@@ -299,24 +296,17 @@
   </div>
 
   <script>
-    // ★ 這裡放你的 LIFF ID（已是你現在的）
     const LIFF_ID = '2008567730';
-
-    // ★ 這裡放你的 Apps Script Web App URL（讀歷史訂單）
     const API_BASE =
       'https://script.google.com/macros/s/AKfycbwh2tNbj_NKcy3tyw94HUb6-C_cu3C4llX1qrEmmW075oPwJ3savE8qMrwMVeSpJtMFHA/exec';
 
-    let gLineUserId = '';      // 從 LIFF 拿到的 userId
-    let gOrdersAll  = [];      // 全部歷史訂單（第一次載入後都存在這裡，之後搜尋都在前端處理）
+    let gLineUserId = '';
+    let gOrdersAll  = [];
 
-    // -----------------------------
-    // 初始化流程
-    // -----------------------------
     async function init() {
       try {
         await liff.init({ liffId: LIFF_ID });
 
-        // 若不是在 LINE 內打開，就給提示
         if (!liff.isInClient()) {
           document.getElementById('root').innerText =
             '請從 LINE 官方帳號內的選單開啟此畫面唷～';
@@ -332,10 +322,7 @@
           return;
         }
 
-        // 先把版面骨架畫出來（搜尋列 + 空的列表）
         buildLayout();
-
-        // 第一次載入：一次抓全部歷史訂單
         await fetchOrdersFromServer();
 
       } catch (err) {
@@ -345,9 +332,6 @@
       }
     }
 
-    // -----------------------------
-    // 畫出搜尋列 + 列表容器
-    // -----------------------------
     function buildLayout() {
       const root = document.getElementById('root');
       root.innerHTML = `
@@ -377,7 +361,6 @@
         <div id="orderList">載入中...</div>
       `;
 
-      // 綁定按鈕事件
       document.getElementById('btnSearch').addEventListener('click', () => {
         applyFilter();
       });
@@ -388,35 +371,25 @@
         renderOrders(gOrdersAll);
       });
 
-      // Enter 直接搜尋
       document.getElementById('keyword').addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') {
-          applyFilter();
-        }
+        if (e.key === 'Enter') applyFilter();
       });
     }
 
-    // -----------------------------
-    // 顯示載入動畫
-    // -----------------------------
     function showLoading() {
       const listEl = document.getElementById('orderList');
       if (!listEl) return;
 
       listEl.innerHTML = `
-  <div class="loading">
-    <div class="cat-running">
-      <div class="cat"></div>
-    </div>
-    <div>貓咪奔跑中，請稍候...</div>
-  </div>
-`;
-
+        <div class="loading">
+          <div class="cat-running">
+            <div class="cat"></div>
+          </div>
+          <div>貓咪奔跑中，請稍候...</div>
+        </div>
+      `;
     }
 
-    // -----------------------------
-    // 從 Apps Script 取得全部歷史訂單
-    // -----------------------------
     async function fetchOrdersFromServer() {
       const listEl = document.getElementById('orderList');
       showLoading();
@@ -439,16 +412,13 @@
 
         gOrdersAll = data.orders || [];
 
-        // 依照服務日期排序（若後端沒有排）
         gOrdersAll.sort((a, b) => {
           const da = (a.serviceDate || a.dateText || '').toString();
           const db = (b.serviceDate || b.dateText || '').toString();
           return da.localeCompare(db);
         });
 
-        // 先畫全部
         renderOrders(gOrdersAll);
-        // 再根據資料自動產生日期快速選單
         buildQuickDates();
 
       } catch (err) {
@@ -457,35 +427,26 @@
       }
     }
 
-    // -----------------------------
-    // 依目前輸入的關鍵字做「模糊搜尋」
-    // -----------------------------
     function applyFilter() {
       const input = document.getElementById('keyword');
       const kwRaw = (input.value || '').trim();
 
-      // 沒輸入就顯示全部
       if (!kwRaw) {
         renderOrders(gOrdersAll);
         return;
       }
 
-      // 把空白拿掉，讓「01  /  28」這種也能搜到
       const kw = kwRaw.replace(/\s/g, '');
 
       const filtered = gOrdersAll.filter((o) => {
         const dateText = (o.serviceDate || o.dateText || '').toString();
         const normalizedDate = dateText.replace(/\s/g, '');
-        // 只要日期文字有包含關鍵字就算（模糊搜尋）
         return normalizedDate.includes(kw);
       });
 
       renderOrders(filtered);
     }
 
-    // -----------------------------
-    // 依照歷史訂單，自動產生「日期快速選單」
-    // -----------------------------
     function buildQuickDates() {
       const container = document.getElementById('quickDates');
       if (!container) return;
@@ -494,7 +455,6 @@
         .map((o) => o.serviceDate || o.dateText || '')
         .filter((d) => !!d);
 
-      // 取唯一日期
       const uniqueDates = Array.from(new Set(allDates));
       uniqueDates.sort();
 
@@ -504,13 +464,9 @@
       }
 
       container.innerHTML = uniqueDates
-        .map(
-          (d) =>
-            `<button class="quick-date-chip" data-date="${d}">${d}</button>`
-        )
+        .map((d) => `<button class="quick-date-chip" data-date="${d}">${d}</button>`)
         .join('');
 
-      // 點日期 chip → 自動帶入搜尋並套用
       container.querySelectorAll('.quick-date-chip').forEach((btn) => {
         btn.addEventListener('click', () => {
           const date = btn.getAttribute('data-date') || '';
@@ -521,9 +477,6 @@
       });
     }
 
-    // -----------------------------
-    // 把訂單列表畫出來
-    // -----------------------------
     function renderOrders(orders) {
       const listEl = document.getElementById('orderList');
 
@@ -532,7 +485,7 @@
         return;
       }
 
-      listEl.innerHTML = ''; // 清空
+      listEl.innerHTML = '';
 
       orders.forEach((o) => {
         const status = o.status || '—';
@@ -547,7 +500,6 @@
         const card = document.createElement('div');
         card.className = 'order-card';
 
-        // summary 區塊（服務日期＋總金額）
         const summaryRow = document.createElement('div');
         summaryRow.className = 'order-summary-row';
 
@@ -581,7 +533,7 @@
 
         const expandIcon = document.createElement('div');
         expandIcon.className = 'expand-icon';
-        expandIcon.textContent = '⌵'; // 折疊箭頭
+        expandIcon.textContent = '⌵';
 
         summaryRow.appendChild(summaryLeft);
         summaryRow.appendChild(summaryRight);
@@ -589,7 +541,6 @@
 
         card.appendChild(summaryRow);
 
-        // 詳細內容區塊（展開後出現）
         const detail = document.createElement('div');
         detail.className = 'order-detail';
 
@@ -632,7 +583,6 @@
 
         card.appendChild(detail);
 
-        // 點整張卡片 → 展開 / 收合
         card.addEventListener('click', () => {
           const expanded = card.classList.toggle('expanded');
           expandIcon.textContent = expanded ? '⌃' : '⌵';
@@ -642,7 +592,6 @@
       });
     }
 
-    // 啟動！
     init();
   </script>
 </body>
