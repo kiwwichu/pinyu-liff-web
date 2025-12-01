@@ -255,30 +255,34 @@
     let gOrdersAll = []; // 目前查回來的訂單（之後還可以在前端篩）
 
     // -----------------------------
-   async function init() {
+async function init() {
   try {
-    await liff.init({ liffId: LIFF_ID });
 
     // -----------------------------
-    // 開發模式：如果不是在 LINE 裡 → 用 familyId 測試
+    // ★ Step 1: 嘗試初始化 LIFF
+    // -----------------------------
+    try {
+      await liff.init({ liffId: LIFF_ID });
+    } catch (e) {
+      console.log("⚠ LIFF 初始化失敗，瀏覽器模式啟動", e);
+    }
+
+    // -----------------------------
+    // ★ Step 2: 如果不是在 LINE → 使用 familyId 測試
     // -----------------------------
     if (!liff.isInClient()) {
-      console.log("⚠️ 開發模式：瀏覽器中啟動，用 familyId 測試");
-      gLineUserId = null; // 不用 lineUserId
-
-      // 🚧 你想測哪個家庭編號？直接填！
-      const testFamilyId = "103-022";
-
-      // 畫搜尋欄、版面
+      console.log("🌐 開發模式：瀏覽器中啟動");
       buildLayout();
 
-      // 用 familyId 打後端 API
+      // ⬇ 你要測試哪個家庭？自己改！
+      const testFamilyId = "103-022";
       await fetchAndRenderOrders_byFamily(testFamilyId);
+
       return;
     }
 
     // -----------------------------
-    // 正式模式（LINE 內）
+    // ★ Step 3: LINE 內正式版本
     // -----------------------------
     const decoded = liff.getDecodedIDToken();
     gLineUserId = decoded ? decoded.sub : '';
@@ -291,12 +295,14 @@
 
     buildLayout();
     await fetchAndRenderOrders();
+
   } catch (err) {
-    console.error(err);
+    console.error("❌ init 發生錯誤：", err);
     document.getElementById('root').innerText =
       '系統發生錯誤，請稍後再試或通知 pinyu～';
   }
 }
+
 
 
     // -----------------------------
