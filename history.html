@@ -14,7 +14,7 @@
     }
 
     .page {
-      max-width: 480px;           /* 手機寬度 */
+      max-width: 480px;
       margin: 0 auto;
       min-height: 100vh;
       display: flex;
@@ -38,7 +38,7 @@
       box-sizing: border-box;
     }
 
-    /* 上方日期搜尋列 */
+    /* 上方搜尋列：單一關鍵字搜尋（模糊搜尋日期） */
     .filter-bar {
       background: #ffffff;
       border-radius: 10px;
@@ -69,13 +69,17 @@
       flex: 1;
     }
 
-    .filter-input input[type="date"] {
+    .filter-input input[type="text"] {
       width: 100%;
       box-sizing: border-box;
       font-size: 12px;
       padding: 4px 6px;
       border-radius: 6px;
       border: 1px solid #ccc;
+    }
+
+    .filter-input input::placeholder {
+      color: #bbb;
     }
 
     .filter-actions {
@@ -101,6 +105,29 @@
     .btn-secondary {
       background-color: #e5e5e5;
       color: #444;
+    }
+
+    /* 自動產生的日期快速選單 */
+    .quick-dates {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .quick-date-chip {
+      border: none;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      background-color: #f2f7ff;
+      color: #336699;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .quick-date-chip:hover {
+      background-color: #e0efff;
     }
 
     /* 列表標題列（服務日期／總金額） */
@@ -232,6 +259,30 @@
       color: #888;
       text-align: center;
     }
+
+    /* 載入動畫 */
+    .loading {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      margin: 0 auto 6px;
+      border-radius: 50%;
+      border: 3px solid #ddd;
+      border-top-color: #48a2e8;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 
   <!-- LIFF SDK -->
@@ -245,134 +296,128 @@
   </div>
 
   <script>
-    // ★ 這裡放你的 LIFF ID
+    // ★ 這裡放你的 LIFF ID（已是你現在的）
     const LIFF_ID = '2008567730';
-    // ★ 這裡放你的 Apps Script Web App URL
+
+    // ★ 這裡放你的 Apps Script Web App URL（讀歷史訂單）
     const API_BASE =
       'https://script.google.com/macros/s/AKfycbwh2tNbj_NKcy3tyw94HUb6-C_cu3C4llX1qrEmmW075oPwJ3savE8qMrwMVeSpJtMFHA/exec';
 
-    let gLineUserId = '103-022';
-    let gOrdersAll = []; // 目前查回來的訂單（之後還可以在前端篩）
+    let gLineUserId = '';      // 從 LIFF 拿到的 userId
+    let gOrdersAll  = [];      // 全部歷史訂單（第一次載入後都存在這裡，之後搜尋都在前端處理）
 
     // -----------------------------
-async function init() {
-  try {
+    // 初始化流程
+    // -----------------------------
+    async function init() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
 
-    // -----------------------------
-    // ★ Step 1: 嘗試初始化 LIFF
-    // -----------------------------
-    try {
-      await liff.init({ liffId: LIFF_ID });
-    } catch (e) {
-      console.log("⚠ LIFF 初始化失敗，瀏覽器模式啟動", e);
+        // 若不是在 LINE 內打開，就給提示
+        if (!liff.isInClient()) {
+          document.getElementById('root').innerText =
+            '請從 LINE 官方帳號內的選單開啟此畫面唷～';
+          return;
+        }
+
+        const decoded = liff.getDecodedIDToken();
+        gLineUserId = decoded ? decoded.sub : '';
+
+        if (!gLineUserId) {
+          document.getElementById('root').innerText =
+            '無法取得您的帳號資訊，請通知 pinyu 幫忙查看設定～';
+          return;
+        }
+
+        // 先把版面骨架畫出來（搜尋列 + 空的列表）
+        buildLayout();
+
+        // 第一次載入：一次抓全部歷史訂單
+        await fetchOrdersFromServer();
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('root').innerText =
+          '系統發生錯誤，請稍後再試或通知 pinyu～';
+      }
     }
-
-    // -----------------------------
-    // ★ Step 2: 如果不是在 LINE → 使用 familyId 測試
-    // -----------------------------
-    if (!liff.isInClient()) {
-      console.log("🌐 開發模式：瀏覽器中啟動");
-      buildLayout();
-
-      // ⬇ 你要測試哪個家庭？自己改！
-      const testFamilyId = "103-022";
-      await fetchAndRenderOrders_byFamily(testFamilyId);
-
-      return;
-    }
-
-    // -----------------------------
-    // ★ Step 3: LINE 內正式版本
-    // -----------------------------
-    const decoded = liff.getDecodedIDToken();
-    gLineUserId = decoded ? decoded.sub : '';
-
-    if (!gLineUserId) {
-      document.getElementById('root').innerText =
-        '無法取得您的帳號資訊，請通知 pinyu 幫忙查看設定～';
-      return;
-    }
-
-    buildLayout();
-    await fetchAndRenderOrders();
-
-  } catch (err) {
-    console.error("❌ init 發生錯誤：", err);
-    document.getElementById('root').innerText =
-      '系統發生錯誤，請稍後再試或通知 pinyu～';
-  }
-}
-
-
 
     // -----------------------------
     // 畫出搜尋列 + 列表容器
     // -----------------------------
-function buildLayout() {
-  const root = document.getElementById('root');
-  root.innerHTML = `
-    <div class="filter-bar">
-      <div class="filter-row">
-        <span class="filter-label">服務日期</span>
-        <div class="filter-input">
-          <input type="date" id="datePick" />
+    function buildLayout() {
+      const root = document.getElementById('root');
+      root.innerHTML = `
+        <div class="filter-bar">
+          <div class="filter-row">
+            <span class="filter-label">搜尋日期</span>
+            <div class="filter-input">
+              <input
+                type="text"
+                id="keyword"
+                placeholder="例如：01、01/28、2025-01-28"
+              />
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-secondary" id="btnClear">清除</button>
+            <button class="btn btn-primary" id="btnSearch">搜尋</button>
+          </div>
+          <div class="quick-dates" id="quickDates"></div>
         </div>
-      </div>
-      <div class="filter-actions">
-        <button class="btn btn-secondary" id="btnClear">清除</button>
-        <button class="btn btn-primary" id="btnSearch">搜尋</button>
-      </div>
-    </div>
 
-    <div class="list-header">
-      <span>服務日期</span>
-      <span>總金額</span>
-    </div>
+        <div class="list-header">
+          <span>服務日期</span>
+          <span>總金額</span>
+        </div>
 
-    <div id="orderList">載入中...</div>
-  `;
+        <div id="orderList">載入中...</div>
+      `;
 
-  document.getElementById('btnSearch').addEventListener('click', () => {
-    filterOrdersBySingleDate();
-  });
+      // 綁定按鈕事件
+      document.getElementById('btnSearch').addEventListener('click', () => {
+        applyFilter();
+      });
 
-  document.getElementById('btnClear').addEventListener('click', () => {
-    document.getElementById('datePick').value = '';
-    renderOrders(gOrdersAll);
-  });
-}
+      document.getElementById('btnClear').addEventListener('click', () => {
+        const input = document.getElementById('keyword');
+        input.value = '';
+        renderOrders(gOrdersAll);
+      });
 
-function filterOrdersBySingleDate() {
-  const pick = document.getElementById('datePick').value;
-  if (!pick) {
-    renderOrders(gOrdersAll);
-    return;
-  }
-
-  const filtered = gOrdersAll.filter(o => {
-    const dateText = o.serviceDate || o.dateText || '';
-    return dateText.includes(pick);   // 例如：2025-01-20
-  });
-
-  renderOrders(filtered);
-}
+      // Enter 直接搜尋
+      document.getElementById('keyword').addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+          applyFilter();
+        }
+      });
+    }
 
     // -----------------------------
-    // 從 Apps Script 取得資料
+    // 顯示載入動畫
     // -----------------------------
-    async function fetchAndRenderOrders() {
+    function showLoading() {
       const listEl = document.getElementById('orderList');
-      listEl.innerText = '查詢中…';
+      if (!listEl) return;
 
-      const dateFrom = document.getElementById('dateFrom').value || '';
-      const dateTo   = document.getElementById('dateTo').value   || '';
+      listEl.innerHTML = `
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <div>查詢中，請稍候...</div>
+        </div>
+      `;
+    }
 
-      // 組 URL：action=history & lineUserId & (可選)日期
+    // -----------------------------
+    // 從 Apps Script 取得全部歷史訂單
+    // -----------------------------
+    async function fetchOrdersFromServer() {
+      const listEl = document.getElementById('orderList');
+      showLoading();
+
       const params = new URLSearchParams();
       params.set('action', 'history');
       params.set('lineUserId', gLineUserId);
-      if (dateFrom) params.set('dateFrom', dateFrom);
-      if (dateTo)   params.set('dateTo', dateTo);
 
       const url = `${API_BASE}?${params.toString()}`;
 
@@ -386,45 +431,89 @@ function filterOrdersBySingleDate() {
           return;
         }
 
-        const orders = data.orders || [];
-        gOrdersAll = orders;  // 先存起來
-        renderOrders(orders);
+        gOrdersAll = data.orders || [];
+
+        // 依照服務日期排序（若後端沒有排）
+        gOrdersAll.sort((a, b) => {
+          const da = (a.serviceDate || a.dateText || '').toString();
+          const db = (b.serviceDate || b.dateText || '').toString();
+          return da.localeCompare(db);
+        });
+
+        // 先畫全部
+        renderOrders(gOrdersAll);
+        // 再根據資料自動產生日期快速選單
+        buildQuickDates();
+
       } catch (err) {
         console.error(err);
         listEl.innerText = '查詢失敗，請稍後再試或通知 pinyu～';
       }
     }
-async function fetchAndRenderOrders_byFamily(familyId) {
-  const listEl = document.getElementById('orderList');
-  listEl.innerText = '查詢中…';
 
-  const dateFrom = document.getElementById('dateFrom').value || '';
-  const dateTo   = document.getElementById('dateTo').value   || '';
+    // -----------------------------
+    // 依目前輸入的關鍵字做「模糊搜尋」
+    // -----------------------------
+    function applyFilter() {
+      const input = document.getElementById('keyword');
+      const kwRaw = (input.value || '').trim();
 
-  const params = new URLSearchParams();
-  params.set('action', 'history');
-  params.set('familyId', familyId);
-  if (dateFrom) params.set('dateFrom', dateFrom);
-  if (dateTo)   params.set('dateTo', dateTo);
+      // 沒輸入就顯示全部
+      if (!kwRaw) {
+        renderOrders(gOrdersAll);
+        return;
+      }
 
-  const url = `${API_BASE}?${params.toString()}`;
+      // 把空白拿掉，讓「01  /  28」這種也能搜到
+      const kw = kwRaw.replace(/\s/g, '');
 
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    console.log('API 回傳：', data);
+      const filtered = gOrdersAll.filter((o) => {
+        const dateText = (o.serviceDate || o.dateText || '').toString();
+        const normalizedDate = dateText.replace(/\s/g, '');
+        // 只要日期文字有包含關鍵字就算（模糊搜尋）
+        return normalizedDate.includes(kw);
+      });
 
-    if (!data.success) {
-      listEl.innerText = '查詢失敗，請稍後再試或通知 pinyu～';
-      return;
+      renderOrders(filtered);
     }
 
-    renderOrders(data.orders || []);
-  } catch (err) {
-    console.error(err);
-    listEl.innerText = '查詢失敗，請稍後再試或通知 pinyu～';
-  }
-}
+    // -----------------------------
+    // 依照歷史訂單，自動產生「日期快速選單」
+    // -----------------------------
+    function buildQuickDates() {
+      const container = document.getElementById('quickDates');
+      if (!container) return;
+
+      const allDates = gOrdersAll
+        .map((o) => o.serviceDate || o.dateText || '')
+        .filter((d) => !!d);
+
+      // 取唯一日期
+      const uniqueDates = Array.from(new Set(allDates));
+      uniqueDates.sort();
+
+      if (uniqueDates.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = uniqueDates
+        .map(
+          (d) =>
+            `<button class="quick-date-chip" data-date="${d}">${d}</button>`
+        )
+        .join('');
+
+      // 點日期 chip → 自動帶入搜尋並套用
+      container.querySelectorAll('.quick-date-chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const date = btn.getAttribute('data-date') || '';
+          const input = document.getElementById('keyword');
+          input.value = date;
+          applyFilter();
+        });
+      });
+    }
 
     // -----------------------------
     // 把訂單列表畫出來
@@ -439,15 +528,15 @@ async function fetchAndRenderOrders_byFamily(familyId) {
 
       listEl.innerHTML = ''; // 清空
 
-      orders.forEach((o, index) => {
+      orders.forEach((o) => {
         const status = o.status || '—';
         const dateText = o.serviceDate || o.dateText || '—';
         const serviceText =
           o.serviceText ||
-          (o.services && o.services.join('、')) ||        
+          (o.services && o.services.join('、')) ||
           '—';
         const depositText = o.depositText || '';
-        const total = (o.total != null) ? o.total : '—';
+        const total = o.total != null ? o.total : '—';
 
         const card = document.createElement('div');
         card.className = 'order-card';
@@ -486,7 +575,7 @@ async function fetchAndRenderOrders_byFamily(familyId) {
 
         const expandIcon = document.createElement('div');
         expandIcon.className = 'expand-icon';
-        expandIcon.textContent = '⌵';   // 折疊箭頭
+        expandIcon.textContent = '⌵'; // 折疊箭頭
 
         summaryRow.appendChild(summaryLeft);
         summaryRow.appendChild(summaryRight);
@@ -498,36 +587,35 @@ async function fetchAndRenderOrders_byFamily(familyId) {
         const detail = document.createElement('div');
         detail.className = 'order-detail';
 
-        // 訂單編號
         const idRow = document.createElement('div');
         idRow.className = 'detail-row order-id';
-        idRow.textContent = '訂單編號：' + o.orderId;
-
-        // 狀態 & 服務內容
-        const statusRow = document.createElement('div');
-        statusRow.className = 'detail-row';
-        statusRow.innerHTML =
-          `<span class="detail-label">狀態</span>${status}`;
-
-        const serviceRow = document.createElement('div');
-        serviceRow.className = 'detail-row';
-        serviceRow.innerHTML =
-          `<span class="detail-label">服務內容</span>${serviceText}`;
+        idRow.textContent = '訂單編號：' + (o.orderId || '—');
 
         const dateRow = document.createElement('div');
         dateRow.className = 'detail-row';
         dateRow.innerHTML =
           `<span class="detail-label">服務日期</span>${dateText}`;
 
+        const serviceRow = document.createElement('div');
+        serviceRow.className = 'detail-row';
+        serviceRow.innerHTML =
+          `<span class="detail-label">服務內容</span>${serviceText}`;
+
         const totalRow = document.createElement('div');
         totalRow.className = 'detail-row';
         totalRow.innerHTML =
           `<span class="detail-label">總金額</span>${total} 元`;
 
+        const statusRow = document.createElement('div');
+        statusRow.className = 'detail-row';
+        statusRow.innerHTML =
+          `<span class="detail-label">狀態</span>${status}`;
+
         detail.appendChild(idRow);
         detail.appendChild(dateRow);
         detail.appendChild(serviceRow);
         detail.appendChild(totalRow);
+        detail.appendChild(statusRow);
 
         if (depositText) {
           const depRow = document.createElement('div');
