@@ -255,39 +255,49 @@
     let gOrdersAll = []; // 目前查回來的訂單（之後還可以在前端篩）
 
     // -----------------------------
-    // 初始化流程
+   async function init() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+
     // -----------------------------
-    async function init() {
-      try {
-        await liff.init({ liffId: LIFF_ID });
+    // 開發模式：如果不是在 LINE 裡 → 用 familyId 測試
+    // -----------------------------
+    if (!liff.isInClient()) {
+      console.log("⚠️ 開發模式：瀏覽器中啟動，用 familyId 測試");
+      gLineUserId = null; // 不用 lineUserId
 
-        // 若不是在 LINE 內打開，就給提示
-        if (!liff.isInClient()) {
-          document.getElementById('root').innerText =
-            '請從 LINE 官方帳號內的選單開啟此畫面唷～';
-          return;
-        }
+      // 🚧 你想測哪個家庭編號？直接填！
+      const testFamilyId = "103-022";
 
-        const decoded = liff.getDecodedIDToken();
-        gLineUserId = decoded ? decoded.sub : '';
+      // 畫搜尋欄、版面
+      buildLayout();
 
-        if (!gLineUserId) {
-          document.getElementById('root').innerText =
-            '無法取得您的帳號資訊，請通知 pinyu 幫忙查看設定～';
-          return;
-        }
-
-        // 先把版面骨架畫出來（搜尋列 + 空的列表）
-        buildLayout();
-
-        // 初次載入：不帶日期 → 顯示全部歷史訂單
-        await fetchAndRenderOrders();
-      } catch (err) {
-        console.error(err);
-        document.getElementById('root').innerText =
-          '系統發生錯誤，請稍後再試或通知 pinyu～';
-      }
+      // 用 familyId 打後端 API
+      await fetchAndRenderOrders_byFamily(testFamilyId);
+      return;
     }
+
+    // -----------------------------
+    // 正式模式（LINE 內）
+    // -----------------------------
+    const decoded = liff.getDecodedIDToken();
+    gLineUserId = decoded ? decoded.sub : '';
+
+    if (!gLineUserId) {
+      document.getElementById('root').innerText =
+        '無法取得您的帳號資訊，請通知 pinyu 幫忙查看設定～';
+      return;
+    }
+
+    buildLayout();
+    await fetchAndRenderOrders();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('root').innerText =
+      '系統發生錯誤，請稍後再試或通知 pinyu～';
+  }
+}
+
 
     // -----------------------------
     // 畫出搜尋列 + 列表容器
