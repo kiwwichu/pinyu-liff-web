@@ -539,7 +539,7 @@ function mapOrderStatus(rawStatus) {
   // 未付尾款
   if (s.includes('未付尾款')) {
     return {
-      label: '未付尾款',
+      label: '服務完成，待付尾款',
       className: 'status-orange'
     };
   }
@@ -547,7 +547,7 @@ function mapOrderStatus(rawStatus) {
   // 含「完成」就當作服務完成待付尾款
   if (s.includes('完成')) {
     return {
-      label: '服務完成，待付尾款',
+      label: '完成',
       className: 'status-green'
     };
   }
@@ -562,7 +562,7 @@ function mapOrderStatus(rawStatus) {
   // -----------------------------
   // 畫訂單列表
   // -----------------------------
- function renderOrders(orders) {
+function renderOrders(orders) { 
   const listEl = document.getElementById('orderList');
 
   if (!orders || orders.length === 0) {
@@ -573,7 +573,10 @@ function mapOrderStatus(rawStatus) {
   listEl.innerHTML = '';
 
   orders.forEach((o) => {
-    const rawStatus  = o.status || '';
+    // 原始狀態字串
+    const rawStatus = o.status || '';
+
+    // 轉成你想要的顯示文字＋顏色 class
     const { label: statusLabel, className: statusClass } = mapOrderStatus(rawStatus);
 
     const dateText   = o.serviceDate || o.dateText || '—';
@@ -583,7 +586,9 @@ function mapOrderStatus(rawStatus) {
     const tailText   = o.tailText || '';
     const items      = Array.isArray(o.items) ? o.items : [];
 
-    // === 卡片摘要 ===
+    // ======================================
+    //   卡片外觀（摘要）
+    // ======================================
     const card = document.createElement('div');
     card.className = 'order-card';
 
@@ -599,7 +604,12 @@ function mapOrderStatus(rawStatus) {
 
     const serviceSpan = document.createElement('div');
     serviceSpan.className = 'summary-service';
-    serviceSpan.textContent = `${items.length} 個服務項目`;
+    // 看起來比較直覺：若第一個項目有類別就顯示，否則顯示「N 個服務項目」
+    if (items.length > 0 && items[0].category) {
+      serviceSpan.textContent = items[0].category + (items.length > 1 ? ` 等 ${items.length} 個服務項目` : '');
+    } else {
+      serviceSpan.textContent = `${items.length} 個服務項目`;
+    }
 
     summaryLeft.appendChild(dateSpan);
     summaryLeft.appendChild(serviceSpan);
@@ -612,8 +622,8 @@ function mapOrderStatus(rawStatus) {
     totalSpan.textContent = total + ' 元';
 
     const statusSpan = document.createElement('div');
-    statusSpan.className = 'summary-status ' + statusClass;
-    statusSpan.textContent = statusLabel;
+    statusSpan.className = 'summary-status ' + statusClass; // 加顏色 class
+    statusSpan.textContent = statusLabel;                   // 顯示轉換後的文字
 
     summaryRight.appendChild(totalSpan);
     summaryRight.appendChild(statusSpan);
@@ -628,17 +638,50 @@ function mapOrderStatus(rawStatus) {
 
     card.appendChild(summaryRow);
 
-    // === 展開細節（略，照你原本 items 的寫法）===
+    // ======================================
+    //   展開後的細項區
+    // ======================================
     const detail = document.createElement('div');
     detail.className = 'order-detail';
 
+    // 訂單編號
     const idRow = document.createElement('div');
     idRow.className = 'detail-row order-id';
-    idRow.textContent = '訂單編號：' + orderId;
+    idRow.textContent = `訂單編號：${orderId}`;
     detail.appendChild(idRow);
 
-    // ...中間你原本每項服務的內容...
+    // =====================
+    // 每項服務列出來
+    // =====================
+    items.forEach((it, i) => {
+      let block = document.createElement('div');
+      block.style.margin = "6px 0";
+      block.style.padding = "6px 0";
+      block.style.borderTop = "1px dashed #ddd";
 
+      block.innerHTML = `
+        <div class="detail-row"><b>${i + 1}. 服務項目</b></div>
+        ${it.category   ? `<div class="detail-row"><span class="detail-label">服務類別</span>${it.category}</div>` : ""}
+        ${it.dateText  ? `<div class="detail-row"><span class="detail-label">服務日期</span>${it.dateText}</div>` : ""}
+        ${it.hours     ? `<div class="detail-row"><span class="detail-label">時數</span>${it.hours}</div>` : ""}
+        <div class="detail-row">
+          <span class="detail-label">單價</span>${it.unitPrice} 元 ／ 次數：${it.times}
+        </div>
+        ${it.travelUnit > 0 ?
+          `<div class="detail-row">
+             <span class="detail-label">車馬費</span>${it.travelUnit} 元／次（共 ${it.travelTotal} 元）
+           </div>`
+          : ""
+        }
+        <div class="detail-row"><span class="detail-label">小計</span>${it.lineTotal} 元</div>
+      `;
+
+      detail.appendChild(block);
+    });
+
+    // =====================
+    // 最後統計區
+    // =====================
     const totalRow = document.createElement('div');
     totalRow.className = 'detail-row';
     totalRow.innerHTML =
@@ -662,11 +705,12 @@ function mapOrderStatus(rawStatus) {
     const statusRow = document.createElement('div');
     statusRow.className = 'detail-row';
     statusRow.innerHTML =
-      `<span class="detail-label">狀態</span>${statusLabel}`;
+      `<span class="detail-label">狀態</span>${statusLabel}`;  // 這裡也用轉換後的文字
     detail.appendChild(statusRow);
 
     card.appendChild(detail);
 
+    // 展開/收合
     card.addEventListener('click', () => {
       const expanded = card.classList.toggle('expanded');
       expandIcon.textContent = expanded ? '⌃' : '⌵';
@@ -675,6 +719,7 @@ function mapOrderStatus(rawStatus) {
     listEl.appendChild(card);
   });
 }
+
 
   // 啟動！
   init();
