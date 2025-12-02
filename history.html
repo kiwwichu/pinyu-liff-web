@@ -311,7 +311,7 @@
   </div>
 
 <script>
-  const LIFF_ID = '2008600362-O4V8Aq10';  // 這裡等一下再確認一次
+  const LIFF_ID = '2008600362-O4V8Aq10';
   const API_BASE =
     'https://script.google.com/macros/s/AKfycbzTAFTsgL3wrFN89GTuI_HtH2jbMyMV48InQVQXIH93dGT9ZDUYb2KIgVD0_jextau9cA/exec';
 
@@ -323,24 +323,34 @@
   // -----------------------------
   async function init() {
     try {
-      // 1) 不是在 LINE 內，就不要跑 liff.init
+      // 1) 檢查是不是在 LINE 內
       if (!liff.isInClient()) {
         document.getElementById('root').innerText =
           '請從 LINE 官方帳號內的選單開啟此畫面唷～';
         return;
       }
 
-      // 2) 在 LINE 內才初始化 LIFF
+      // 2) 初始化 LIFF
       await liff.init({ liffId: LIFF_ID });
 
-      // 3) 優先用 getContext 拿 userId
-      const ctx = liff.getContext();
-      gLineUserId = ctx && ctx.userId ? ctx.userId : '';
+      // 3) 沒登入就要求登入（但在 LINE 內通常已經是登入狀態）
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
 
-      // 4) 備案：再試一次用 ID Token 拿
+      // 4) 優先用 getProfile 拿 userId（最穩）
+      const profile = await liff.getProfile();
+      gLineUserId = profile && profile.userId ? profile.userId : '';
+
+      // 5) 備用：再試 context / ID Token（多一層保險）
+      if (!gLineUserId) {
+        const ctx = liff.getContext();
+        if (ctx && ctx.userId) gLineUserId = ctx.userId;
+      }
       if (!gLineUserId) {
         const decoded = liff.getDecodedIDToken();
-        gLineUserId = decoded && decoded.sub ? decoded.sub : '';
+        if (decoded && decoded.sub) gLineUserId = decoded.sub;
       }
 
       if (!gLineUserId) {
@@ -349,7 +359,7 @@
         return;
       }
 
-      // 5) 畫畫面＋抓歷史訂單
+      // 6) 畫畫面 + 抓歷史訂單
       buildLayout();
       await fetchOrdersFromServer();
 
@@ -448,7 +458,8 @@
       if (!res.ok) {
         const text = await res.text();
         console.error('API HTTP Error:', res.status, text);
-        listEl.innerText = `查詢失敗（HTTP ${res.status}），請通知 pinyu 看後台～`;
+        listEl.innerText =
+          `查詢失敗（HTTP ${res.status}），請通知 pinyu 看後台～`;
         return;
       }
 
@@ -456,12 +467,14 @@
       console.log('API 回傳：', data);
 
       if (!data.success) {
-        listEl.innerText = '查詢失敗（success=false），請稍後再試或通知 pinyu～';
+        listEl.innerText =
+          '查詢失敗（success=false），請稍後再試或通知 pinyu～';
         return;
       }
 
       gOrdersAll = data.orders || [];
 
+      // 依日期排序（舊→新）
       gOrdersAll.sort((a, b) => {
         const da = (a.serviceDate || a.dateText || '').toString();
         const db = (b.serviceDate || b.dateText || '').toString();
@@ -474,12 +487,12 @@
     } catch (err) {
       console.error('fetchOrdersFromServer error:', err);
       const msg = (err && err.message) ? err.message : String(err);
-      listEl.innerText = '查詢失敗（例外）：' + msg + '，請稍後再試或通知 pinyu～';
+      listEl.innerText =
+        '查詢失敗（例外）：' + msg + '，請稍後再試或通知 pinyu～';
     }
   }
 
   // -----------------------------
-   // -----------------------------
   // 模糊搜尋
   // -----------------------------
   function applyFilter() {
@@ -494,7 +507,8 @@
     const kw = kwRaw.replace(/\s/g, '');
 
     const filtered = gOrdersAll.filter((o) => {
-      const dateText = (o.dateText || o.serviceDate || o.createdText || '').toString();
+      const dateText =
+        (o.dateText || o.serviceDate || o.createdText || '').toString();
       const normalizedDate = dateText.replace(/\s/g, '');
       return normalizedDate.includes(kw);
     });
@@ -536,7 +550,66 @@
   }
 
   // -----------------------------
-  // 畫訂單列表（用上面的 renderOrderCard）
+  // 狀態文字 / 顏色對應
+  // -----------------------------
+  function mapOrderStatus(rawStatus) {
+    const s = (rawStatus || '').trim();
+
+    // 這裡你可以依你表單的實際文字再微調
+    if (['完成', '已完成', '已服務', '結案'].includes(s)) {
+      return { label: s || '已完成', className: 'status-green' };
+    }
+    if (['未付尾款', '待付款', '尾款未付'].includes(s)) {
+      return { label: s || '未付尾款', className: 'status-orange' };
+    }
+    if (['待執行', '待服務', '已確認', '成立'].includes(s)) {
+      return { label: s || '待服務', className: 'status-blue' };
+    }
+
+    // 預設當成「待服務」
+    return { label: s || '處理中', className: 'status-blue' };
+  }
+
+  // -----------------------------
+  // 單一訂單卡片
+  // -----------------------------
+  function renderOrderCard(order) {
+    const dateText =
+      order.serviceDate || order.dateText || order.createdText || '';
+    const totalText =
+      order.total != null && order.total !== ''
+        ? `${order.total} 元`
+        : '-';
+    const serviceSummary =
+      order.serviceSummary || order.services || order.remark || '';
+    const orderId = order.orderId || order.id || '';
+    const statusInfo = mapOrderStatus(order.status || '');
+
+    return `
+      <div class="order-card">
+        <div class="order-summary-row">
+          <div class="order-summary-left">
+            <div class="summary-date">${dateText}</div>
+            <div class="summary-service">${serviceSummary}</div>
+            <div class="summary-status ${statusInfo.className}">
+              ${statusInfo.label}
+            </div>
+          </div>
+          <div class="order-summary-right">
+            <div class="summary-total">${totalText}</div>
+          </div>
+        </div>
+        ${
+          orderId
+            ? `<div class="order-id">訂單編號：${orderId}</div>`
+            : ''
+        }
+      </div>
+    `;
+  }
+
+  // -----------------------------
+  // 畫訂單列表
   // -----------------------------
   function renderOrders(orders) {
     const listEl = document.getElementById('orderList');
@@ -548,44 +621,12 @@
       return;
     }
 
-    // 先幫每一筆算出要顯示的狀態 label
-    const html = orders.map((order) => {
-      const statusInfo = mapOrderStatus(order.status || '');
-      order.cardTitle = statusInfo.label;
-
-      // 這三個顏色你之後想改可以自己調
-      if (statusInfo.className === 'status-green') {
-        order.cardColor = '#e1f5e4';
-      } else if (statusInfo.className === 'status-orange') {
-        order.cardColor = '#ffeacc';
-      } else {
-        order.cardColor = '#e4f1ff';
-      }
-
-      return renderOrderCard(order);
-    }).join('');
-
+    const html = orders.map((order) => renderOrderCard(order)).join('');
     listEl.innerHTML = html;
-
-    // 展開 / 收合明細
-    listEl.querySelectorAll('.order-toggle-row').forEach((rowEl) => {
-      rowEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const orderId = rowEl.getAttribute('data-order-id');
-        if (!orderId) return;
-
-        const detailEl = listEl.querySelector(`.order-card-detail[data-detail-for="${orderId}"]`);
-        if (!detailEl) return;
-
-        const isOpen = detailEl.style.display === 'block';
-        detailEl.style.display = isOpen ? 'none' : 'block';
-
-        const arrow = rowEl.querySelector('.toggle-arrow');
-        if (arrow) arrow.textContent = isOpen ? '⌄' : '⌃';
-      });
-    });
   }
 
+  // -----------------------------
   // 啟動！
+  // -----------------------------
   init();
 </script>
