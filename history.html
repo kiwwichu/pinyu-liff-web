@@ -203,11 +203,26 @@
       color: #333;
     }
 
-    .summary-status {
-      font-size: 11px;
-      color: #48a2e8;
-      margin-top: 2px;
-    }
+.summary-status {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+/* 待服務：藍色 */
+.summary-status.status-blue {
+  color: #48a2e8;
+}
+
+/* 未付尾款：橘色（你之後要換別的顏色也可以改這裡） */
+.summary-status.status-orange {
+  color: #d97b00;
+}
+
+/* 完成：綠色 */
+.summary-status.status-green {
+  color: #3c8b4c;
+}
+
 
     .expand-icon {
       font-size: 16px;
@@ -518,100 +533,149 @@
       });
     });
   }
+function mapOrderStatus(rawStatus) {
+  const s = rawStatus || '';
+
+  // 未付尾款
+  if (s.includes('未付尾款')) {
+    return {
+      label: '未付尾款',
+      className: 'status-orange'
+    };
+  }
+
+  // 含「完成」就當作服務完成待付尾款
+  if (s.includes('完成')) {
+    return {
+      label: '服務完成，待付尾款',
+      className: 'status-green'
+    };
+  }
+
+  // 其他（含 常客／待執行／已確認…）都視為「訂單已成立，待服務」
+  return {
+    label: '訂單已成立，待服務',
+    className: 'status-blue'
+  };
+}
 
   // -----------------------------
   // 畫訂單列表
   // -----------------------------
-  function renderOrders(orders) {
-    const listEl = document.getElementById('orderList');
+ function renderOrders(orders) {
+  const listEl = document.getElementById('orderList');
 
-    if (!orders || orders.length === 0) {
-      listEl.innerText = '目前查不到符合條件的歷史訂單唷～';
-      return;
+  if (!orders || orders.length === 0) {
+    listEl.innerText = '目前查不到符合條件的歷史訂單唷～';
+    return;
+  }
+
+  listEl.innerHTML = '';
+
+  orders.forEach((o) => {
+    const rawStatus  = o.status || '';
+    const { label: statusLabel, className: statusClass } = mapOrderStatus(rawStatus);
+
+    const dateText   = o.serviceDate || o.dateText || '—';
+    const total      = (o.totalSum != null) ? o.totalSum : (o.total || '—');
+    const orderId    = o.orderId || '—';
+    const depText    = o.depText || '';
+    const tailText   = o.tailText || '';
+    const items      = Array.isArray(o.items) ? o.items : [];
+
+    // === 卡片摘要 ===
+    const card = document.createElement('div');
+    card.className = 'order-card';
+
+    const summaryRow = document.createElement('div');
+    summaryRow.className = 'order-summary-row';
+
+    const summaryLeft = document.createElement('div');
+    summaryLeft.className = 'order-summary-left';
+
+    const dateSpan = document.createElement('div');
+    dateSpan.className = 'summary-date';
+    dateSpan.textContent = dateText;
+
+    const serviceSpan = document.createElement('div');
+    serviceSpan.className = 'summary-service';
+    serviceSpan.textContent = `${items.length} 個服務項目`;
+
+    summaryLeft.appendChild(dateSpan);
+    summaryLeft.appendChild(serviceSpan);
+
+    const summaryRight = document.createElement('div');
+    summaryRight.className = 'order-summary-right';
+
+    const totalSpan = document.createElement('div');
+    totalSpan.className = 'summary-total';
+    totalSpan.textContent = total + ' 元';
+
+    const statusSpan = document.createElement('div');
+    statusSpan.className = 'summary-status ' + statusClass;
+    statusSpan.textContent = statusLabel;
+
+    summaryRight.appendChild(totalSpan);
+    summaryRight.appendChild(statusSpan);
+
+    const expandIcon = document.createElement('div');
+    expandIcon.className = 'expand-icon';
+    expandIcon.textContent = '⌵';
+
+    summaryRow.appendChild(summaryLeft);
+    summaryRow.appendChild(summaryRight);
+    summaryRow.appendChild(expandIcon);
+
+    card.appendChild(summaryRow);
+
+    // === 展開細節（略，照你原本 items 的寫法）===
+    const detail = document.createElement('div');
+    detail.className = 'order-detail';
+
+    const idRow = document.createElement('div');
+    idRow.className = 'detail-row order-id';
+    idRow.textContent = '訂單編號：' + orderId;
+    detail.appendChild(idRow);
+
+    // ...中間你原本每項服務的內容...
+
+    const totalRow = document.createElement('div');
+    totalRow.className = 'detail-row';
+    totalRow.innerHTML =
+      `<span class="detail-label">本次訂單總金額</span>${total} 元`;
+    detail.appendChild(totalRow);
+
+    if (depText) {
+      const depRow = document.createElement('div');
+      depRow.className = 'detail-row deposit-text';
+      depRow.textContent = depText;
+      detail.appendChild(depRow);
     }
 
-    listEl.innerHTML = '';
+    if (tailText) {
+      const tailRow = document.createElement('div');
+      tailRow.className = 'detail-row deposit-text';
+      tailRow.textContent = tailText;
+      detail.appendChild(tailRow);
+    }
 
-    orders.forEach((o) => {
-      const status = o.status || '—';
-      const dateText = o.serviceDate || o.dateText || '—';
-      const serviceText =
-        o.serviceText ||
-        (o.services && o.services.join('、')) ||
-        '—';
-      const depositText = o.depositText || '';
-      const total = o.total != null ? o.total : '—';
+    const statusRow = document.createElement('div');
+    statusRow.className = 'detail-row';
+    statusRow.innerHTML =
+      `<span class="detail-label">狀態</span>${statusLabel}`;
+    detail.appendChild(statusRow);
 
-      const card = document.createElement('div');
-      card.className = 'order-card';
+    card.appendChild(detail);
 
-      const summaryRow = document.createElement('div');
-      summaryRow.className = 'order-summary-row';
+    card.addEventListener('click', () => {
+      const expanded = card.classList.toggle('expanded');
+      expandIcon.textContent = expanded ? '⌃' : '⌵';
+    });
 
-      const summaryLeft = document.createElement('div');
-      summaryLeft.className = 'order-summary-left';
+    listEl.appendChild(card);
+  });
+}
 
-      const dateSpan = document.createElement('div');
-      dateSpan.className = 'summary-date';
-      dateSpan.textContent = dateText;
-
-      const serviceSpan = document.createElement('div');
-      serviceSpan.className = 'summary-service';
-      serviceSpan.textContent = serviceText;
-
-      summaryLeft.appendChild(dateSpan);
-      summaryLeft.appendChild(serviceSpan);
-
-      const summaryRight = document.createElement('div');
-      summaryRight.className = 'order-summary-right';
-
-      const totalSpan = document.createElement('div');
-      totalSpan.className = 'summary-total';
-      totalSpan.textContent = total + ' 元';
-
-      const statusSpan = document.createElement('div');
-      statusSpan.className = 'summary-status';
-      statusSpan.textContent = status;
-
-      summaryRight.appendChild(totalSpan);
-      summaryRight.appendChild(statusSpan);
-
-      const expandIcon = document.createElement('div');
-      expandIcon.className = 'expand-icon';
-      expandIcon.textContent = '⌵';
-
-      summaryRow.appendChild(summaryLeft);
-      summaryRow.appendChild(summaryRight);
-      summaryRow.appendChild(expandIcon);
-
-      card.appendChild(summaryRow);
-
-      const detail = document.createElement('div');
-      detail.className = 'order-detail';
-
-      const idRow = document.createElement('div');
-      idRow.className = 'detail-row order-id';
-      idRow.textContent = '訂單編號：' + (o.orderId || '—');
-
-      const dateRow = document.createElement('div');
-      dateRow.className = 'detail-row';
-      dateRow.innerHTML =
-        `<span class="detail-label">服務日期</span>${dateText}`;
-
-      const serviceRow = document.createElement('div');
-      serviceRow.className = 'detail-row';
-      serviceRow.innerHTML =
-        `<span class="detail-label">服務內容</span>${serviceText}`;
-
-      const totalRow = document.createElement('div');
-      totalRow.className = 'detail-row';
-      totalRow.innerHTML =
-        `<span class="detail-label">總金額</span>${total} 元`;
-
-      const statusRow = document.createElement('div');
-      statusRow.className = 'detail-row';
-      statusRow.innerHTML =
-        `<span class="detail-label">狀態</span>${status}`;
 
       detail.appendChild(idRow);
       detail.appendChild(dateRow);
