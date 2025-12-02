@@ -676,31 +676,6 @@ function mapOrderStatus(rawStatus) {
   });
 }
 
-
-      detail.appendChild(idRow);
-      detail.appendChild(dateRow);
-      detail.appendChild(serviceRow);
-      detail.appendChild(totalRow);
-      detail.appendChild(statusRow);
-
-      if (depositText) {
-        const depRow = document.createElement('div');
-        depRow.className = 'detail-row deposit-text';
-        depRow.textContent = depositText;
-        detail.appendChild(depRow);
-      }
-
-      card.appendChild(detail);
-
-      card.addEventListener('click', () => {
-        const expanded = card.classList.toggle('expanded');
-        expandIcon.textContent = expanded ? '⌃' : '⌵';
-      });
-
-      listEl.appendChild(card);
-    });
-  }
-
   // 啟動！
   init();
 </script>
