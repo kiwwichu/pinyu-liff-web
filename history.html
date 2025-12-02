@@ -493,7 +493,7 @@
     const kw = kwRaw.replace(/\s/g, '');
 
     const filtered = gOrdersAll.filter((o) => {
-      const dateText = (o.serviceDate || o.dateText || '').toString();
+      const dateText = order.dateText || order.serviceDate || order.createdText || '';
       const normalizedDate = dateText.replace(/\s/g, '');
       return normalizedDate.includes(kw);
     });
@@ -562,122 +562,87 @@ function mapOrderStatus(rawStatus) {
   // -----------------------------
   // 畫訂單列表
   // -----------------------------
-function renderOrders(orders) { 
-  const listEl = document.getElementById('orderList');
+function renderOrderCard(order) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const itemCount = items.length;
 
-  if (!orders || orders.length === 0) {
-    listEl.innerText = '目前查不到符合條件的歷史訂單唷～';
-    return;
-  }
+  // 顯示上面的日期：如果有 serviceDate 就用它，沒有再用 createdText（你可以之後再微調）
+  const dateText = order.dateText || order.serviceDate || '';
 
-  listEl.innerHTML = '';
+  // 每一個明細列的 HTML
+  const itemsHtml = itemCount === 0
+    ? `<div class="order-item-row empty">目前沒有明細資料</div>`
+    : items.map(item => {
+        return `
+          <div class="order-item-row">
+            <div class="order-item-main">
+              <div class="order-item-title">
+                ${item.index}. ${item.category || '未填服務類別'}
+              </div>
+              <div class="order-item-sub">
+                ${item.dateText ? `服務日期：${item.dateText}｜` : ''}
+                ${item.hours ? `時數：${item.hours}｜` : ''}
+                次數：${item.times || 0}
+              </div>
+              <div class="order-item-sub">
+                單價：${item.unitPrice || 0} 元
+                ${item.travelUnit && item.travelUnit > 0
+                  ? `｜車馬費：${item.travelUnit} 元／次（共 ${item.travelTotal || 0} 元）`
+                  : ''}
+                ${item.tip && item.tip > 0 ? `｜小費：${item.tip} 元` : ''}
+              </div>
+            </div>
+            <div class="order-item-amount">
+              小計<br>${item.lineTotal || 0} 元
+            </div>
+          </div>
+        `;
+      }).join('');
 
-  orders.forEach((o) => {
-    // 原始狀態字串
-    const rawStatus = o.status || '';
-
-    // 轉成你想要的顯示文字＋顏色 class
-    const { label: statusLabel, className: statusClass } = mapOrderStatus(rawStatus);
-
-    const dateText   = o.serviceDate || o.dateText || '—';
-    const total      = (o.totalSum != null) ? o.totalSum : (o.total || '—');
-    const orderId    = o.orderId || '—';
-    const depText    = o.depText || '';
-    const tailText   = o.tailText || '';
-    const items      = Array.isArray(o.items) ? o.items : [];
-
-    // ======================================
-    //   卡片外觀（摘要）
-    // ======================================
-    const card = document.createElement('div');
-    card.className = 'order-card';
-
-    const summaryRow = document.createElement('div');
-    summaryRow.className = 'order-summary-row';
-
-    const summaryLeft = document.createElement('div');
-    summaryLeft.className = 'order-summary-left';
-
-    const dateSpan = document.createElement('div');
-    dateSpan.className = 'summary-date';
-    dateSpan.textContent = dateText;
-
-    const serviceSpan = document.createElement('div');
-    serviceSpan.className = 'summary-service';
-    // 看起來比較直覺：若第一個項目有類別就顯示，否則顯示「N 個服務項目」
-    if (items.length > 0 && items[0].category) {
-      serviceSpan.textContent = items[0].category + (items.length > 1 ? ` 等 ${items.length} 個服務項目` : '');
-    } else {
-      serviceSpan.textContent = `${items.length} 個服務項目`;
-    }
-
-    summaryLeft.appendChild(dateSpan);
-    summaryLeft.appendChild(serviceSpan);
-
-    const summaryRight = document.createElement('div');
-    summaryRight.className = 'order-summary-right';
-
-    const totalSpan = document.createElement('div');
-    totalSpan.className = 'summary-total';
-    totalSpan.textContent = total + ' 元';
-
-    const statusSpan = document.createElement('div');
-    statusSpan.className = 'summary-status ' + statusClass; // 加顏色 class
-    statusSpan.textContent = statusLabel;                   // 顯示轉換後的文字
-
-    summaryRight.appendChild(totalSpan);
-    summaryRight.appendChild(statusSpan);
-
-    const expandIcon = document.createElement('div');
-    expandIcon.className = 'expand-icon';
-    expandIcon.textContent = '⌵';
-
-    summaryRow.appendChild(summaryLeft);
-    summaryRow.appendChild(summaryRight);
-    summaryRow.appendChild(expandIcon);
-
-    card.appendChild(summaryRow);
-
-    // ======================================
-    //   展開後的細項區
-    // ======================================
-    const detail = document.createElement('div');
-    detail.className = 'order-detail';
-
-    // 訂單編號
-    const idRow = document.createElement('div');
-    idRow.className = 'detail-row order-id';
-    idRow.textContent = `訂單編號：${orderId}`;
-    detail.appendChild(idRow);
-
-    // =====================
-    // 每項服務列出來
-    // =====================
-    items.forEach((it, i) => {
-      let block = document.createElement('div');
-      block.style.margin = "6px 0";
-      block.style.padding = "6px 0";
-      block.style.borderTop = "1px dashed #ddd";
-
-      block.innerHTML = `
-        <div class="detail-row"><b>${i + 1}. 服務項目</b></div>
-        ${it.category   ? `<div class="detail-row"><span class="detail-label">服務類別</span>${it.category}</div>` : ""}
-        ${it.dateText  ? `<div class="detail-row"><span class="detail-label">服務日期</span>${it.dateText}</div>` : ""}
-        ${it.hours     ? `<div class="detail-row"><span class="detail-label">時數</span>${it.hours}</div>` : ""}
-        <div class="detail-row">
-          <span class="detail-label">單價</span>${it.unitPrice} 元 ／ 次數：${it.times}
+  // 卡片本體（含 summary＋展開內容）
+  return `
+    <div class="order-card">
+      <div class="order-card-main">
+        <div class="order-card-header">
+          <div class="order-card-date">${dateText || '—'}</div>
+          <div class="order-card-amount">${order.total || 0} 元</div>
         </div>
-        ${it.travelUnit > 0 ?
-          `<div class="detail-row">
-             <span class="detail-label">車馬費</span>${it.travelUnit} 元／次（共 ${it.travelTotal} 元）
-           </div>`
-          : ""
-        }
-        <div class="detail-row"><span class="detail-label">小計</span>${it.lineTotal} 元</div>
-      `;
 
-      detail.appendChild(block);
-    });
+        <div class="order-card-sub">
+          <span>${itemCount} 個服務項目</span>
+          ${order.serviceText ? `<span>｜${order.serviceText}</span>` : ''}
+        </div>
+
+        <div class="order-card-sub">
+          <span class="order-status-tag" style="background:${order.cardColor || '#ccc'}">
+            ${order.cardTitle || order.status || '—'}
+          </span>
+        </div>
+
+        <div class="order-toggle-row" data-order-id="${order.orderId}">
+          <span class="toggle-text">訂單明細</span>
+          <span class="toggle-arrow">⌄</span>
+        </div>
+      </div>
+
+      <div class="order-card-detail" data-detail-for="${order.orderId}" style="display:none;">
+        <div class="order-detail-body">
+          ${itemsHtml}
+        </div>
+
+        <div class="order-detail-summary">
+          <div>${order.depositText || ''}</div>
+          <div>本次訂單總金額：<b>${order.total || 0} 元</b></div>
+        </div>
+
+        <div class="order-detail-footer">
+          訂單編號：${order.orderId}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 
     // =====================
     // 最後統計區
