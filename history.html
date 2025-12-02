@@ -164,7 +164,7 @@
     }
 
     .order-card:hover {
-      background-color: #f9fbff;
+      filter: brightness(0.98);
     }
 
     .order-summary-row {
@@ -203,26 +203,25 @@
       color: #333;
     }
 
-.summary-status {
-  font-size: 11px;
-  margin-top: 2px;
-}
+    .summary-status {
+      font-size: 11px;
+      margin-top: 2px;
+    }
 
-/* 待服務：藍色 */
-.summary-status.status-blue {
-  color: #48a2e8;
-}
+    /* 待服務：藍色 */
+    .summary-status.status-blue {
+      color: #48a2e8;
+    }
 
-/* 未付尾款：橘色（你之後要換別的顏色也可以改這裡） */
-.summary-status.status-orange {
-  color: #d97b00;
-}
+    /* 未付尾款：橘色 */
+    .summary-status.status-orange {
+      color: #d97b00;
+    }
 
-/* 完成：綠色 */
-.summary-status.status-green {
-  color: #3c8b4c;
-}
-
+    /* 完成：綠色 */
+    .summary-status.status-green {
+      color: #3c8b4c;
+    }
 
     .expand-icon {
       font-size: 16px;
@@ -311,12 +310,41 @@
   </div>
 
 <script>
-  const LIFF_ID = '2008600362-O4V8Aq10';  // 這裡等一下再確認一次
+  const LIFF_ID = '2008600362-O4V8Aq10';
   const API_BASE =
     'https://script.google.com/macros/s/AKfycbzTAFTsgL3wrFN89GTuI_HtH2jbMyMV48InQVQXIH93dGT9ZDUYb2KIgVD0_jextau9cA/exec';
 
   let gLineUserId = '';
   let gOrdersAll  = [];
+
+  // -----------------------------
+  // 狀態 → 顯示文字 + 顏色 class
+  // -----------------------------
+  function mapOrderStatus(rawStatus) {
+    const s = rawStatus || '';
+
+    // 未付尾款
+    if (s.includes('未付尾款')) {
+      return {
+        label: '服務完成，待付尾款',
+        className: 'status-orange'
+      };
+    }
+
+    // 含「完成」就當作服務完成
+    if (s.includes('完成')) {
+      return {
+        label: '已完成',
+        className: 'status-green'
+      };
+    }
+
+    // 其他（含 常客／待執行／已確認…）都視為「訂單已成立，待服務」
+    return {
+      label: '訂單已成立，待服務',
+      className: 'status-blue'
+    };
+  }
 
   // -----------------------------
   // 初始化
@@ -462,6 +490,7 @@
 
       gOrdersAll = data.orders || [];
 
+      // 依服務日期排序（字串）
       gOrdersAll.sort((a, b) => {
         const da = (a.serviceDate || a.dateText || '').toString();
         const db = (b.serviceDate || b.dateText || '').toString();
@@ -479,7 +508,6 @@
   }
 
   // -----------------------------
-   // -----------------------------
   // 模糊搜尋
   // -----------------------------
   function applyFilter() {
@@ -534,58 +562,9 @@
       });
     });
   }
-  
-function mapOrderStatus(status) {
-  const map = {
-    "待執行": { label: "已成立", className: "status-blue" },
-    "常客": { label: "已確認", className: "status-blue" },
-    "未付尾款": { label: "服務完成", className: "status-orange" },
-    "完成": { label: "已完成", className: "status-green" },
-  };
-
-  return map[status] || { label: status, className: "status-blue" };
-}
 
   // -----------------------------
-  function renderOrderCard(o) {
-  const statusInfo = mapOrderStatus(o.status || '');
-
-  const itemsHtml = (o.items || [])
-    .map(it => {
-      return `
-        <div class="detail-row">
-          <span class="detail-label">•</span>
-          ${it.serviceName || it.name || ''}　
-          x${it.count || it.times || 1}
-          （$${it.price || 0}）
-        </div>
-      `;
-    })
-    .join('');
-
-  return `
-    <div class="order-card" style="background:${o.cardColor || '#e4f1ff'};">
-      <div class="order-summary-row order-toggle-row" data-order-id="${o.orderId}">
-        <div class="order-summary-left">
-          <div class="summary-date">${o.serviceDate || o.dateText || ''}</div>
-          <div class="summary-service">${statusInfo.label || ''}</div>
-        </div>
-        <div class="order-summary-right">
-          <div class="summary-total">$${o.total || 0}</div>
-          <div class="summary-status ${statusInfo.className}"></div>
-        </div>
-        <span class="expand-icon toggle-arrow">⌄</span>
-      </div>
-
-      <div class="order-card-detail" data-detail-for="${o.orderId}" style="display:none;">
-        ${itemsHtml}
-        <div class="order-id">訂單編號：${o.orderId}</div>
-      </div>
-    </div>
-  `;
-}
-
-  // 畫訂單列表（用上面的 renderOrderCard）
+  // 畫訂單列表（詳細版 + 顏色）
   // -----------------------------
   function renderOrders(orders) {
     const listEl = document.getElementById('orderList');
@@ -597,44 +576,152 @@ function mapOrderStatus(status) {
       return;
     }
 
-    // 先幫每一筆算出要顯示的狀態 label
-    const html = orders.map((order) => {
-      const statusInfo = mapOrderStatus(order.status || '');
-      order.cardTitle = statusInfo.label;
+    listEl.innerHTML = '';
 
-      // 這三個顏色你之後想改可以自己調
-      if (statusInfo.className === 'status-green') {
-        order.cardColor = '#e1f5e4';
-      } else if (statusInfo.className === 'status-orange') {
-        order.cardColor = '#ffeacc';
+    orders.forEach((o) => {
+      const rawStatus = o.status || '';
+      const { label: statusLabel, className: statusClass } = mapOrderStatus(rawStatus);
+
+      const dateText = o.serviceDate || o.dateText || '—';
+      const total    = (o.totalSum != null) ? o.totalSum : (o.total || '—');
+      const orderId  = o.orderId || '—';
+      const depText  = o.depText || '';
+      const tailText = o.tailText || '';
+      const items    = Array.isArray(o.items) ? o.items : [];
+
+      // 卡片
+      const card = document.createElement('div');
+      card.className = 'order-card';
+      
+      // ====== 摘要列 ======
+      const summaryRow   = document.createElement('div');
+      summaryRow.className = 'order-summary-row';
+
+      const summaryLeft  = document.createElement('div');
+      summaryLeft.className = 'order-summary-left';
+
+      const dateSpan     = document.createElement('div');
+      dateSpan.className = 'summary-date';
+      dateSpan.textContent = dateText;
+
+      const serviceSpan  = document.createElement('div');
+      serviceSpan.className = 'summary-service';
+
+      if (items.length > 0 && items[0].category) {
+        // 用第一個服務類別 + 數量
+        serviceSpan.textContent =
+          items[0].category + (items.length > 1 ? ` 等 ${items.length} 個服務項目` : '');
       } else {
-        order.cardColor = '#e4f1ff';
+        serviceSpan.textContent = `${items.length} 個服務項目`;
       }
 
-      return renderOrderCard(order);
-    }).join('');
+      summaryLeft.appendChild(dateSpan);
+      summaryLeft.appendChild(serviceSpan);
 
-    listEl.innerHTML = html;
+      const summaryRight = document.createElement('div');
+      summaryRight.className = 'order-summary-right';
 
-    // 展開 / 收合明細
-    listEl.querySelectorAll('.order-toggle-row').forEach((rowEl) => {
-      rowEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const orderId = rowEl.getAttribute('data-order-id');
-        if (!orderId) return;
+      const totalSpan    = document.createElement('div');
+      totalSpan.className = 'summary-total';
+      totalSpan.textContent = total + ' 元';
 
-        const detailEl = listEl.querySelector(`.order-card-detail[data-detail-for="${orderId}"]`);
-        if (!detailEl) return;
+      const statusSpan   = document.createElement('div');
+      statusSpan.className = 'summary-status ' + statusClass;
+      statusSpan.textContent = statusLabel;
 
-        const isOpen = detailEl.style.display === 'block';
-        detailEl.style.display = isOpen ? 'none' : 'block';
+      summaryRight.appendChild(totalSpan);
+      summaryRight.appendChild(statusSpan);
 
-        const arrow = rowEl.querySelector('.toggle-arrow');
-        if (arrow) arrow.textContent = isOpen ? '⌄' : '⌃';
+      const expandIcon   = document.createElement('div');
+      expandIcon.className = 'expand-icon';
+      expandIcon.textContent = '⌵';
+
+      summaryRow.appendChild(summaryLeft);
+      summaryRow.appendChild(summaryRight);
+      summaryRow.appendChild(expandIcon);
+
+      card.appendChild(summaryRow);
+
+      // ====== 細項區 ======
+      const detail = document.createElement('div');
+      detail.className = 'order-detail';
+
+      // 訂單編號
+      const idRow = document.createElement('div');
+      idRow.className = 'detail-row order-id';
+      idRow.textContent = `訂單編號：${orderId}`;
+      detail.appendChild(idRow);
+
+      // 每一個服務項目
+      items.forEach((it, i) => {
+        const block = document.createElement('div');
+        block.style.margin = '6px 0';
+        block.style.padding = '6px 0';
+        block.style.borderTop = '1px dashed #ddd';
+
+        block.innerHTML = `
+          <div class="detail-row"><b>${i + 1}. 服務項目</b></div>
+          ${it.category   ? `<div class="detail-row"><span class="detail-label">服務類別</span>${it.category}</div>` : ''}
+          ${it.dateText  ? `<div class="detail-row"><span class="detail-label">服務日期</span>${it.dateText}</div>` : ''}
+          ${it.hours     ? `<div class="detail-row"><span class="detail-label">時數</span>${it.hours}</div>` : ''}
+          <div class="detail-row">
+            <span class="detail-label">單價</span>${it.unitPrice} 元 ／ 次數：${it.times}
+          </div>
+          ${it.travelUnit > 0
+            ? `<div class="detail-row">
+                 <span class="detail-label">車馬費</span>${it.travelUnit} 元／次（共 ${it.travelTotal} 元）
+               </div>`
+            : ''
+          }
+          <div class="detail-row"><span class="detail-label">小計</span>${it.lineTotal} 元</div>
+        `;
+
+        detail.appendChild(block);
       });
+
+      // 總金額
+      const totalRow = document.createElement('div');
+      totalRow.className = 'detail-row';
+      totalRow.innerHTML =
+        `<span class="detail-label">本次訂單總金額</span>${total} 元`;
+      detail.appendChild(totalRow);
+
+      // 訂金 & 尾款文字
+      if (depText) {
+        const depRow = document.createElement('div');
+        depRow.className = 'detail-row deposit-text';
+        depRow.textContent = depText;
+        detail.appendChild(depRow);
+      }
+
+      if (tailText) {
+        const tailRow = document.createElement('div');
+        tailRow.className = 'detail-row deposit-text';
+        tailRow.textContent = tailText;
+        detail.appendChild(tailRow);
+      }
+
+      // 狀態
+      const statusRow = document.createElement('div');
+      statusRow.className = 'detail-row';
+      statusRow.innerHTML =
+        `<span class="detail-label">狀態</span>${statusLabel}`;
+      detail.appendChild(statusRow);
+
+      card.appendChild(detail);
+
+      // 展開 / 收合
+      card.addEventListener('click', () => {
+        const expanded = card.classList.toggle('expanded');
+        expandIcon.textContent = expanded ? '⌃' : '⌵';
+      });
+
+      listEl.appendChild(card);
     });
   }
 
   // 啟動！
   init();
 </script>
+</body>
+</html>
