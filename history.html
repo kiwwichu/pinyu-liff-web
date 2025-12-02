@@ -534,8 +534,57 @@
       });
     });
   }
+  
+function mapOrderStatus(status) {
+  const map = {
+    "待執行": { label: "已成立", className: "status-blue" },
+    "常客": { label: "已確認", className: "status-blue" },
+    "未付尾款": { label: "服務完成", className: "status-orange" },
+    "完成": { label: "已完成", className: "status-green" },
+  };
+
+  return map[status] || { label: status, className: "status-blue" };
+}
 
   // -----------------------------
+  function renderOrderCard(o) {
+  const statusInfo = mapOrderStatus(o.status || '');
+
+  const itemsHtml = (o.items || [])
+    .map(it => {
+      return `
+        <div class="detail-row">
+          <span class="detail-label">•</span>
+          ${it.serviceName || it.name || ''}　
+          x${it.count || it.times || 1}
+          （$${it.price || 0}）
+        </div>
+      `;
+    })
+    .join('');
+
+  return `
+    <div class="order-card" style="background:${o.cardColor || '#e4f1ff'};">
+      <div class="order-summary-row order-toggle-row" data-order-id="${o.orderId}">
+        <div class="order-summary-left">
+          <div class="summary-date">${o.serviceDate || o.dateText || ''}</div>
+          <div class="summary-service">${statusInfo.label || ''}</div>
+        </div>
+        <div class="order-summary-right">
+          <div class="summary-total">$${o.total || 0}</div>
+          <div class="summary-status ${statusInfo.className}"></div>
+        </div>
+        <span class="expand-icon toggle-arrow">⌄</span>
+      </div>
+
+      <div class="order-card-detail" data-detail-for="${o.orderId}" style="display:none;">
+        ${itemsHtml}
+        <div class="order-id">訂單編號：${o.orderId}</div>
+      </div>
+    </div>
+  `;
+}
+
   // 畫訂單列表（用上面的 renderOrderCard）
   // -----------------------------
   function renderOrders(orders) {
