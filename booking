@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>寵物保姆預約</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+    }
+    .page {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 24px;
+      box-sizing: border-box;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 8px 0 16px;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .field {
+      margin-bottom: 8px;
+    }
+    .field-label {
+      font-size: 13px;
+      margin-bottom: 2px;
+      color: #555;
+    }
+    .hint {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    input[type="date"],
+    input[type="time"],
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid #d0d4e0;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+    .inline-row {
+      display: flex;
+      gap: 8px;
+    }
+    .inline-row > div {
+      flex: 1;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .chip {
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid #d0d4e0;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chip.selected {
+      background: #48a2e8;
+      color: white;
+      border-color: #48a2e8;
+    }
+    .radio-group,
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 13px;
+    }
+    .radio-item,
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-submit {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      background: #48a2e8;
+      margin-top: 8px;
+      cursor: pointer;
+    }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    .footer-note {
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+      margin-top: 6px;
+    }
+    .error {
+      color: #c62828;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+  </style>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <div class="page">
+    <h1>預約到府照顧</h1>
+
+    <!-- 日期與頻率 -->
+    <div class="card">
+      <div class="card-title">1｜服務日期與頻率</div>
+      <div class="field inline-row">
+        <div>
+          <div class="field-label">開始日期</div>
+          <input type="date" id="startDate" />
+        </div>
+        <div>
+          <div class="field-label">結束日期</div>
+          <input type="date" id="endDate" />
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">服務頻率</div>
+        <div class="radio-group" id="frequencyGroup">
+          <label class="radio-item">
+            <input type="radio" name="frequency" value="一天一次" checked />
+            <span>一天一次</span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="frequency" value="早晚各一次" />
+            <span>早晚各一次</span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="frequency" value="早中晚各一次" />
+            <span>早中晚各一次</span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="frequency" value="兩天一次" />
+            <span>兩天一次</span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="frequency" value="三天一次" />
+            <span>三天一次</span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="frequency" value="其他" />
+            <span>其他（備註說明）</span>
+          </label>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">服務區段</div>
+        <div class="hint">如果選「一天一次」建議只勾一個；「早晚各一次」將自動帶入早＋晚。</div>
+        <div class="chips" id="sectionChips">
+          <div class="chip" data-value="早上">早上</div>
+          <div class="chip" data-value="下午">下午</div>
+          <div class="chip" data-value="晚上">晚上</div>
+          <div class="chip" data-value="深夜">深夜</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 時間彈性 -->
+    <div class="card">
+      <div class="card-title">2｜時間彈性</div>
+      <div class="field">
+        <div class="radio-group" id="timeFlexGroup">
+          <label class="radio-item">
+            <input type="radio" name="timeFlex" value="flex" checked />
+            <span>時間彈性，區段內皆可，由保姆安排</span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="timeFlex" value="approx" />
+            <span>希望大約時間（例如 18:00 左右）</span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="timeFlex" value="fixed" />
+            <span>需盡量固定時間（餵藥等）</span>
+          </label>
+        </div>
+      </div>
+      <div class="field" id="timeField" style="display:none;">
+        <div class="field-label">希望時間（可約略）</div>
+        <input type="time" id="specifiedTime" />
+      </div>
+      <div class="hint">實際到訪時間會依當日路線安排，服務前會再與您確認唷 🐾</div>
+    </div>
+
+    <!-- 毛孩與服務內容 -->
+    <div class="card">
+      <div class="card-title">3｜毛孩與服務內容</div>
+      <div class="field">
+        <div class="field-label">毛孩姓名</div>
+        <input type="text" id="petNames" placeholder="例如：襪襪、小黑（多隻用頓號或逗號分隔）" />
+      </div>
+      <div class="field">
+        <div class="field-label">服務類別</div>
+        <select id="serviceCategory">
+          <option value="到府照顧" selected>到府照顧</option>
+          <option value="到府散步">到府散步</option>
+          <option value="其他">其他（備註說明）</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">服務方案</div>
+        <select id="servicePlan">
+          <option value="30分">30 分</option>
+          <option value="45分">45 分</option>
+          <option value="60分" selected>60 分</option>
+          <option value="90分">90 分</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">其他需求／備註</div>
+        <textarea id="note" placeholder="例如：有餵藥需求、怕生、喜歡逗貓棒、對陌生人敏感…"></textarea>
+      </div>
+    </div>
+
+    <button class="btn-submit" id="btnSubmit">送出預約</button>
+    <div class="footer-note">送出後系統會先建立「預約需求單」，保姆確認後再與您回覆確定時段。</div>
+    <div class="error" id="errorBox" style="display:none;"></div>
+  </div>
+
+  <script>
+    // ====== LIFF 初始化 ======
+    const LIFF_ID = "YOUR_LIFF_ID"; // ← 換成你的 LIFF ID
+
+    async function initLiff() {
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+    }
+
+    // ====== UI 行為 ======
+    function setupSectionChips() {
+      const chips = document.querySelectorAll("#sectionChips .chip");
+      chips.forEach(chip => {
+        chip.addEventListener("click", () => {
+          chip.classList.toggle("selected");
+        });
+      });
+    }
+
+    function setupTimeFlex() {
+      const group = document.getElementById("timeFlexGroup");
+      const timeField = document.getElementById("timeField");
+      group.addEventListener("change", () => {
+        const value = group.querySelector("input[name='timeFlex']:checked").value;
+        if (value === "approx" || value === "fixed") {
+          timeField.style.display = "block";
+        } else {
+          timeField.style.display = "none";
+        }
+      });
+    }
+
+    function getSelectedSections() {
+      const selected = [];
+      document.querySelectorAll("#sectionChips .chip.selected").forEach(chip => {
+        selected.push(chip.dataset.value);
+      });
+      return selected;
+    }
+
+    function getSelectedRadio(name) {
+      const el = document.querySelector(`input[name="${name}"]:checked`);
+      return el ? el.value : "";
+    }
+
+    function showError(msg) {
+      const box = document.getElementById("errorBox");
+      box.textContent = msg;
+      box.style.display = msg ? "block" : "none";
+    }
+
+    async function submitForm() {
+      showError("");
+      const btn = document.getElementById("btnSubmit");
+      btn.disabled = true;
+
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value || startDate;
+      const frequency = getSelectedRadio("frequency");
+      const sections = getSelectedSections();
+      const timeFlex = getSelectedRadio("timeFlex");
+      const specifiedTime = document.getElementById("specifiedTime").value || "";
+      const petNames = document.getElementById("petNames").value.trim();
+      const serviceCategory = document.getElementById("serviceCategory").value;
+      const servicePlan = document.getElementById("servicePlan").value;
+      const note = document.getElementById("note").value.trim();
+
+      // 簡單驗證
+      if (!startDate) {
+        showError("請選擇開始日期");
+        btn.disabled = false;
+        return;
+      }
+      if (sections.length === 0) {
+        showError("請至少選擇一個服務區段");
+        btn.disabled = false;
+        return;
+      }
+      if (!petNames) {
+        showError("請填寫毛孩姓名");
+        btn.disabled = false;
+        return;
+      }
+      if ((timeFlex === "approx" || timeFlex === "fixed") && !specifiedTime) {
+        showError("請填寫希望的時間");
+        btn.disabled = false;
+        return;
+      }
+
+      // 取得 LINE 使用者資訊
+      let lineUserId = "";
+      let lineDisplayName = "";
+      try {
+        const profile = await liff.getProfile();
+        lineUserId = profile.userId || "";
+        lineDisplayName = profile.displayName || "";
+      } catch (e) {
+        // 若取不到也沒關係，後端可用 idToken 再查
+      }
+
+      const payload = {
+        startDate,
+        endDate,
+        frequency,
+        sections,
+        timeFlex,
+        specifiedTime,
+        pets: petNames.split(/[,、，]/).map(s => s.trim()).filter(Boolean),
+        serviceCategory,
+        servicePlan,
+        note,
+        lineUserId,
+        lineDisplayName,
+        source: "LIFF-Booking"
+      };
+
+      try {
+        const res = await fetch("YOUR_APPS_SCRIPT_WEBAPP_URL", { // ← 換成你的 Apps Script Web App URL
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("network");
+
+        const data = await res.json().catch(() => ({}));
+
+        alert("已送出預約，感謝您的填寫 💛\n\n之後會再與您確認實際到訪時間。");
+
+        // 如果你想關閉 LIFF 視窗：
+        if (liff.isInClient()) {
+          liff.closeWindow();
+        }
+      } catch (err) {
+        console.error(err);
+        showError("送出時發生錯誤，請稍後再試或私訊保姆。");
+        btn.disabled = false;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await initLiff();
+      setupSectionChips();
+      setupTimeFlex();
+      document.getElementById("btnSubmit").addEventListener("click", submitForm);
+    });
+  </script>
+</body>
+</html>
