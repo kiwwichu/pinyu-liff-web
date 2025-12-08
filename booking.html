@@ -758,7 +758,7 @@ header {
 
 </style>
   <!-- JS 將在第 3～5 段提供 -->
-  <script src="app.js">
+  <script>
 /* ========== 全域變數 ========== */
 
 // 從 Apps Script 帶入
@@ -766,6 +766,7 @@ let familyId = "";
 let isNewCustomer = true;
 let farePerVisit = 0;
 let depositText = "需訂金";
+let hasValidDistance = false;
 
 // 預設服務類型
 let serviceType = "到府照顧";   
@@ -885,18 +886,21 @@ distanceInput?.addEventListener("input", () => {
   if (isNaN(km) || km <= 0) {
     fareResultBox.textContent = "尚未輸入公里數。";
     farePerVisit = 0;
+    hasValidDistance = false;  // ✅ 無效輸入
     return;
   }
 
   const result = calcFareFromDistance(km);
 
   farePerVisit = result.fare;
+  hasValidDistance = true;     // ✅ 有輸入有效公里數
 
   fareResultBox.innerHTML = `
     四捨五入後距離：<strong>${result.km} 公里</strong><br>
     預估車馬費：<strong>${result.fare} 元 / 次</strong>
   `;
 });
+
 
 
 
@@ -1431,14 +1435,13 @@ function buildPayload() {
 ============================================================ */
 
 nextBtn.addEventListener("click", () => {
-if (currentStep === 1) {
-  if (isNewCustomer) {
-    if (!hasValidDistance) {
+  if (currentStep === 1) {
+    if (isNewCustomer && !hasValidDistance) {
+      // 新客必填：至少輸入一次合法的公里數
       alert("請先輸入距離以試算車馬費");
       return;
     }
-  }
-  currentStep = 2;
+    currentStep = 2;
 }
  else if (currentStep === 2) {
     if (!startDate || !endDate) {
