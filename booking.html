@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>預約時間選擇</title>
+  <title>預約時間設定</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -27,112 +27,201 @@
       border-bottom: 1px solid #e0ebf7;
       color: #144a7e;
     }
-    .calendar-wrapper {
-      padding: 8px 16px 0;
-    }
-    .month-row {
+
+    .step-indicator {
       display: flex;
       justify-content: center;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 4px;
-    }
-    .month-btn {
-      border: none;
-      background: transparent;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px 8px;
-      color: #48a2e8;
-    }
-    .month-label {
-      font-size: 15px;
-      font-weight: 500;
-      color: #144a7e;
-    }
-    .weekday-row,
-    .days-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      text-align: center;
-    }
-    .weekday-row {
+      gap: 8px;
+      padding: 10px 16px 0;
       font-size: 12px;
-      color: #8fa0ba;
-      padding: 4px 0;
+      color: #7a8baa;
     }
-    .day-cell {
-      height: 40px;
+    .step-dot {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 14px;
+      gap: 4px;
+    }
+    .step-circle {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #d1e4ff;
+    }
+    .step-dot.active .step-circle {
+      background: #48a2e8;
+    }
+    .step-dot.active span {
+      color: #225f9f;
+      font-weight: 600;
+    }
+
+    .content {
+      padding: 12px 16px 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #123456;
+    }
+    .section-sub {
+      font-size: 12px;
+      color: #7a8baa;
+      margin-bottom: 12px;
+    }
+
+    .field-group {
+      margin-bottom: 16px;
+    }
+    .field-label {
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #4b5e7c;
+    }
+    .date-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .date-row input[type="date"] {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #cfe3fb;
+      font-size: 13px;
+      outline: none;
+    }
+    .date-row span {
+      font-size: 12px;
+      color: #7a8baa;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .option-card {
+      border-radius: 14px;
+      border: 1px solid #d1e4ff;
+      padding: 10px 12px;
+      font-size: 13px;
       cursor: pointer;
-      position: relative;
+      background: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.15s ease;
     }
-    .day-disabled {
-      color: #c8ceda;
-      cursor: default;
+    .option-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
-    .day-available {
+    .option-title {
       font-weight: 600;
       color: #123456;
     }
-    .day-selected::after {
-      content: "";
-      position: absolute;
-      width: 32px;
-      height: 32px;
+    .option-desc {
+      font-size: 11px;
+      color: #7a8baa;
+    }
+    .option-tag {
+      font-size: 11px;
+      padding: 2px 8px;
       border-radius: 999px;
-      background: #e4f2ff; /* 品牌藍的淡底 */
-      z-index: -1;
+      background: #e4f2ff;
+      color: #225f9f;
+    }
+    .option-card.active {
+      border-color: #48a2e8;
+      background: #f3f8ff;
+      box-shadow: 0 3px 10px rgba(72, 162, 232, 0.18);
     }
 
-    .times-card {
-      margin: 12px 16px;
-      padding: 10px 12px;
-      border-radius: 16px;
-      border: 1px solid #cfe3fb;
-      background: #f5f9ff;
+    .day-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
     }
-    .times-title {
-      font-size: 13px;
-      color: #4a6487;
-      margin-bottom: 8px;
-    }
-    .time-btn {
-      width: 100%;
-      padding: 12px 0;
+    .day-row {
+      padding: 8px 10px;
       border-radius: 12px;
-      border: 1px solid #48a2e8;
-      background: #ffffff;
-      color: #1764b3;
-      font-size: 16px;
-      font-weight: 600;
-      text-align: center;
-      cursor: pointer;
+      border: 1px solid #e0ebf7;
+      background: #f8fbff;
     }
-    .time-btn.disabled {
-      opacity: 0.4;
-      cursor: default;
+    .day-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: #123456;
+    }
+    .day-row-header span:last-child {
+      font-size: 11px;
+      color: #7a8baa;
+    }
+    .slot-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .slot-chip {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #cfe3fb;
+      font-size: 11px;
+      cursor: pointer;
+      background: #ffffff;
+      color: #4b5e7c;
+      white-space: nowrap;
+    }
+    .slot-chip small {
+      font-size: 10px;
+      color: #9ba8bd;
+    }
+    .slot-chip.active {
+      border-color: #48a2e8;
+      background: #e4f2ff;
+      color: #225f9f;
+    }
+
+    .summary-box {
+      margin-top: 12px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px dashed #cfe3fb;
+      background: #f5f9ff;
+      font-size: 12px;
+      color: #4b5e7c;
     }
 
     .bottom-bar {
-      margin-top: auto;
-      padding: 12px 16px 24px;
+      padding: 10px 16px 18px;
       border-top: 1px solid #e0ebf7;
       background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
-    .primary-btn {
+    .primary-btn,
+    .secondary-btn {
       width: 100%;
       border-radius: 999px;
       border: none;
-      padding: 12px 0;
-      font-size: 15px;
+      padding: 10px 0;
+      font-size: 14px;
       font-weight: 600;
-      color: #ffffff;
-      background: #48a2e8;
       cursor: pointer;
+    }
+    .primary-btn {
+      background: #48a2e8;
+      color: #ffffff;
       box-shadow: 0 4px 10px rgba(72, 162, 232, 0.25);
     }
     .primary-btn:disabled {
@@ -140,166 +229,428 @@
       cursor: default;
       box-shadow: none;
     }
+    .secondary-btn {
+      background: #f3f7fc;
+      color: #4b5e7c;
+    }
     .sub-text {
       font-size: 11px;
-      color: #8fa0ba;
-      margin-top: 4px;
+      color: #7a8baa;
       text-align: center;
     }
+
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="page">
-    <header>選擇預約時間</header>
+    <header>設定預約期間與時間</header>
 
-    <div class="calendar-wrapper">
-      <div class="month-row">
-        <button class="month-btn" id="prevMonth">&lt;</button>
-        <div class="month-label" id="monthLabel"></div>
-        <button class="month-btn" id="nextMonth">&gt;</button>
+    <div class="step-indicator">
+      <div class="step-dot" data-step="1">
+        <div class="step-circle"></div><span>期間</span>
       </div>
-      <div class="weekday-row">
-        <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div>
+      <div class="step-dot" data-step="2">
+        <div class="step-circle"></div><span>頻率</span>
       </div>
-      <div class="days-grid" id="daysGrid"></div>
+      <div class="step-dot" data-step="3">
+        <div class="step-circle"></div><span>每日時段</span>
+      </div>
     </div>
 
-    <div class="times-card">
-      <div class="times-title" id="timesTitle">請先選擇日期</div>
-      <button class="time-btn disabled" id="timeBtn" disabled>--:--</button>
+    <div class="content">
+      <!-- STEP 1：選期間 -->
+      <div class="step-panel" id="step1">
+        <div class="section-title">選擇服務期間</div>
+        <div class="section-sub">請先選擇此次照顧的開始與結束日期，後續可再細調每天的時段。</div>
+
+        <div class="field-group">
+          <div class="field-label">服務日期區間</div>
+          <div class="date-row">
+            <input type="date" id="startDate">
+            <span>至</span>
+            <input type="date" id="endDate">
+          </div>
+        </div>
+
+        <div class="summary-box" id="step1Summary">
+          尚未選擇期間。
+        </div>
+      </div>
+
+      <!-- STEP 2：選頻率 -->
+      <div class="step-panel hidden" id="step2">
+        <div class="section-title">選擇這段期間的預設頻率</div>
+        <div class="section-sub">系統會先幫您套用一個常見的排程，下一步可以針對個別日期微調。</div>
+
+        <div class="options-grid">
+          <div class="option-card" data-template="daily1-evening">
+            <div class="option-main">
+              <div class="option-title">每日 1 次（預設晚上）</div>
+              <div class="option-desc">整段期間每天 1 次，到訪時間預設為晚上 18:00–21:00。</div>
+            </div>
+            <div class="option-tag">推薦給一般出遊</div>
+          </div>
+
+          <div class="option-card" data-template="daily2-morning-evening">
+            <div class="option-main">
+              <div class="option-title">每日 2 次（早＋晚）</div>
+              <div class="option-desc">整段期間每天早上 1 次＋晚上 1 次。</div>
+            </div>
+            <div class="option-tag">最常見</div>
+          </div>
+
+          <div class="option-card" data-template="daily3-morning-afternoon-evening">
+            <div class="option-main">
+              <div class="option-title">每日 3 次（早＋午＋晚）</div>
+              <div class="option-desc">整段期間早上、下午、晚上各 1 次。</div>
+            </div>
+            <div class="option-tag">需要密集照顧時</div>
+          </div>
+
+          <div class="option-card" data-template="custom-empty">
+            <div class="option-main">
+              <div class="option-title">完全自訂</div>
+              <div class="option-desc">下一步會顯示每一天，您可以自由勾選早 / 午 / 晚 / 深夜。</div>
+            </div>
+            <div class="option-tag">頭尾特別複雜時</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3：逐日勾選時段 -->
+      <div class="step-panel hidden" id="step3">
+        <div class="section-title">調整每日到訪時段</div>
+        <div class="section-sub">
+          已依照您選擇的頻率套用預設排程，如不需要的時段可以取消勾選。<br>
+          範圍：早上 09:00–12:00、下午 13:00–17:00、晚上 18:00–21:00、深夜 22:00–23:00。
+        </div>
+
+        <div class="day-list" id="dayList"></div>
+
+        <div class="summary-box" id="step3Summary">
+          尚未選擇任何到訪時段。
+        </div>
+      </div>
     </div>
 
     <div class="bottom-bar">
-      <button class="primary-btn" id="nextBtn" disabled>填寫預約備註 ➜</button>
-      <div class="sub-text">會先建立預約需求，保姆確認後再與您敲定時間 🐾</div>
+      <button class="secondary-btn hidden" id="prevBtn">← 上一步</button>
+      <button class="primary-btn" id="nextBtn">下一步</button>
+      <div class="sub-text" id="hintText">
+        會先建立預約需求，保姆確認後再與您敲定實際時間與金額 🐾
+      </div>
     </div>
   </div>
 
   <script>
-    // ===== 假資料：這裡暫時先寫死，可之後改成 call Apps Script API =====
-    // key: 'YYYY-MM-DD' → value: 可預約時間字串
-    const mockAvailability = {
-      '2025-12-19': '15:00',
-      '2025-12-23': '18:30',
-      '2025-12-24': '20:00'
+    // ===== 時段定義 =====
+    const SLOT_DEFS = [
+      { id: 'MORNING', label: '早上', range: '09:00–12:00' },
+      { id: 'AFTERNOON', label: '下午', range: '13:00–17:00' },
+      { id: 'EVENING', label: '晚上', range: '18:00–21:00' },
+      { id: 'LATE', label: '深夜', range: '22:00–23:00' }
+    ];
+
+    let currentStep = 1;
+    let startDate = null;
+    let endDate = null;
+    let selectedTemplate = null;
+
+    // schedule: { 'YYYY-MM-DD': Set(['MORNING','EVENING',...]) }
+    let schedule = {};
+
+    const stepPanels = {
+      1: document.getElementById('step1'),
+      2: document.getElementById('step2'),
+      3: document.getElementById('step3')
     };
+    const stepDots = document.querySelectorAll('.step-dot');
 
-    const monthLabel = document.getElementById('monthLabel');
-    const daysGrid = document.getElementById('daysGrid');
-    const timesTitle = document.getElementById('timesTitle');
-    const timeBtn = document.getElementById('timeBtn');
+    const startInput = document.getElementById('startDate');
+    const endInput = document.getElementById('endDate');
+    const step1Summary = document.getElementById('step1Summary');
+
+    const optionCards = document.querySelectorAll('.option-card');
+
+    const dayList = document.getElementById('dayList');
+    const step3Summary = document.getElementById('step3Summary');
+
+    const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
+    const hintText = document.getElementById('hintText');
 
-    let current = new Date(); // 今天
-    current.setDate(1); // 移到當月1號
-    let selectedDate = null;  // 被選到的 Date 物件
-    let selectedTime = null;
-
+    // ===== 工具函式 =====
     function formatDateKey(d) {
       const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,'0');
-      const day = String(d.getDate()).padStart(2,'0');
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
       return `${y}-${m}-${day}`;
     }
 
-    function renderCalendar() {
-      const y = current.getFullYear();
-      const m = current.getMonth(); // 0-based
-      monthLabel.textContent = `${y} 年 ${m+1} 月`;
+    function parseDateStr(str) {
+      if (!str) return null;
+      const [y, m, d] = str.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
 
-      daysGrid.innerHTML = '';
-      const firstDay = new Date(y, m, 1);
-      const firstWeekday = (firstDay.getDay() + 6) % 7; // 轉成 0=一 ... 6=日
-
-      const daysInMonth = new Date(y, m+1, 0).getDate();
-
-      // 前面空格
-      for (let i = 0; i < firstWeekday; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'day-cell';
-        daysGrid.appendChild(cell);
+    function getDateRangeArray(start, end) {
+      const arr = [];
+      let cur = new Date(start);
+      while (cur <= end) {
+        arr.push(new Date(cur));
+        cur.setDate(cur.getDate() + 1);
       }
+      return arr;
+    }
 
-      // 每一天
-      for (let d = 1; d <= daysInMonth; d++) {
-        const cell = document.createElement('div');
-        cell.className = 'day-cell';
-        const dateObj = new Date(y, m, d);
-        const key = formatDateKey(dateObj);
+    function getWeekdayName(d) {
+      const names = ['日', '一', '二', '三', '四', '五', '六'];
+      return names[d.getDay()];
+    }
 
-        const hasSlot = !!mockAvailability[key];
+    function updateStepUI() {
+      Object.values(stepPanels).forEach(p => p.classList.add('hidden'));
+      stepPanels[currentStep].classList.remove('hidden');
 
-        if (!hasSlot) {
-          cell.classList.add('day-disabled');
-        } else {
-          cell.classList.add('day-available');
-        }
+      stepDots.forEach(dot => {
+        const step = Number(dot.getAttribute('data-step'));
+        dot.classList.toggle('active', step === currentStep);
+      });
 
-        cell.textContent = d;
-
-        if (selectedDate &&
-            dateObj.toDateString() === selectedDate.toDateString()) {
-          cell.classList.add('day-selected');
-        }
-
-        if (hasSlot) {
-          cell.addEventListener('click', () => {
-            selectedDate = dateObj;
-            selectedTime = mockAvailability[key];
-            updateTimeSection();
-            renderCalendar(); // 重新畫一次套 selected 樣式
-          });
-        }
-
-        daysGrid.appendChild(cell);
+      if (currentStep === 1) {
+        prevBtn.classList.add('hidden');
+        nextBtn.textContent = '下一步';
+      } else if (currentStep === 2) {
+        prevBtn.classList.remove('hidden');
+        nextBtn.textContent = '下一步';
+      } else if (currentStep === 3) {
+        prevBtn.classList.remove('hidden');
+        nextBtn.textContent = '送出預約需求';
       }
     }
 
-    function updateTimeSection() {
-      if (!selectedDate) {
-        timesTitle.textContent = '請先選擇日期';
-        timeBtn.textContent = '--:--';
-        timeBtn.disabled = true;
-        timeBtn.classList.add('disabled');
-        nextBtn.disabled = true;
+    function updateStep1Summary() {
+      if (!startDate || !endDate) {
+        step1Summary.textContent = '尚未選擇期間。';
         return;
       }
-      const key = formatDateKey(selectedDate);
-      const t = mockAvailability[key];
-      timesTitle.textContent = `${selectedDate.getMonth()+1}/${selectedDate.getDate()} 可預約時間`;
-      timeBtn.textContent = t || '已額滿';
-      const canBook = !!t;
-      timeBtn.disabled = !canBook;
-      nextBtn.disabled = !canBook;
-      if (canBook) {
-        timeBtn.classList.remove('disabled');
-      } else {
-        timeBtn.classList.add('disabled');
-      }
+      const rangeDays = getDateRangeArray(startDate, endDate).length;
+      step1Summary.textContent =
+        `已選擇期間：${startInput.value} ～ ${endInput.value}（共 ${rangeDays} 天）`;
     }
 
-    document.getElementById('prevMonth').addEventListener('click', () => {
-      current.setMonth(current.getMonth() - 1);
-      renderCalendar();
-      updateTimeSection();
-    });
-    document.getElementById('nextMonth').addEventListener('click', () => {
-      current.setMonth(current.getMonth() + 1);
-      renderCalendar();
-      updateTimeSection();
+    function applyTemplateToSchedule(templateId) {
+      schedule = {}; // 先清空
+      if (!startDate || !endDate) return;
+      const dates = getDateRangeArray(startDate, endDate);
+
+      dates.forEach(d => {
+        const key = formatDateKey(d);
+        schedule[key] = new Set();
+
+        if (templateId === 'daily1-evening') {
+          schedule[key].add('EVENING');
+        } else if (templateId === 'daily2-morning-evening') {
+          schedule[key].add('MORNING');
+          schedule[key].add('EVENING');
+        } else if (templateId === 'daily3-morning-afternoon-evening') {
+          schedule[key].add('MORNING');
+          schedule[key].add('AFTERNOON');
+          schedule[key].add('EVENING');
+        } else if (templateId === 'custom-empty') {
+          // 全空，由使用者自己勾
+        }
+      });
+    }
+
+    function renderDayList() {
+      if (!startDate || !endDate) return;
+      dayList.innerHTML = '';
+
+      const dates = getDateRangeArray(startDate, endDate);
+
+      dates.forEach(d => {
+        const key = formatDateKey(d);
+        if (!schedule[key]) schedule[key] = new Set();
+
+        const dayRow = document.createElement('div');
+        dayRow.className = 'day-row';
+
+        const header = document.createElement('div');
+        header.className = 'day-row-header';
+        header.innerHTML = `
+          <span>${d.getMonth() + 1}/${d.getDate()}（${getWeekdayName(d)}）</span>
+          <span>點選下方時段可勾選 / 取消</span>
+        `;
+        dayRow.appendChild(header);
+
+        const chipsWrapper = document.createElement('div');
+        chipsWrapper.className = 'slot-chips';
+
+        SLOT_DEFS.forEach(slot => {
+          const chip = document.createElement('div');
+          chip.className = 'slot-chip';
+          chip.setAttribute('data-date', key);
+          chip.setAttribute('data-slot', slot.id);
+
+          if (schedule[key].has(slot.id)) {
+            chip.classList.add('active');
+          }
+
+          chip.innerHTML = `
+            ${slot.label}
+            <small>${slot.range}</small>
+          `;
+
+          chip.addEventListener('click', () => {
+            const dateKey = chip.getAttribute('data-date');
+            const slotId = chip.getAttribute('data-slot');
+            const set = schedule[dateKey] || new Set();
+
+            if (set.has(slotId)) {
+              set.delete(slotId);
+              chip.classList.remove('active');
+            } else {
+              set.add(slotId);
+              chip.classList.add('active');
+            }
+            schedule[dateKey] = set;
+            updateStep3Summary();
+          });
+
+          chipsWrapper.appendChild(chip);
+        });
+
+        dayRow.appendChild(chipsWrapper);
+        dayList.appendChild(dayRow);
+      });
+
+      updateStep3Summary();
+    }
+
+    function updateStep3Summary() {
+      let total = 0;
+      let morning = 0, afternoon = 0, evening = 0, late = 0;
+
+      Object.values(schedule).forEach(set => {
+        set.forEach(slotId => {
+          total++;
+          if (slotId === 'MORNING') morning++;
+          else if (slotId === 'AFTERNOON') afternoon++;
+          else if (slotId === 'EVENING') evening++;
+          else if (slotId === 'LATE') late++;
+        });
+      });
+
+      if (total === 0) {
+        step3Summary.textContent = '尚未選擇任何到訪時段。';
+        return;
+      }
+
+      step3Summary.textContent =
+        `本次共預約 ${total} 次到府服務：早上 ${morning} 次、下午 ${afternoon} 次、晚上 ${evening} 次、深夜 ${late} 次。`;
+    }
+
+    // ===== 事件綁定 =====
+    startInput.addEventListener('change', () => {
+      startDate = parseDateStr(startInput.value);
+      endDate = parseDateStr(endInput.value);
+      if (startDate && endDate && endDate < startDate) {
+        alert('結束日期不可早於開始日期');
+        endInput.value = '';
+        endDate = null;
+      }
+      updateStep1Summary();
     });
 
-    // 之後點「填寫預約備註」可以跳到第二頁 / 或顯示備註表單
+    endInput.addEventListener('change', () => {
+      startDate = parseDateStr(startInput.value);
+      endDate = parseDateStr(endInput.value);
+      if (startDate && endDate && endDate < startDate) {
+        alert('結束日期不可早於開始日期');
+        endInput.value = '';
+        endDate = null;
+      }
+      updateStep1Summary();
+    });
+
+    optionCards.forEach(card => {
+      card.addEventListener('click', () => {
+        optionCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        selectedTemplate = card.getAttribute('data-template');
+      });
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (currentStep > 1) {
+        currentStep--;
+        updateStepUI();
+      }
+    });
+
     nextBtn.addEventListener('click', () => {
-      if (!selectedDate || !selectedTime) return;
-      alert(`接下來進入備註頁：\n日期：${formatDateKey(selectedDate)}\n時間：${selectedTime}`);
-      // TODO：這裡之後可以改成：
-      // 1）location.href 換到「備註填寫」的第二個 LIFF 頁面，或
-      // 2）在同一頁下方打開一個表單，把日期時間一起送回 Apps Script
+      if (currentStep === 1) {
+        startDate = parseDateStr(startInput.value);
+        endDate = parseDateStr(endInput.value);
+        if (!startDate || !endDate) {
+          alert('請先選擇服務期間');
+          return;
+        }
+        currentStep = 2;
+        updateStepUI();
+      } else if (currentStep === 2) {
+        if (!selectedTemplate) {
+          alert('請先選擇一個預設頻率');
+          return;
+        }
+        applyTemplateToSchedule(selectedTemplate);
+        renderDayList();
+        currentStep = 3;
+        updateStepUI();
+      } else if (currentStep === 3) {
+        // 組成要送出的資料
+        const payload = {
+          startDate: startInput.value,
+          endDate: endInput.value,
+          visits: []
+        };
+
+        Object.entries(schedule).forEach(([dateKey, set]) => {
+          if (set.size > 0) {
+            payload.visits.push({
+              date: dateKey,
+              slots: Array.from(set) // 例如 ["MORNING","EVENING"]
+            });
+          }
+        });
+
+        if (payload.visits.length === 0) {
+          alert('尚未選擇任何到訪時段，請至少勾選一個。');
+          return;
+        }
+
+        // 這裡先用 alert 看資料長什麼樣，之後可以改成 fetch/LIFF 傳給 Apps Script
+        alert('將送出以下預約資料：\n' + JSON.stringify(payload, null, 2));
+
+        /*
+        範例：送到 Apps Script
+        fetch('你的 Apps Script 網址', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(res => res.json())
+          .then(result => {
+            // 顯示成功畫面 or 跳轉
+          });
+        */
+      }
     });
 
-    renderCalendar();
-    updateTimeSection();
+    // 初始化
+    updateStepUI();
+    updateStep1Summary();
   </script>
 </body>
 </html>
