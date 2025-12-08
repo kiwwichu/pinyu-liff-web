@@ -1044,8 +1044,8 @@ function updateStep2Summary() {
   else if (selectedTemplate === "daily3-morning-afternoon-evening") freqText = "每日 3 次（早＋午＋晚）";
   else if (selectedTemplate === "custom-empty") freqText = "完全自訂";
 
-  step2Summary.textContent =
-    `已選擇：${startInput.value} ～ ${endInput.value}（共 ${days} 天） <br>
+  step2Summary.innerHTML =
+    `已選擇：${startInput.value} ～ ${endInput.value}（共 ${days} 天）<br>
     預設頻率：${freqText}`;
 }
 
