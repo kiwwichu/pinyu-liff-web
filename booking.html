@@ -17,31 +17,31 @@
 
     <!-- 步驟指示 -->
     <div class="step-indicator">
-      <div class="step-dot" data-step="1">
-        <div class="step-circle"></div><span>車馬費</span>
-      </div>
-      <div class="step-dot" data-step="2">
-        <div class="step-circle"></div><span>日期</span>
-      </div>
-      <div class="step-dot" data-step="3">
-        <div class="step-circle"></div><span>時段</span>
-      </div>
-      <div class="step-dot" data-step="4">
-        <div class="step-circle"></div><span>服務</span>
-      </div>
-      <div class="step-dot" data-step="5">
-        <div class="step-circle"></div><span>方案</span>
-      </div>
-      <div class="step-dot" data-step="6">
-        <div class="step-circle"></div><span>毛孩</span>
-      </div>
-      <div class="step-dot" data-step="7">
-        <div class="step-circle"></div><span>加購項目</span>
-      </div>
-      <div class="step-dot" data-step="8">
-        <div class="step-circle"></div><span>試算報價</span>
-      </div>
-    </div>
+  <div class="step-dot" data-step="1">
+    <div class="step-circle"></div><span>車馬費</span>
+  </div>
+  <span class="step-sep">›</span>
+
+  <div class="step-dot" data-step="2">
+    <div class="step-circle"></div><span>服務日期</span>
+  </div>
+  <span class="step-sep">›</span>
+
+  <div class="step-dot" data-step="3">
+    <div class="step-circle"></div><span>服務方案</span>
+  </div>
+  <span class="step-sep">›</span>
+
+  <div class="step-dot" data-step="4">
+    <div class="step-circle"></div><span>加購項目</span>
+  </div>
+  <span class="step-sep">›</span>
+
+  <div class="step-dot" data-step="5">
+    <div class="step-circle"></div><span>試算報價</span>
+  </div>
+</div>
+
 
     <!-- 內容區 -->
     <div class="content">
@@ -406,29 +406,25 @@ header {
 .step-indicator {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  padding: 12px 0 4px;
+  gap: 14px;
+  padding: 12px 8px 0;
   font-size: 12px;
   color: #7a8baa;
-}
-.step-indicator .step-dot:not(:last-child)::after {
-  content: " > ";
-  margin: 0 6px;
-  color: #b7c7dd;
-  font-weight: 600;
+  flex-wrap: wrap;
 }
 
 .step-dot {
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
 }
 
 .step-circle {
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: #c9defc;
+  background: #d1e4ff;
 }
 
 .step-dot.active .step-circle {
@@ -436,9 +432,15 @@ header {
 }
 
 .step-dot.active span {
-  font-weight: 600;
   color: #225f9f;
+  font-weight: 600;
 }
+
+.step-sep {
+  color: #c4d7f1;
+  font-size: 12px;
+}
+
 
 /* ========== 內容區 ========== */
 .content {
@@ -804,7 +806,7 @@ const stepPanels = {
 
 const stepDots = document.querySelectorAll(".step-dot");
 const prevBtn = document.getElementById("prevBtn");
-const nextBtn = document.getElementById("nextBtn");
+const nextBtn = document.getElementById('nextBtn');
 const hintText = document.getElementById("hintText");
 
 /* ========== Step UI 更新 ========== */
