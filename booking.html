@@ -1218,22 +1218,27 @@ function updateStep3Summary() {
 }
 
 /* ============================================================
-   Step 4：服務類型選擇
-============================================================ */
-
+/* Step 4：服務類型選擇 */
 const serviceTypeCards = document.querySelectorAll('#stepServiceType .option-card');
 const serviceTypeSummary = document.getElementById("serviceTypeSummary");
 
 serviceTypeCards.forEach(card => {
   card.addEventListener("click", () => {
+
+    // 移除其他卡片的 active 樣式
     serviceTypeCards.forEach(c => c.classList.remove("active"));
+
+    // 加上目前選到的卡片
     card.classList.add("active");
 
-card.addEventListener("click", () => {
-  serviceType = card.dataset.service;
-  serviceTypeSummary.textContent = `您選擇：${serviceType}`;
+    // 取得資料
+    serviceType = card.dataset.service;
+
+    // 填入下方提示框
+    serviceTypeSummary.textContent = `您選擇：${serviceType}`;
+  });
 });
-});
+
 
 
 /* ============================================================
