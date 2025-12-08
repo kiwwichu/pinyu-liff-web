@@ -1,211 +1,57 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <title>預約時間選擇</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f9fafb;
-      color: #333;
-    }
-    .page {
-      max-width: 480px;
-      margin: 0 auto;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background: #fff;
-    }
-    header {
-      padding: 12px 16px;
-      font-size: 16px;
-      font-weight: 600;
-      text-align: center;
-      border-bottom: 1px solid #eee;
-    }
-    .calendar-wrapper {
-      padding: 8px 16px 0;
-    }
-    .month-row {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 4px;
-    }
-    .month-btn {
-      border: none;
-      background: transparent;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px 8px;
-    }
-    .month-label {
-      font-size: 15px;
-      font-weight: 500;
-    }
-    .weekday-row, .days-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      text-align: center;
-    }
-    .weekday-row {
-      font-size: 12px;
-      color: #999;
-      padding: 4px 0;
-    }
-    .day-cell {
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      cursor: pointer;
-      position: relative;
-    }
-    .day-disabled {
-      color: #d0d4dc;
-      cursor: default;
-    }
-    .day-selected::after {
-      content: "";
-      position: absolute;
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      background: #f9b4b4;
-      z-index: -1;
-    }
-    .day-available {
-      font-weight: 600;
-      color: #222;
-    }
-
-    .times-card {
-      margin: 12px 16px;
-      padding: 10px 12px;
-      border-radius: 16px;
-      border: 1px solid #f0d7d7;
-      background: #fff7f7;
-    }
-    .times-title {
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 8px;
-    }
-    .time-btn {
-      width: 100%;
-      padding: 12px 0;
-      border-radius: 12px;
-      border: 1px solid #f29b9b;
-      background: #fff;
-      color: #f06a6a;
-      font-size: 16px;
-      font-weight: 600;
-      text-align: center;
-      cursor: pointer;
-    }
-    .time-btn.disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-
-    .bottom-bar {
-      margin-top: auto;
-      padding: 12px 16px 24px;
-      border-top: 1px solid #f0f0f0;
-    }
-    .primary-btn {
-      width: 100%;
-      border-radius: 999px;
-      border: none;
-      padding: 12px 0;
-      font-size: 15px;
-      font-weight: 600;
-      color: #fff;
-      background: #f29b9b;
-      cursor: pointer;
-    }
-    .primary-btn:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-    .sub-text {
-      font-size: 11px;
-      color: #999;
-      margin-top: 4px;
-      text-align: center;
-    }
-  </style>
+  <!-- 放在 </head> 前或一開始 -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-  <div class="page">
-    <header>選擇預約時間</header>
-
-    <div class="calendar-wrapper">
-      <div class="month-row">
-        <button class="month-btn" id="prevMonth">&lt;</button>
-        <div class="month-label" id="monthLabel"></div>
-        <button class="month-btn" id="nextMonth">&gt;</button>
-      </div>
-      <div class="weekday-row">
-        <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div>
-      </div>
-      <div class="days-grid" id="daysGrid"></div>
-    </div>
-
-    <div class="times-card">
-      <div class="times-title" id="timesTitle">請先選擇日期</div>
-      <button class="time-btn disabled" id="timeBtn" disabled>--:--</button>
-    </div>
-
-    <div class="bottom-bar">
-      <button class="primary-btn" id="nextBtn" disabled>填寫預約備註 ➜</button>
-      <div class="sub-text">會先建立預約需求，保姆確認後再與您敲定時間 🐾</div>
-    </div>
-  </div>
-
+  ...
   <script>
-const ADMIN_UIDS = [
-  "U9b0f1fd6029a58ff6c0fc06cf85da8dd"
-];
+    const ADMIN_UIDS = [
+      "U9b0f1fd6029a58ff6c0fc06cf85da8dd"  // 你的 LINE userId
+    ];
 
-async function checkAdmin() {
-  await liff.init({ liffId: "2008600362-O4V8Aq10" });
-  const profile = await liff.getProfile();
-  
-  if (!ADMIN_UIDS.includes(profile.userId)) {
-    document.body.innerHTML = `
-      <div style="padding:20px;font-size:16px;">
-        此頁面僅供管理員測試，尚未對外開放。
-      </div>
-    `;
-    return false;
-  }
-  return true;
-}
+    async function checkAdmin() {
+      try {
+        await liff.init({ liffId: "2008600362-O4V8Aq10" });
 
-checkAdmin();
-    // ===== 假資料：這裡暫時先寫死，可之後改成 call Apps Script API =====
-    // key: 'YYYY-MM-DD' → value: 可預約時間字串
+        // 如果沒登入，先請他登入
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return false;
+        }
+
+        const profile = await liff.getProfile();
+        console.log("current userId:", profile.userId);
+
+        if (!ADMIN_UIDS.includes(profile.userId)) {
+          document.body.innerHTML = `
+            <div style="padding:24px;font-size:16px;line-height:1.6;">
+              此預約頁正在內部測試中，尚未對外開放。<br/>
+              如有預約需求，請直接私訊快樂小狗 pinyu 🐾
+            </div>
+          `;
+          return false;
+        }
+        return true;
+      } catch (e) {
+        console.error(e);
+        document.body.innerHTML = `
+          <div style="padding:24px;font-size:16px;line-height:1.6;">
+            無法載入預約頁面，請稍後再試或私訊保姆。<br/>
+          </div>
+        `;
+        return false;
+      }
+    }
+
+    // ===== 假資料：之後可以換成呼叫 GAS API =====
     const mockAvailability = {
       '2025-12-19': '15:00',
       '2025-12-23': '18:30',
       '2025-12-24': '20:00'
     };
 
-    const monthLabel = document.getElementById('monthLabel');
-    const daysGrid = document.getElementById('daysGrid');
-    const timesTitle = document.getElementById('timesTitle');
-    const timeBtn = document.getElementById('timeBtn');
-    const nextBtn = document.getElementById('nextBtn');
-
     let current = new Date(); // 今天
-    current.setDate(1); // 移到當月1號
-    let selectedDate = null;  // 被選到的 Date 物件
+    current.setDate(1);       // 移到當月1號
+    let selectedDate = null;
     let selectedTime = null;
 
     function formatDateKey(d) {
@@ -215,102 +61,111 @@ checkAdmin();
       return `${y}-${m}-${day}`;
     }
 
-    function renderCalendar() {
-      const y = current.getFullYear();
-      const m = current.getMonth(); // 0-based
-      monthLabel.textContent = `${y} 年 ${m+1} 月`;
+    function initCalendar() {
+      const monthLabel = document.getElementById('monthLabel');
+      const daysGrid = document.getElementById('daysGrid');
+      const timesTitle = document.getElementById('timesTitle');
+      const timeBtn = document.getElementById('timeBtn');
+      const nextBtn = document.getElementById('nextBtn');
 
-      daysGrid.innerHTML = '';
-      const firstDay = new Date(y, m, 1);
-      const firstWeekday = (firstDay.getDay() + 6) % 7; // 轉成 0=一 ... 6=日
+      function renderCalendar() {
+        const y = current.getFullYear();
+        const m = current.getMonth();
+        monthLabel.textContent = `${y} 年 ${m+1} 月`;
 
-      const daysInMonth = new Date(y, m+1, 0).getDate();
+        daysGrid.innerHTML = '';
+        const firstDay = new Date(y, m, 1);
+        const firstWeekday = (firstDay.getDay() + 6) % 7;
+        const daysInMonth = new Date(y, m+1, 0).getDate();
 
-      // 前面空格
-      for (let i = 0; i < firstWeekday; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'day-cell';
-        daysGrid.appendChild(cell);
+        for (let i = 0; i < firstWeekday; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'day-cell';
+          daysGrid.appendChild(cell);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const cell = document.createElement('div');
+          cell.className = 'day-cell';
+          const dateObj = new Date(y, m, d);
+          const key = formatDateKey(dateObj);
+          const hasSlot = !!mockAvailability[key];
+
+          if (!hasSlot) {
+            cell.classList.add('day-disabled');
+          } else {
+            cell.classList.add('day-available');
+          }
+
+          cell.textContent = d;
+
+          if (selectedDate &&
+              dateObj.toDateString() === selectedDate.toDateString()) {
+            cell.classList.add('day-selected');
+          }
+
+          if (hasSlot) {
+            cell.addEventListener('click', () => {
+              selectedDate = dateObj;
+              selectedTime = mockAvailability[key];
+              updateTimeSection();
+              renderCalendar();
+            });
+          }
+
+          daysGrid.appendChild(cell);
+        }
       }
 
-      // 每一天
-      for (let d = 1; d <= daysInMonth; d++) {
-        const cell = document.createElement('div');
-        cell.className = 'day-cell';
-        const dateObj = new Date(y, m, d);
-        const key = formatDateKey(dateObj);
-
-        const hasSlot = !!mockAvailability[key];
-
-        if (!hasSlot) {
-          cell.classList.add('day-disabled');
+      function updateTimeSection() {
+        if (!selectedDate) {
+          timesTitle.textContent = '請先選擇日期';
+          timeBtn.textContent = '--:--';
+          timeBtn.disabled = true;
+          timeBtn.classList.add('disabled');
+          nextBtn.disabled = true;
+          return;
+        }
+        const key = formatDateKey(selectedDate);
+        const t = mockAvailability[key];
+        timesTitle.textContent = `${selectedDate.getMonth()+1}/${selectedDate.getDate()} 可預約時間`;
+        timeBtn.textContent = t || '已額滿';
+        const canBook = !!t;
+        timeBtn.disabled = !canBook;
+        nextBtn.disabled = !canBook;
+        if (canBook) {
+          timeBtn.classList.remove('disabled');
         } else {
-          cell.classList.add('day-available');
+          timeBtn.classList.add('disabled');
         }
-
-        cell.textContent = d;
-
-        if (selectedDate &&
-            dateObj.toDateString() === selectedDate.toDateString()) {
-          cell.classList.add('day-selected');
-        }
-
-        if (hasSlot) {
-          cell.addEventListener('click', () => {
-            selectedDate = dateObj;
-            selectedTime = mockAvailability[key];
-            updateTimeSection();
-            renderCalendar(); // 重新畫一次套 selected 樣式
-          });
-        }
-
-        daysGrid.appendChild(cell);
       }
-    }
 
-    function updateTimeSection() {
-      if (!selectedDate) {
-        timesTitle.textContent = '請先選擇日期';
-        timeBtn.textContent = '--:--';
-        timeBtn.disabled = true;
-        timeBtn.classList.add('disabled');
-        nextBtn.disabled = true;
-        return;
-      }
-      const key = formatDateKey(selectedDate);
-      const t = mockAvailability[key];
-      timesTitle.textContent = `${selectedDate.getMonth()+1}/${selectedDate.getDate()} 可預約時間`;
-      timeBtn.textContent = t || '已額滿';
-      const canBook = !!t;
-      timeBtn.disabled = !canBook;
-      nextBtn.disabled = !canBook;
-      if (canBook) {
-        timeBtn.classList.remove('disabled');
-      } else {
-        timeBtn.classList.add('disabled');
-      }
-    }
+      document.getElementById('prevMonth').addEventListener('click', () => {
+        current.setMonth(current.getMonth() - 1);
+        renderCalendar();
+        updateTimeSection();
+      });
+      document.getElementById('nextMonth').addEventListener('click', () => {
+        current.setMonth(current.getMonth() + 1);
+        renderCalendar();
+        updateTimeSection();
+      });
 
-    document.getElementById('prevMonth').addEventListener('click', () => {
-      current.setMonth(current.getMonth() - 1);
+      nextBtn.addEventListener('click', () => {
+        if (!selectedDate || !selectedTime) return;
+        alert(`接下來進入備註頁：\n日期：${formatDateKey(selectedDate)}\n時間：${selectedTime}`);
+      });
+
       renderCalendar();
       updateTimeSection();
-    });
-    document.getElementById('nextMonth').addEventListener('click', () => {
-      current.setMonth(current.getMonth() + 1);
-      renderCalendar();
-      updateTimeSection();
-    });
+    }
 
-    // 之後點「填寫預約備註」可以跳到第二頁 / 或顯示備註表單
-    nextBtn.addEventListener('click', () => {
-      if (!selectedDate || !selectedTime) return;
-      alert(`接下來進入備註頁：\n日期：${formatDateKey(selectedDate)}\n時間：${selectedTime}`);
-      // 這裡可以用 location.href 換頁，或顯示備註表單 / 呼叫 LIFF 傳資料等
+    // 等 DOM 載入後再檢查身分＋初始化畫面
+    document.addEventListener('DOMContentLoaded', async () => {
+      const ok = await checkAdmin();
+      if (!ok) return; // 不是管理員，直接結束
+      initCalendar();  // 只有管理員才會跑到這裡
     });
-
-    renderCalendar();
-    updateTimeSection();
   </script>
 </body>
 </html>
