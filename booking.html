@@ -160,6 +160,8 @@
 
       <!-- STEP 4：服務類型 -->
       <div class="step-panel hidden" id="stepServiceType">
+      <div id="serviceTypeSummary" class="selection-summary"></div>
+
 
         <div class="section-title">選擇服務類型</div>
         <div class="section-sub">整段期間皆使用相同服務類型。</div>
@@ -463,6 +465,16 @@ header {
   margin-bottom: 12px;
   line-height: 1.6;
 }
+
+.selection-summary {
+  background: #eef6ff;
+  padding: 10px 16px;
+  margin-top: 16px;
+  border-radius: 10px;
+  color: #3566a8;
+  font-size: 14px;
+}
+
 
 /* ========== 表單欄位 ========== */
 .field-group {
@@ -1217,9 +1229,10 @@ serviceTypeCards.forEach(card => {
     serviceTypeCards.forEach(c => c.classList.remove("active"));
     card.classList.add("active");
 
-    serviceType = card.dataset.service;
-    serviceTypeSummary.textContent = `您選擇：${serviceType}`;
-  });
+card.addEventListener("click", () => {
+  serviceType = card.dataset.service;
+  serviceTypeSummary.textContent = `您選擇：${serviceType}`;
+});
 });
 
 
