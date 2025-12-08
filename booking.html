@@ -1431,15 +1431,16 @@ function buildPayload() {
 ============================================================ */
 
 nextBtn.addEventListener("click", () => {
-  if (currentStep === 1) {
-    if (isNewCustomer && farePerVisit === 0) {
-      // 新客必填車馬費
+if (currentStep === 1) {
+  if (isNewCustomer) {
+    if (!hasValidDistance) {
       alert("請先輸入距離以試算車馬費");
       return;
     }
-    currentStep = 2;
-
-  } else if (currentStep === 2) {
+  }
+  currentStep = 2;
+}
+ else if (currentStep === 2) {
     if (!startDate || !endDate) {
       alert("請先選擇日期區間");
       return;
