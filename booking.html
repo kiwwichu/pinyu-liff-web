@@ -1045,7 +1045,7 @@ function updateStep2Summary() {
   else if (selectedTemplate === "custom-empty") freqText = "完全自訂";
 
   step2Summary.textContent =
-    `已選擇：${startInput.value} ～ ${endInput.value}（共 ${days} 天），預設頻率：${freqText}`;
+    `已選擇：${startInput.value} ～ ${endInput.value}（共 ${days} 天）+ "\n" + 預設頻率：${freqText}`;
 }
 
 
