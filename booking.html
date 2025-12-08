@@ -8,7 +8,7 @@
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f9fafb;
+      background: #f5f7fb;
       color: #333;
     }
     .page {
@@ -17,14 +17,15 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      background: #fff;
+      background: #ffffff;
     }
     header {
       padding: 12px 16px;
       font-size: 16px;
       font-weight: 600;
       text-align: center;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid #e0ebf7;
+      color: #144a7e;
     }
     .calendar-wrapper {
       padding: 8px 16px 0;
@@ -42,19 +43,22 @@
       font-size: 18px;
       cursor: pointer;
       padding: 4px 8px;
+      color: #48a2e8;
     }
     .month-label {
       font-size: 15px;
       font-weight: 500;
+      color: #144a7e;
     }
-    .weekday-row, .days-grid {
+    .weekday-row,
+    .days-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       text-align: center;
     }
     .weekday-row {
       font-size: 12px;
-      color: #999;
+      color: #8fa0ba;
       padding: 4px 0;
     }
     .day-cell {
@@ -67,8 +71,12 @@
       position: relative;
     }
     .day-disabled {
-      color: #d0d4dc;
+      color: #c8ceda;
       cursor: default;
+    }
+    .day-available {
+      font-weight: 600;
+      color: #123456;
     }
     .day-selected::after {
       content: "";
@@ -76,33 +84,29 @@
       width: 32px;
       height: 32px;
       border-radius: 999px;
-      background: #f9b4b4;
+      background: #e4f2ff; /* 品牌藍的淡底 */
       z-index: -1;
-    }
-    .day-available {
-      font-weight: 600;
-      color: #222;
     }
 
     .times-card {
       margin: 12px 16px;
       padding: 10px 12px;
       border-radius: 16px;
-      border: 1px solid #f0d7d7;
-      background: #fff7f7;
+      border: 1px solid #cfe3fb;
+      background: #f5f9ff;
     }
     .times-title {
       font-size: 13px;
-      color: #666;
+      color: #4a6487;
       margin-bottom: 8px;
     }
     .time-btn {
       width: 100%;
       padding: 12px 0;
       border-radius: 12px;
-      border: 1px solid #f29b9b;
-      background: #fff;
-      color: #f06a6a;
+      border: 1px solid #48a2e8;
+      background: #ffffff;
+      color: #1764b3;
       font-size: 16px;
       font-weight: 600;
       text-align: center;
@@ -116,7 +120,8 @@
     .bottom-bar {
       margin-top: auto;
       padding: 12px 16px 24px;
-      border-top: 1px solid #f0f0f0;
+      border-top: 1px solid #e0ebf7;
+      background: #ffffff;
     }
     .primary-btn {
       width: 100%;
@@ -125,17 +130,19 @@
       padding: 12px 0;
       font-size: 15px;
       font-weight: 600;
-      color: #fff;
-      background: #f29b9b;
+      color: #ffffff;
+      background: #48a2e8;
       cursor: pointer;
+      box-shadow: 0 4px 10px rgba(72, 162, 232, 0.25);
     }
     .primary-btn:disabled {
       opacity: 0.5;
       cursor: default;
+      box-shadow: none;
     }
     .sub-text {
       font-size: 11px;
-      color: #999;
+      color: #8fa0ba;
       margin-top: 4px;
       text-align: center;
     }
@@ -286,7 +293,9 @@
     nextBtn.addEventListener('click', () => {
       if (!selectedDate || !selectedTime) return;
       alert(`接下來進入備註頁：\n日期：${formatDateKey(selectedDate)}\n時間：${selectedTime}`);
-      // 這裡可以用 location.href 換頁，或顯示備註表單 / 呼叫 LIFF 傳資料等
+      // TODO：這裡之後可以改成：
+      // 1）location.href 換到「備註填寫」的第二個 LIFF 頁面，或
+      // 2）在同一頁下方打開一個表單，把日期時間一起送回 Apps Script
     });
 
     renderCalendar();
