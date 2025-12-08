@@ -169,28 +169,7 @@
   </div>
 
   <script>
-    <script>
-const ADMIN_UIDS = [
-  "U49a468448c2a3e9bf5d1404647826d86"
-];
 
-async function checkAdmin() {
-  await liff.init({ liffId: "2008600362-O4V8Aq10" });
-  const profile = await liff.getProfile();
-  
-  if (!ADMIN_UIDS.includes(profile.userId)) {
-    document.body.innerHTML = `
-      <div style="padding:20px;font-size:16px;">
-        此頁面僅供管理員測試，尚未對外開放。
-      </div>
-    `;
-    return false;
-  }
-  return true;
-}
-
-checkAdmin();
-</script>
     // ===== 假資料：這裡暫時先寫死，可之後改成 call Apps Script API =====
     // key: 'YYYY-MM-DD' → value: 可預約時間字串
     const mockAvailability = {
