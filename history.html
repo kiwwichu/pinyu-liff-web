@@ -491,9 +491,12 @@ async function fetchOrdersFromServer() {
     console.log('API 回傳：', data);
 
     if (!data.success) {
-      listEl.innerText = '查詢失敗（success=false），請稍後再試或通知 pinyu～';
+      console.log('history API error data', data);
+      listEl.innerText = `查詢失敗：
+    ${data.error || ''} ${data.message || ''}`.trim();
       return;
     }
+
 
     gOrdersAll = data.orders || [];
 
