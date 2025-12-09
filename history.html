@@ -592,11 +592,12 @@ async function fetchOrdersFromServer() {
       const { label: statusLabel, className: statusClass } = mapOrderStatus(rawStatus);
 
       const dateText = o.serviceDate || o.dateText || '—';
-      const total    = (o.totalSum != null) ? o.totalSum : (o.total || '—');
+      const total    = (o.total != null) ? o.total : '—';
       const orderId  = o.orderId || '—';
-      const depText  = o.depText || '';
+      const depText  = o.depositText || o.depText || '';
       const tailText = o.tailText || '';
       const items    = Array.isArray(o.items) ? o.items : [];
+
 
       // 卡片
       const card = document.createElement('div');
