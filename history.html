@@ -347,45 +347,54 @@
   // -----------------------------
   // 初始化
   // -----------------------------
-  async function init() {
-    try {
-      // 1) 不是在 LINE 內，就不要跑 liff.init
-      if (!liff.isInClient()) {
-        document.getElementById('root').innerText =
-          '請從 LINE 官方帳號內的選單開啟此畫面唷～';
-        return;
-      }
-
-      // 2) 在 LINE 內才初始化 LIFF
-      await liff.init({ liffId: LIFF_ID });
-
-      // 3) 優先用 getContext 拿 userId
-      const ctx = liff.getContext();
-      gLineUserId = ctx && ctx.userId ? ctx.userId : '';
-
-      // 4) 備案：再試一次用 ID Token 拿
-      if (!gLineUserId) {
-        const decoded = liff.getDecodedIDToken();
-        gLineUserId = decoded && decoded.sub ? decoded.sub : '';
-      }
-
-      if (!gLineUserId) {
-        document.getElementById('root').innerText =
-          '目前無法取得您的帳號資訊，請關閉此頁面後再從快樂小狗 Pinyu 官方帳號的選單重新開啟一次～';
-        return;
-      }
-
-      // 5) 畫畫面＋抓歷史訂單
-      buildLayout();
-      await fetchOrdersFromServer();
-
-    } catch (err) {
-      console.error('init error:', err);
-      const msg = (err && err.message) ? err.message : String(err);
+ async function init() {
+  try {
+    // 0) 先確認 liff 這個變數真的有存在
+    if (typeof liff === 'undefined') {
+      console.error('LIFF SDK not loaded');
       document.getElementById('root').innerText =
-        '初始化發生錯誤：' + msg + '\n請稍後再試或通知 pinyu～';
+        'LIFF SDK 載入失敗，請確認網路連線，或從 LINE 官方帳號的選單重新開啟此畫面～';
+      return;
     }
+
+    // 1) 不是在 LINE 內，就不要跑 liff.init
+    if (!liff.isInClient()) {
+      document.getElementById('root').innerText =
+        '請從 LINE 官方帳號內的選單開啟此畫面唷～';
+      return;
+    }
+
+    // 2) 在 LINE 內才初始化 LIFF
+    await liff.init({ liffId: LIFF_ID });
+
+    // 3) 優先用 getContext 拿 userId
+    const ctx = liff.getContext();
+    gLineUserId = ctx && ctx.userId ? ctx.userId : '';
+
+    // 4) 備案：再試一次用 ID Token 拿
+    if (!gLineUserId) {
+      const decoded = liff.getDecodedIDToken();
+      gLineUserId = decoded && decoded.sub ? decoded.sub : '';
+    }
+
+    if (!gLineUserId) {
+      document.getElementById('root').innerText =
+        '目前無法取得您的帳號資訊，請關閉此頁面後再從快樂小狗 Pinyu 官方帳號的選單重新開啟一次～';
+      return;
+    }
+
+    // 5) 畫畫面＋抓歷史訂單
+    buildLayout();
+    await fetchOrdersFromServer();
+
+  } catch (err) {
+    console.error('init error:', err);
+    const msg = (err && err.message) ? err.message : String(err);
+    document.getElementById('root').innerText =
+      '初始化發生錯誤：' + msg + '\n請稍後再試或通知 pinyu～';
   }
+}
+
 
   // -----------------------------
   // 畫出搜尋列 + 列表骨架
@@ -720,7 +729,7 @@ async function fetchOrdersFromServer() {
 const LIFF_BASE_URL = "https://liff.line.me/2008600362-O4V8Aq10";
 
 function openOrderHistory() {
-  if (liff.isInClient()) {
+  if (typeof liff !== 'undefined' && liff.isInClient()) {
     liff.openWindow({ url: LIFF_BASE_URL, external: false });
   } else {
     window.location.href = LIFF_BASE_URL;
@@ -729,12 +738,13 @@ function openOrderHistory() {
 
 function openOrderDetail(orderId) {
   const url = `${LIFF_BASE_URL}?orderId=${encodeURIComponent(orderId)}`;
-  if (liff.isInClient()) {
+  if (typeof liff !== 'undefined' && liff.isInClient()) {
     liff.openWindow({ url, external: false });
   } else {
     window.location.href = url;
   }
 }
+
   // 啟動！
   init();
 </script>
