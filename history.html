@@ -504,24 +504,6 @@ async function fetchOrdersFromServer() {
   }
 }
 
-
-      // 依服務日期排序（字串）
-      gOrdersAll.sort((a, b) => {
-        const da = (a.serviceDate || a.dateText || '').toString();
-        const db = (b.serviceDate || b.dateText || '').toString();
-        return da.localeCompare(db);
-      });
-
-      renderOrders(gOrdersAll);
-      buildQuickDates();
-
-    } catch (err) {
-      console.error('fetchOrdersFromServer error:', err);
-      const msg = (err && err.message) ? err.message : String(err);
-      listEl.innerText = '查詢失敗（例外）：' + msg + '，請稍後再試或通知 pinyu～';
-    }
-  }
-
   // -----------------------------
   // 模糊搜尋
   // -----------------------------
@@ -735,6 +717,24 @@ async function fetchOrdersFromServer() {
     });
   }
 
+const LIFF_BASE_URL = "https://liff.line.me/2008600362-O4V8Aq10";
+
+function openOrderHistory() {
+  if (liff.isInClient()) {
+    liff.openWindow({ url: LIFF_BASE_URL, external: false });
+  } else {
+    window.location.href = LIFF_BASE_URL;
+  }
+}
+
+function openOrderDetail(orderId) {
+  const url = `${LIFF_BASE_URL}?orderId=${encodeURIComponent(orderId)}`;
+  if (liff.isInClient()) {
+    liff.openWindow({ url, external: false });
+  } else {
+    window.location.href = url;
+  }
+}
   // 啟動！
   init();
 </script>
