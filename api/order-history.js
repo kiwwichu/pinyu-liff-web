@@ -42,6 +42,7 @@ export default async function handler(req, res) {
     try {
       gasJson = JSON.parse(gasText);
     } catch (e) {
+      console.log("gasText =", gasText);
       // GAS 有回應，但不是 JSON → 回給前端 debug
       res.status(200).json({
         success: false,
