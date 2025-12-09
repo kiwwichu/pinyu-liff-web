@@ -207,6 +207,10 @@
       font-size: 11px;
       margin-top: 2px;
     }
+    /* 未付訂金：紅色 */
+    .summary-status.status-red {
+      color: #d93025;
+    }
 
     /* 待服務：藍色 */
     .summary-status.status-blue {
@@ -320,7 +324,15 @@
   // -----------------------------
   function mapOrderStatus(rawStatus) {
     const s = rawStatus || '';
-
+    
+    // 🔴 未付訂金 → 紅色
+    if (s.includes('未付訂金') || s.includes('逾期') || s.includes('失效') || s.includes('退款')) {
+      return {
+        // 如果你想直接顯示表格裡的字，就用 rawStatus
+        label: rawStatus || '未付訂金，訂單未成立',
+        className: 'status-red'
+      };
+      
     // 未付尾款
     if (s.includes('未付尾款')) {
       return {
