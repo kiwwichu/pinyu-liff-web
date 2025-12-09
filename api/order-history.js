@@ -1,90 +1,64 @@
 // api/order-history.js
 
 export default async function handler(req, res) {
-  // 只接受 POST，其他一律拒絕
-  if (req.method !== 'POST') {
-    res.status(405).json({ success: false, message: 'Method not allowed' });
+  if (req.method !== "POST") {
+    res.status(405).json({ success: false, message: "Method not allowed" });
     return;
   }
 
   const GAS_URL = process.env.GAS_ORDER_HISTORY_URL;
 
-  // 1) 檢查環境變數是否有設
   if (!GAS_URL) {
     res.status(500).json({
       success: false,
-      message: 'GAS_ORDER_HISTORY_URL is not set in environment variables',
+      message: "GAS_ORDER_HISTORY_URL is not set in environment variables",
     });
     return;
   }
 
   try {
-    // 2) 讀取 request body（在 Vercel Node 環境自己解析）
-    let rawBody = '';
-    await new Promise((resolve, reject) => {
-      req.on('data', (chunk) => {
-        rawBody += chunk;
-      });
-      req.on('end', resolve);
-      req.on('error', reject);
-    });
-
-    let body = {};
-    if (rawBody) {
-      body = JSON.parse(rawBody);
-    }
-
-    const lineUserId = body.lineUserId;
+    // Vercel 會自動幫你把 JSON body 變成 req.body
+    const { lineUserId } = req.body || {};
     if (!lineUserId) {
       res.status(400).json({
         success: false,
-        message: 'lineUserId is required in request body',
+        message: "lineUserId is required in request body",
       });
       return;
     }
 
-    // 3) 組成呼叫 GAS 的 URL：?action=history&lineUserId=...
-    const params = new URLSearchParams();
-    params.set('action', 'history');
-    params.set('lineUserId', lineUserId);
+    // 組成 call GAS 的 URL
+    const params = new URLSearchParams({
+      action: "history",
+      lineUserId,
+    });
 
     const url = `${GAS_URL}?${params.toString()}`;
 
-    // 4) 呼叫 GAS（原本前端直接打的那個網址）
-    const response = await fetch(url, { method: 'GET' });
+    const gasRes = await fetch(url, { method: "GET" });
+    const gasText = await gasRes.text();
 
-    const text = await response.text();
-
-    // 4-1) 如果 HTTP 狀態不是 2xx，回傳錯誤（帶一點 debug）
-    if (!response.ok) {
-      res.status(500).json({
-        success: false,
-        message: `GAS HTTP Error ${response.status}`,
-        raw: text.slice(0, 200),  // 前 200 字 debug 用
-      });
-      return;
-    }
-
-    // 4-2) 嘗試把 GAS 回傳的文字 parse 成 JSON
-    let data;
+    let gasJson;
     try {
-      data = JSON.parse(text);
+      gasJson = JSON.parse(gasText);
     } catch (e) {
-      res.status(500).json({
+      // GAS 有回應，但不是 JSON → 回給前端 debug
+      res.status(200).json({
         success: false,
-        message: 'GAS response is not valid JSON',
-        raw: text.slice(0, 200),
+        from: "vercel",
+        message: "GAS response is not valid JSON",
+        raw: gasText.slice(0, 200),
       });
       return;
     }
 
-    // 5) 一切正常 → 直接把 GAS 的結果回傳給前端
-    res.status(200).json(data);
+    // ✅ 不管 success 是 true / false，都用 200 回去
+    res.status(200).json(gasJson);
   } catch (err) {
-    console.error('order-history API error:', err);
+    console.error("order-history API error:", err);
     res.status(500).json({
       success: false,
-      message: err.message || 'Unknown error',
+      message: err.message || "Unknown error",
     });
   }
 }
