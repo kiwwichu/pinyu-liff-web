@@ -923,21 +923,22 @@ const oldCustomerBlock = document.getElementById("oldCustomerBlock");
 const newCustomerBlock = document.getElementById("newCustomerBlock");
 const oldCustomerSummary = document.getElementById("oldCustomerSummary");
 
-// 請自行填入你的 Apps Script URL
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzhFRM2r01IfO9JZO-9o1tVit69aTjADO_j34KJ7wQaYOe99HM1lQ4pvf3MsMtAKJfrBg/exec";
+// ❌ 不需要再放 WEB_APP_URL
+// const WEB_APP_URL = "...";
 
-function initBooking() {
-
-  const mockUserId = "Uxxxx123"; // 之後改成 liff.getContext().userId
-
-  fetch(WEB_APP_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "initBooking",
-      userId: mockUserId,
-    }),
-  })
+// ✔ 改呼叫自己的 Vercel API
+fetch("/api/booking", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "initBooking",
+    userId: mockUserId,  // 之後改成 liff 取得的 userId
+  }),
+})
+  .then(r => r.json())
+  .then(data => {
+    // 這裡的 data 就是 GAS 回傳的東西
+  });
     .then(r => r.json())
     .then(data => {
       if (!data.ok) return;
