@@ -311,8 +311,6 @@
 
 <script>
   const LIFF_ID = '2008600362-O4V8Aq10';
-  const API_BASE =
-    'https://script.google.com/macros/s/AKfycbxkwRQPbarTaFlNzhII1J6rx-rzjVjaG3hubGTD9KMJ59PtJMzQQxM2rHrCaKqoGsMj/exec';
 
   let gLineUserId = '';
   let gOrdersAll  = [];
@@ -460,35 +458,52 @@
   // -----------------------------
   // 從 Apps Script 抓歷史訂單
   // -----------------------------
-  async function fetchOrdersFromServer() {
-    const listEl = document.getElementById('orderList');
-    showLoading();
+async function fetchOrdersFromServer() {
+  const listEl = document.getElementById('orderList');
+  showLoading();
 
-    const params = new URLSearchParams();
-    params.set('action', 'history');
-    params.set('lineUserId', gLineUserId);
+  try {
+    const res = await fetch('/api/order-history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        lineUserId: gLineUserId,
+      }),
+    });
 
-    const url = `${API_BASE}?${params.toString()}`;
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('API HTTP Error:', res.status, text);
+      listEl.innerText = `查詢失敗（HTTP ${res.status}），請通知 pinyu 看後台～`;
+      return;
+    }
 
-    try {
-      const res = await fetch(url);
+    const data = await res.json();
+    console.log('API 回傳：', data);
 
-      if (!res.ok) {
-        const text = await res.text();
-        console.error('API HTTP Error:', res.status, text);
-        listEl.innerText = `查詢失敗（HTTP ${res.status}），請通知 pinyu 看後台～`;
-        return;
-      }
+    if (!data.success) {
+      listEl.innerText = '查詢失敗（success=false），請稍後再試或通知 pinyu～';
+      return;
+    }
 
-      const data = await res.json();
-      console.log('API 回傳：', data);
+    gOrdersAll = data.orders || [];
 
-      if (!data.success) {
-        listEl.innerText = '查詢失敗（success=false），請稍後再試或通知 pinyu～';
-        return;
-      }
+    gOrdersAll.sort((a, b) => {
+      const da = (a.serviceDate || a.dateText || '').toString();
+      const db = (b.serviceDate || b.dateText || '').toString();
+      return da.localeCompare(db);
+    });
 
-      gOrdersAll = data.orders || [];
+    renderOrders(gOrdersAll);
+    buildQuickDates();
+
+  } catch (err) {
+    console.error('fetchOrdersFromServer error:', err);
+    const msg = (err && err.message) ? err.message : String(err);
+    listEl.innerText = '查詢失敗（例外）：' + msg + '，請稍後再試或通知 pinyu～';
+  }
+}
+
 
       // 依服務日期排序（字串）
       gOrdersAll.sort((a, b) => {
