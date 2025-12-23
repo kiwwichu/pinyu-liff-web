@@ -919,44 +919,36 @@ distanceInput?.addEventListener("input", () => {
 
 /* ========== 舊客／新客 InitBooking（Apps Script） ========== */
 
+const mockUserId = "TEST_USER"; // 先讓程式能跑，之後換成 LIFF userId
+
 const oldCustomerBlock = document.getElementById("oldCustomerBlock");
 const newCustomerBlock = document.getElementById("newCustomerBlock");
 const oldCustomerSummary = document.getElementById("oldCustomerSummary");
 
-// ❌ 不需要再放 WEB_APP_URL
-// const WEB_APP_URL = "...";
-
-// ✔ 改呼叫自己的 Vercel API
-fetch("/api/booking", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    action: "initBooking",
-    userId: mockUserId,  // 之後改成 liff 取得的 userId
-  }),
-})
-  .then(r => r.json())
-  .then(data => {
-    // 這裡的 data 就是 GAS 回傳的東西
-  });
+function initBooking() {
+  fetch("/api/booking", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "initBooking",
+      userId: mockUserId,
+    }),
+  })
     .then(r => r.json())
     .then(data => {
-      if (!data.ok) return;
+      if (!data || !data.ok) throw new Error("initBooking not ok");
 
       isNewCustomer = data.isNewCustomer;
       familyId = data.familyId || "";
       farePerVisit = data.farePerVisit || 0;
 
-      // 訂金判斷（你後端欄位 idxStdDep / idxCusDep）
       depositText = data.isRegular
         ? "免訂金（常客）"
         : "需訂金（實際金額由 Pinyu 告知）";
 
-      // UI 切換
       if (isNewCustomer) {
         newCustomerBlock.classList.remove("hidden");
         oldCustomerBlock.classList.add("hidden");
-
       } else {
         newCustomerBlock.classList.add("hidden");
         oldCustomerBlock.classList.remove("hidden");
@@ -970,7 +962,7 @@ fetch("/api/booking", {
       }
     })
     .catch(err => {
-      console.warn("initBooking failed", err);
+      console.warn("initBooking failed:", err);
       // 若失敗 → 當作新客
       isNewCustomer = true;
       newCustomerBlock.classList.remove("hidden");
@@ -978,10 +970,10 @@ fetch("/api/booking", {
     });
 }
 
-
-// 初始化執行
+// 初始化
 updateStepUI();
 initBooking();
+
 
     /* ============================================================
    日期處理工具
