@@ -4,92 +4,490 @@
   <meta charset="UTF-8" />
   <title>快樂小狗 Pinyu｜預約設定</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  
-  <!-- CSS 將在第 2 段提供 -->
-  <link rel="stylesheet" href="style.css">
 
+  <style>
+    /* ========== 全域樣式 ========== */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f7fc;
+      color: #333;
+    }
+
+    .page {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+    }
+
+    header {
+      padding: 12px 16px;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      border-bottom: 1px solid #d0e2ff;
+      color: #144a7e;
+      background: #ffffff;
+    }
+
+    /* ========== 步驟指示器 ========== */
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 8px 0;
+      font-size: 12px;
+      color: #7a8baa;
+      flex-wrap: wrap;
+    }
+
+    .step-dot {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .step-circle {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #d1e4ff;
+    }
+
+    .step-dot.active .step-circle { background: #48a2e8; }
+    .step-dot.active span { color: #225f9f; font-weight: 600; }
+
+    .step-sep { color: #c4d7f1; font-size: 12px; }
+
+    /* ========== 內容區 ========== */
+    .content {
+      padding: 12px 16px 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #123456;
+    }
+
+    .section-sub {
+      font-size: 13px;
+      color: #667a95;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    /* ========== 表單欄位 ========== */
+    .field-group { margin-bottom: 16px; }
+
+    .field-label {
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: #3f4f66;
+    }
+
+    .text-input,
+    .date-input,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #cfe0f5;
+      background: #ffffff;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .text-input:focus,
+    .date-input:focus,
+    textarea:focus {
+      border-color: #48a2e8;
+      outline: none;
+    }
+
+    .date-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-row span {
+      font-size: 12px;
+      color: #7a8baa;
+    }
+
+    /* ========== 選項卡 ========== */
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-card {
+      border-radius: 14px;
+      border: 1px solid #d1e4ff;
+      background: #ffffff;
+      padding: 12px 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.2s ease;
+      user-select: none;
+    }
+
+    .option-card.active {
+      background: #e9f3ff;
+      border-color: #48a2e8;
+      box-shadow: 0 2px 8px rgba(72, 162, 232, 0.25);
+    }
+
+    .option-main {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .option-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #123456;
+    }
+
+    .option-desc {
+      font-size: 12px;
+      color: #6c7a8f;
+    }
+
+    .option-tag {
+      font-size: 11px;
+      background: #dff0ff;
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: #1c5b9f;
+    }
+
+    /* ========== 摘要框 ========== */
+    .summary-box {
+      background: #f0f6ff;
+      border: 1px solid #d1e4ff;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.7;
+      margin-bottom: 16px;
+      color: #3f4f66;
+    }
+
+    .summary-box strong { color: #123456; }
+
+    /* ========== Step4：每日時段 ========== */
+    .day-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .day-row {
+      background: #f7fbff;
+      border: 1px solid #dce8fa;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .day-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #123456;
+      gap: 10px;
+    }
+
+    .day-row-header span:last-child {
+      font-size: 12px;
+      color: #738099;
+      white-space: nowrap;
+    }
+
+    .slot-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .slot-chip {
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid #cfe3fb;
+      background: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+      color: #3f4f66;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slot-chip small {
+      font-size: 10px;
+      margin-left: 3px;
+      color: #8695a8;
+    }
+
+    .slot-chip.active {
+      background: #dff0ff;
+      border-color: #48a2e8;
+      color: #1d5fae;
+    }
+
+    .minute-select {
+      border: 1px solid #cfe3fb;
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      color: #1d5fae;
+    }
+
+    /* ========== 勾選框列表 ========== */
+    .checkbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .checkbox-item {
+      font-size: 14px;
+      color: #3f4f66;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.5;
+    }
+
+    /* ========== Quote Card ========== */
+    .quote-card {
+      border-radius: 16px;
+      border: 1px solid #d3e3f8;
+      background: #ffffff;
+      padding: 16px 14px 12px;
+      font-size: 13px;
+    }
+
+    .quote-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .quote-range {
+      font-size: 15px;
+      font-weight: 700;
+      color: #123456;
+    }
+
+    .quote-service-type {
+      font-size: 12px;
+      color: #6d7b90;
+    }
+
+    .quote-total {
+      font-size: 20px;
+      font-weight: 700;
+      color: #e28c27;
+      white-space: nowrap;
+    }
+
+    .quote-section {
+      border-top: 1px dashed #cbd8ee;
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+
+    .quote-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #123456;
+    }
+
+    .quote-line {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: #4b5e7c;
+      gap: 10px;
+    }
+
+    .quote-line span:first-child { color: #7a8baa; }
+
+    .quote-subtotal {
+      margin-top: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: right;
+      color: #123456;
+    }
+
+    .highlight-text { color: #e28c27; font-weight: 700; }
+
+    /* ========== 底部按鈕區 ========== */
+    .bottom-bar {
+      padding: 12px 16px 18px;
+      border-top: 1px solid #d0e2ff;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      width: 100%;
+      border-radius: 999px;
+      padding: 12px 0;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+    }
+
+    .primary-btn {
+      background: #48a2e8;
+      color: #ffffff;
+      box-shadow: 0 3px 8px rgba(72, 162, 232, 0.25);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .secondary-btn {
+      background: #e9f3ff;
+      color: #234e7d;
+    }
+
+    .sub-text {
+      font-size: 12px;
+      text-align: center;
+      color: #6c7a8f;
+      line-height: 1.6;
+    }
+
+    .hidden { display: none; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid #d1e4ff;
+      background: #fff;
+      font-size: 13px;
+      color: #234e7d;
+    }
+
+    .muted { color: #6c7a8f; font-size: 12px; }
+  </style>
 </head>
+
 <body>
   <div class="page">
 
-    <!-- Header -->
     <header>設定預約需求</header>
 
-    <!-- 步驟指示 -->
-    <div class="step-indicator">
-  <div class="step-dot" data-step="1">
+    <!-- Step Indicator -->
+<div class="step-indicator">
+  <div class="step-dot" data-ind="1">
     <div class="step-circle"></div><span>車馬費</span>
   </div>
   <span class="step-sep">›</span>
 
-  <div class="step-dot" data-step="2">
+  <div class="step-dot" data-ind="2">
     <div class="step-circle"></div><span>服務日期</span>
   </div>
   <span class="step-sep">›</span>
 
-  <div class="step-dot" data-step="3">
+  <div class="step-dot" data-ind="3">
+    <div class="step-circle"></div><span>頻率</span>
+  </div>
+  <span class="step-sep">›</span>
+
+  <div class="step-dot" data-ind="4">
     <div class="step-circle"></div><span>服務方案</span>
   </div>
   <span class="step-sep">›</span>
 
-  <div class="step-dot" data-step="4">
+  <div class="step-dot" data-ind="5">
     <div class="step-circle"></div><span>加購項目</span>
   </div>
   <span class="step-sep">›</span>
 
-  <div class="step-dot" data-step="5">
+  <div class="step-dot" data-ind="6">
     <div class="step-circle"></div><span>試算報價</span>
   </div>
 </div>
 
 
-    <!-- 內容區 -->
     <div class="content">
 
-      <!-- STEP 1：地區 / 車馬費 -->
-      <div class="step-panel" id="step1">
 
-        <div class="section-title">確認服務地區與距離</div>
-        <div class="section-sub">
-          新客需填寫距離以試算車馬費；舊客將自動帶入資料。
+      <!-- STEP 0：新客須知 + 距離試算（舊客跳過） -->
+      <div class="step-panel" id="step0">
+        <div class="section-title">預約須知（新客）</div>
+        <div class="section-sub">為了讓照顧更順利，請先閱讀並同意以下須知。</div>
+
+        <div class="summary-box">
+          <strong>🐾 預約前請留意</strong><br>
+          1) 服務以毛孩安全為優先，如遇緊急狀況會先聯絡飼主，必要時協助就醫。<br>
+          2) 到府服務需提供可進出方式（鑰匙／門禁／代收）與基本清潔耗材（垃圾袋、貓砂袋等）。<br>
+          3) 系統試算為預估金額，實際仍以 Pinyu 最終確認為主。<br>
+          4) 若需臨時改時段或加單，將依當日動線與檔期安排為準。<br>
         </div>
 
-        <!-- 新客 -->
-        <div id="newCustomerBlock">
-          <div class="summary-box">
-            <strong>🧭 如何確認距離？</strong><br>
-            1. 打開 Google Maps<br>
-            2. 搜尋「中山捷運站 → 您的地址」<br>
-            3. 選「機車模式 🛵」即可看到公里數<br>
-            4. 下方輸入 Google Maps 顯示數字（小數點會自動四捨五入）<br><br>
-            若不確定，也可以將地址私訊給我，我會協助查詢 💛
-          </div>
+        <div class="section-title" style="font-size:16px;margin-top:6px;">車馬費試算</div>
+        <div class="section-sub">新客請輸入 Google Maps「中山捷運站 → 您的地址」機車模式的公里數（小數會四捨五入）。</div>
 
-          <div class="field-group">
-            <div class="field-label">請輸入公里數</div>
-            <input type="number" step="0.1" id="distanceKm" class="text-input"
-              placeholder="例如：4.7 或 12.3">
-          </div>
-
-          <div class="summary-box" id="fareResultBox">
-            尚未輸入公里數。
-          </div>
+        <div class="field-group">
+          <div class="field-label">請輸入公里數</div>
+          <input type="number" step="0.1" id="distanceKm" class="text-input" placeholder="例如：4.7 或 12.3">
         </div>
 
-        <!-- 舊客 -->
-        <div id="oldCustomerBlock" class="hidden">
-          <div class="summary-box" id="oldCustomerSummary">
-            <!-- Apps Script initBooking 會填入 -->
-          </div>
-        </div>
+        <div class="summary-box" id="fareResultBox">尚未輸入公里數。</div>
 
+        <label class="checkbox-item" style="margin-top:6px;">
+          <input type="checkbox" id="agreeNotice">
+          <span>我已閱讀並同意以上預約須知</span>
+        </label>
       </div>
 
-      <!-- STEP 2：日期與預設頻率 -->
-      <div class="step-panel hidden" id="step2">
-
-        <div class="section-title">選擇服務期間與頻率</div>
-        <div class="section-sub">下一步可再微調每日時段。</div>
+      <!-- STEP 1：日期 -->
+      <div class="step-panel hidden" id="step1">
+        <div class="section-title">選擇服務日期</div>
+        <div class="section-sub">先選日期區間，之後再選服務類型與頻率。</div>
 
         <div class="field-group">
           <div class="field-label">服務日期區間</div>
@@ -100,78 +498,21 @@
           </div>
         </div>
 
-        <div class="field-group">
-          <div class="field-label">預設頻率</div>
-
-          <div class="options-grid">
-
-          <div class="option-card" data-template="daily1-evening">
-            <div class="option-main">
-              <div class="option-title">每日 1 次（預設晚上）</div>
-              <div class="option-desc">適合短暫外出、毛孩作息穩定時的小小陪伴。</div>
-            </div>
-            <div class="option-tag">常見選項</div>
-          </div>
-
-            <div class="option-card" data-template="daily2-morning-evening">
-    <div class="option-main">
-      <div class="option-title">每日 2 次（早＋晚）</div>
-      <div class="option-desc">早晚各一趟，兼顧清潔補水，也陪毛孩度過一天的重點時刻。</div>
-    </div>
-    <div class="option-tag">最多人選擇</div>
-          </div>
-
-              <div class="option-card" data-template="daily3-morning-afternoon-evening">
-                <div class="option-main">
-                  <div class="option-title">每日 3 次（早＋午＋晚）</div>
-                  <div class="option-desc">給需要多一點安全感的毛孩，一天三次溫柔陪伴。</div>
-                </div>
-                <div class="option-tag">更多關心時刻</div>
-              </div>
-
-              <div class="option-card" data-template="custom-empty">
-                <div class="option-main">
-                  <div class="option-title">完全自訂</div>
-                  <div class="option-desc">可依毛孩習慣自由調整，下一步勾選適合的時段即可。</div>
-                </div>
-                <div class="option-tag">自由彈性</div>
-              </div>
-
-
-          </div>
-        </div>
-
-        <div class="summary-box" id="step2Summary">尚未選擇期間與頻率。</div>
-
+        <div class="summary-box" id="step1Summary">尚未選擇日期。</div>
       </div>
 
-      <!-- STEP 3：每日時段 -->
-      <div class="step-panel hidden" id="step3">
-        <div class="section-title">調整每日到訪時段</div>
-        <div class="section-sub">
-          點選即可勾選／取消：<br>
-          早上 09:00–12:00、下午 13:00–17:00、晚上 18:00–21:00、深夜 22:00–23:00。
-        </div>
+      <!-- STEP 2：主要服務類型 -->
+      <div class="step-panel hidden" id="step2">
+        <div class="section-title">選擇主要服務類型</div>
+        <div class="section-sub">整段期間採用相同服務類型。</div>
 
-        <div id="dayList" class="day-list"></div>
-
-        <div class="summary-box" id="step3Summary">尚未選擇任何到訪時段。</div>
-      </div>
-
-      <!-- STEP 4：服務類型 -->
-      <div class="step-panel hidden" id="stepServiceType">
-      <div id="serviceTypeTopSummary" class="selection-summary"></div>
-
-
-        <div class="section-title">選擇服務類型</div>
-        <div class="section-sub">整段期間皆使用相同服務類型。</div>
-
-        <div class="options-grid">
+        <div class="options-grid" id="serviceTypeGrid">
           <div class="option-card" data-service="到府照顧">
             <div class="option-main">
               <div class="option-title">到府照顧</div>
               <div class="option-desc">餵食｜補水｜清潔｜陪伴｜照片回報</div>
             </div>
+            <div class="option-tag">最常見</div>
           </div>
 
           <div class="option-card" data-service="遛狗散步">
@@ -179,6 +520,7 @@
               <div class="option-title">遛狗散步</div>
               <div class="option-desc">散步｜排便觀察｜安全互動</div>
             </div>
+            <div class="option-tag">外出</div>
           </div>
 
           <div class="option-card" data-service="長時間陪伴">
@@ -186,115 +528,157 @@
               <div class="option-title">長時間陪伴</div>
               <div class="option-desc">適合分離焦慮、需要陪伴的毛孩</div>
             </div>
+            <div class="option-tag">加強安全感</div>
           </div>
         </div>
 
-        <div class="summary-box" id="serviceTypeSummary">
-          尚未選擇服務類型。
-        </div>
-
+        <div class="summary-box" id="serviceTypeSummary">尚未選擇服務類型。</div>
       </div>
 
-      <!-- STEP 5：方案（30/45/60 分鐘） -->
-      <div class="step-panel hidden" id="stepPlan">
+      <!-- STEP 3：預設分鐘 -->
+      <div class="step-panel hidden" id="step3">
+        <div class="section-title">選擇預設每次分鐘方案</div>
+        <div class="section-sub">
+          這是「預設值」：下一步可針對每次到訪（早/午/晚/深夜）單獨調整分鐘。
+        </div>
 
-        <div class="section-title">選擇服務方案</div>
-        <div class="section-sub">不同時長適合不同毛孩需求。</div>
-
-        <div class="options-grid">
-          <div class="option-card" data-plan="30" data-price="350">
+        <div class="options-grid" id="minutesGrid">
+          <div class="option-card" data-minutes="30">
             <div class="option-main">
-              <div class="option-title">30 分鐘 — NT.350</div>
-              <div class="option-desc">基礎服務：餵食、補水、清潔、紀錄</div>
+              <div class="option-title">30 分鐘</div>
+              <div class="option-desc">基礎照護：餵食、補水、清潔、紀錄</div>
             </div>
             <div class="option-tag">基礎</div>
           </div>
 
-          <div class="option-card" data-plan="45" data-price="450">
+          <div class="option-card" data-minutes="45">
             <div class="option-main">
-              <div class="option-title">45 分鐘 — NT.450</div>
-              <div class="option-desc">增加陪伴、清潔、互動時間</div>
+              <div class="option-title">45 分鐘</div>
+              <div class="option-desc">更充裕的清潔與互動時間</div>
             </div>
             <div class="option-tag">加強</div>
           </div>
 
-          <div class="option-card" data-plan="60" data-price="500">
+          <div class="option-card" data-minutes="60">
             <div class="option-main">
-              <div class="option-title">60 分鐘 — NT.500</div>
-              <div class="option-desc">長時間陪伴或高需求毛孩</div>
+              <div class="option-title">60 分鐘</div>
+              <div class="option-desc">高需求毛孩或長時間陪伴</div>
             </div>
-            <div class="option-tag">最熱門</div>
+            <div class="option-tag">熱門</div>
           </div>
         </div>
 
-        <div class="summary-box" id="planSummary">
-          尚未選擇方案。
-        </div>
-
+        <div class="summary-box" id="minutesSummary">尚未選擇預設分鐘。</div>
       </div>
 
-      <!-- STEP 6：毛孩數量 -->
-      <div class="step-panel hidden" id="stepPet">
+      <!-- STEP 4：頻率模板 + 每日時段（每次到訪可改分鐘） -->
+      <div class="step-panel hidden" id="step4">
+        <div class="section-title">選擇頻率並調整到訪時段</div>
+        <div class="section-sub">
+          先選預設頻率模板，系統會自動勾選時段；你也可以逐日微調。<br>
+          <span class="muted">提示：勾選某個時段後，可在該時段旁選擇這次要用的分鐘。</span>
+        </div>
 
+        <div class="field-group">
+          <div class="field-label">預設頻率</div>
+          <div class="options-grid" id="templateGrid">
+            <div class="option-card" data-template="daily1-evening">
+              <div class="option-main">
+                <div class="option-title">每日 1 次（預設晚上）</div>
+                <div class="option-desc">適合短暫外出、毛孩作息穩定。</div>
+              </div>
+              <div class="option-tag">常見</div>
+            </div>
+
+            <div class="option-card" data-template="daily2-morning-evening">
+              <div class="option-main">
+                <div class="option-title">每日 2 次（早＋晚）</div>
+                <div class="option-desc">早晚各一趟，兼顧補水清潔與陪伴。</div>
+              </div>
+              <div class="option-tag">最多人選</div>
+            </div>
+
+            <div class="option-card" data-template="daily3-morning-afternoon-evening">
+              <div class="option-main">
+                <div class="option-title">每日 3 次（早＋午＋晚）</div>
+                <div class="option-desc">需要更多關心時刻的毛孩。</div>
+              </div>
+              <div class="option-tag">加強</div>
+            </div>
+
+            <div class="option-card" data-template="custom-empty">
+              <div class="option-main">
+                <div class="option-title">完全自訂</div>
+                <div class="option-desc">自由勾選每天要到訪的時段。</div>
+              </div>
+              <div class="option-tag">彈性</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-box" id="step4Summary">尚未選擇頻率模板。</div>
+
+        <div id="dayList" class="day-list"></div>
+
+        <div class="summary-box" id="step4VisitSummary">尚未選擇任何到訪時段。</div>
+      </div>
+
+      <!-- STEP 5：毛孩數量 -->
+      <div class="step-panel hidden" id="step5">
         <div class="section-title">毛孩資訊</div>
         <div class="section-sub">以下資訊影響部分加價項目。</div>
 
         <div class="field-group">
-          <div class="field-label">
-            狗狗隻數（遛狗散步第二隻起 +100／訪視）
-          </div>
+          <div class="field-label">狗狗隻數（遛狗散步第二隻起 +100／訪視）</div>
           <input type="number" id="dogCount" class="text-input" min="0" value="0">
         </div>
 
         <div class="field-group">
-          <div class="field-label">
-            貓咪隻數（第三隻以上視情況加價）
-          </div>
+          <div class="field-label">貓咪隻數（第三隻以上視情況加價）</div>
           <input type="number" id="catCount" class="text-input" min="0" value="0">
         </div>
 
-        <div class="summary-box" id="multiPetSummary">
-          尚未輸入毛孩數量。
-        </div>
-
+        <div class="summary-box" id="multiPetSummary">尚未輸入毛孩數量。</div>
       </div>
 
-      <!-- STEP 7：加購項目 -->
-      <div class="step-panel hidden" id="stepAddons">
-
+      <!-- STEP 6：加購 -->
+      <div class="step-panel hidden" id="step6">
         <div class="section-title">加購項目（可選）</div>
         <div class="section-sub">若毛孩有額外需求，可於此處加購。</div>
 
         <div class="checkbox-list">
-
           <label class="checkbox-item">
             <input type="checkbox" data-addon="medicine" data-price="50">
-            餵藥服務（+50／次）
+            <span>餵藥服務（+50／次）</span>
           </label>
 
-          <label class="checkbox-item">
+          <label class="checkbox-item" id="addonMultiDogRow">
             <input type="checkbox" data-addon="multi-dog" data-price="100">
-            多寵家庭（第二隻狗起 +100／次）
+            <span>多犬加價（第二隻狗起 +100／次）<br><span class="muted">僅遛狗散步適用</span></span>
           </label>
-
         </div>
 
-        <div class="summary-box" id="addonSummary">
-          尚未選擇加購項目。
-        </div>
-
+        <div class="summary-box" id="addonSummary">尚未選擇加購項目。</div>
       </div>
 
-      <!-- STEP 8：試算報價 -->
-      <div class="step-panel hidden" id="stepQuote">
-
-        <div class="section-title">試算本次預約金額</div>
+      <!-- STEP 7：備註 + 試算 + 送出 -->
+      <div class="step-panel hidden" id="step7">
+        <div class="section-title">備註與試算報價</div>
         <div class="section-sub">
-          系統依照您的設定試算金額，<br>實際金額仍以 Pinyu 最終確認為主 💛
+          若有希望的到訪時段、毛孩狀況或照顧需求，請在下方備註。<br>
+          系統試算為預估金額，實際仍以 Pinyu 最終確認為主 💛
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">備註（選填）</div>
+          <textarea id="noteText" placeholder="你可以寫：
+- 希望到訪時間偏好（例如：晚上7點前／早上越早越好）
+- 毛孩狀況（怕生、會躲、需要慢慢靠近、是否會咬/護食）
+- 本次需求（補水、清貓砂、陪玩10分鐘、拍照回報）
+- 其他（濕食沒吃完要不要收、垃圾放哪裡等）"></textarea>
         </div>
 
         <div class="quote-card">
-
           <div class="quote-header">
             <div>
               <div class="quote-range" id="quoteRange"></div>
@@ -304,627 +688,240 @@
           </div>
 
           <div class="quote-section">
-            <div class="quote-section-title">1. 服務項目</div>
+            <div class="quote-section-title">1. 服務明細</div>
 
-            <div class="quote-line">
-              <span>服務日期</span>
-              <span id="quoteDateRangeText"></span>
-            </div>
-
-            <div class="quote-line">
-              <span>時數</span>
-              <span id="quoteDuration"></span>
-            </div>
-
-            <div class="quote-line">
-              <span>服務次數</span>
-              <span id="quoteVisitCount"></span>
-            </div>
-
-            <div class="quote-line">
-              <span>服務單價</span>
-              <span id="quoteUnitPriceText"></span>
-            </div>
-
-            <div class="quote-line">
-              <span>車馬費</span>
-              <span id="quoteFareText"></span>
-            </div>
-
-            <div class="quote-line">
-              <span>多寵加價</span>
-              <span id="quoteMultiPet"></span>
-            </div>
-
-            <div class="quote-line">
-              <span>加購項目</span>
-              <span id="quoteAddons"></span>
-            </div>
+            <div class="quote-line"><span>服務日期</span><span id="quoteDateRangeText"></span></div>
+            <div class="quote-line"><span>到訪次數</span><span id="quoteVisitCount"></span></div>
+            <div class="quote-line"><span>分鐘分佈</span><span id="quoteMinuteDist"></span></div>
+            <div class="quote-line"><span>服務費</span><span id="quoteServiceFee"></span></div>
+            <div class="quote-line"><span>車馬費</span><span id="quoteFareText"></span></div>
+            <div class="quote-line"><span>多寵加價</span><span id="quoteMultiPet"></span></div>
+            <div class="quote-line"><span>加購項目</span><span id="quoteAddons"></span></div>
 
             <div class="quote-subtotal" id="quoteSubtotal"></div>
           </div>
 
           <div class="quote-section">
-            <div class="quote-line">
-              <span>訂金</span>
-              <span id="quoteDepositText" class="highlight-text">免訂金（常客）</span>
-            </div>
-
-            <div class="quote-line">
-              <span>備註</span>
-              <span>此為系統試算金額，實際金額仍需由 Pinyu 最終確認。</span>
-            </div>
+            <div class="quote-line"><span>訂金</span><span id="quoteDepositText" class="highlight-text"></span></div>
+            <div class="quote-line"><span>備註</span><span>此為系統試算金額，實際仍需由 Pinyu 最終確認。</span></div>
           </div>
-
         </div>
 
-        <div class="summary-box" id="quoteDebugBox">
-          （開發用）送出時將一併傳送完整明細。
-        </div>
-
+        <div class="summary-box" id="quoteDebugBox">（開發用）送出時將一併傳送完整明細。</div>
       </div>
 
     </div>
 
-    <!-- 底部按鈕 -->
+    <!-- Bottom Bar -->
     <div class="bottom-bar">
       <button class="secondary-btn hidden" id="prevBtn">← 上一步</button>
       <button class="primary-btn" id="nextBtn">下一步</button>
-      <div class="sub-text" id="hintText">
-        會先建立預約需求，保姆確認後再與您敲定實際金額與時間 🐾
-      </div>
+      <div class="sub-text" id="hintText">會先建立預約需求，保姆確認後再與您敲定實際金額與時間 🐾</div>
     </div>
-
   </div>
-<style>
- /* ========== 全域樣式 ========== */
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f3f7fc;
-  color: #333;
-}
 
-.page {
-  max-width: 480px;
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-}
+  <!-- 第2/3段：JS（上半）貼在這裡 -->
+<script>
+/* ============================================================
+   全域狀態
+============================================================ */
 
-/* Header */
-header {
-  padding: 12px 16px;
-  font-size: 16px;
-  font-weight: 700;
-  text-align: center;
-  border-bottom: 1px solid #d0e2ff;
-  color: #144a7e;
-  background: #ffffff;
-}
+// 模擬 userId（之後換成 LIFF 取得）
+const mockUserId = "TEST_USER";
 
-/* ========== 步驟指示器 ========== */
-.step-indicator {
-  display: flex;
-  justify-content: center;
-  gap: 14px;
-  padding: 12px 8px 0;
-  font-size: 12px;
-  color: #7a8baa;
-  flex-wrap: wrap;
-}
-
-.step-dot {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
-
-.step-circle {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #d1e4ff;
-}
-
-.step-dot.active .step-circle {
-  background: #48a2e8;
-}
-
-.step-dot.active span {
-  color: #225f9f;
-  font-weight: 600;
-}
-
-.step-sep {
-  color: #c4d7f1;
-  font-size: 12px;
-}
-
-
-/* ========== 內容區 ========== */
-.content {
-  padding: 12px 16px 16px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.section-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: #123456;
-}
-
-.section-sub {
-  font-size: 13px;
-  color: #667a95;
-  margin-bottom: 12px;
-  line-height: 1.6;
-}
-
-.selection-summary {
-  background: #eef6ff;
-  padding: 10px 16px;
-  margin-top: 16px;
-  border-radius: 10px;
-  color: #3566a8;
-  font-size: 14px;
-}
-
-
-/* ========== 表單欄位 ========== */
-.field-group {
-  margin-bottom: 16px;
-}
-
-.field-label {
-  font-size: 14px;
-  margin-bottom: 6px;
-  color: #3f4f66;
-}
-
-.text-input,
-.date-input {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #cfe0f5;
-  background: #ffffff;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-.text-input:focus,
-.date-input:focus {
-  border-color: #48a2e8;
-  outline: none;
-}
-
-.date-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.date-row span {
-  font-size: 12px;
-  color: #7a8baa;
-}
-
-/* ========== 選項卡 (Option Card) ========== */
-.options-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.option-card {
-  border-radius: 14px;
-  border: 1px solid #d1e4ff;
-  background: #ffffff;
-  padding: 12px 14px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: 0.2s ease;
-}
-
-.option-card.active {
-  background: #e9f3ff;
-  border-color: #48a2e8;
-  box-shadow: 0 2px 8px rgba(72, 162, 232, 0.25);
-}
-
-.option-main {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.option-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #123456;
-}
-
-.option-desc {
-  font-size: 12px;
-  color: #6c7a8f;
-}
-
-.option-tag {
-  font-size: 11px;
-  background: #dff0ff;
-  padding: 3px 8px;
-  border-radius: 999px;
-  color: #1c5b9f;
-}
-
-/* ========== 摘要框 (Summary Box) ========== */
-.summary-box {
-  background: #f0f6ff;
-  border: 1px solid #d1e4ff;
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 13px;
-  line-height: 1.7;
-  margin-bottom: 16px;
-  color: #3f4f66;
-}
-
-/* ========== Step 3：每日時段 ========== */
-.day-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.day-row {
-  background: #f7fbff;
-  border: 1px solid #dce8fa;
-  border-radius: 12px;
-  padding: 10px 12px;
-}
-
-.day-row-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-  font-size: 14px;
-  color: #123456;
-}
-
-.day-row-header span:last-child {
-  font-size: 12px;
-  color: #738099;
-}
-
-.slot-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.slot-chip {
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid #cfe3fb;
-  background: #ffffff;
-  font-size: 12px;
-  cursor: pointer;
-  color: #3f4f66;
-  white-space: nowrap;
-}
-
-.slot-chip small {
-  font-size: 10px;
-  margin-left: 3px;
-  color: #8695a8;
-}
-
-.slot-chip.active {
-  background: #dff0ff;
-  border-color: #48a2e8;
-  color: #1d5fae;
-}
-
-/* ========== 勾選框列表 ========== */
-.checkbox-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.checkbox-item {
-  font-size: 14px;
-  color: #3f4f66;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* ========== 報價卡 Quote Card ========== */
-.quote-card {
-  border-radius: 16px;
-  border: 1px solid #d3e3f8;
-  background: #ffffff;
-  padding: 16px 14px 12px;
-  font-size: 13px;
-}
-
-.quote-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.quote-range {
-  font-size: 15px;
-  font-weight: 700;
-  color: #123456;
-}
-
-.quote-service-type {
-  font-size: 12px;
-  color: #6d7b90;
-}
-
-.quote-total {
-  font-size: 20px;
-  font-weight: 700;
-  color: #e28c27;
-}
-
-.quote-section {
-  border-top: 1px dashed #cbd8ee;
-  padding-top: 10px;
-  margin-top: 10px;
-}
-
-.quote-section-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: #123456;
-}
-
-.quote-line {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  font-size: 13px;
-  color: #4b5e7c;
-}
-
-.quote-line span:first-child {
-  color: #7a8baa;
-}
-
-.quote-subtotal {
-  margin-top: 8px;
-  font-size: 15px;
-  font-weight: 700;
-  text-align: right;
-  color: #123456;
-}
-
-.highlight-text {
-  color: #e28c27;
-  font-weight: 700;
-}
-
-/* ========== 底部按鈕區 ========== */
-.bottom-bar {
-  padding: 12px 16px 18px;
-  border-top: 1px solid #d0e2ff;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.primary-btn,
-.secondary-btn {
-  width: 100%;
-  border-radius: 999px;
-  padding: 12px 0;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-}
-
-.primary-btn {
-  background: #48a2e8;
-  color: #ffffff;
-  box-shadow: 0 3px 8px rgba(72, 162, 232, 0.25);
-}
-
-.primary-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-  box-shadow: none;
-}
-
-.secondary-btn {
-  background: #e9f3ff;
-  color: #234e7d;
-}
-
-.sub-text {
-  font-size: 12px;
-  text-align: center;
-  color: #6c7a8f;
-  line-height: 1.6;
-}
-
-.hidden {
-  display: none;
-}
-
-</style>
-  <!-- JS 將在第 3～5 段提供 -->
-  <script>
-/* ========== 全域變數 ========== */
-
-// 從 Apps Script 帶入
+// 後端回來的資料
 let familyId = "";
 let isNewCustomer = true;
 let farePerVisit = 0;
-let depositText = "需訂金";
-let hasValidDistance = false;
+let depositText = "需訂金（實際金額由 Pinyu 告知）";
 
-// 預設服務類型
-let serviceType = "到府照顧";   
-
-// 預設方案資料
-let selectedPlan = null;
-let selectedPlanPrice = 0;
-
-// 毛孩資訊
-let dogCountValue = 0;
-let catCountValue = 0;
-
-// 加購項目
-let addons = {}; // e.g. { medicine: 50 }
-
-// 日期與排程
+// 使用者選擇
 let startDate = null;
 let endDate = null;
+
+let serviceType = ""; // 到府照顧 / 遛狗散步 / 長時間陪伴
+let defaultMinutes = null; // Step3 預設分鐘
+
 let selectedTemplate = null;
 
-// 每日時段排程 map：{ "2025-01-01": Set(["MORNING", "EVENING"]) }
+// schedule 結構：schedule[dateKey][slotId] = { minutes: 30 }
 let schedule = {};
 
-// Step 控制
-let currentStep = 1;
+// 毛孩數量
+let dogCountValue = 0;
+let catCountValue = 0;
+let dogExtraFeePerVisit = 0;
+let catRequireEval = false;
 
-// DOM 快取
+// 加購
+let addons = {}; // { medicine: 50, "multi-dog": 100 }
+
+// Step 控制
+let currentStep = 0;
+
+/* ============================================================
+   價格表（分鐘 → 單價）
+   你日後要改價，就改這裡即可
+============================================================ */
+const PRICE_TABLE = {
+  "到府照顧": { 30: 400, 45: 500, 60: 550 },
+  "遛狗散步": { 30: 400, 45: 500, 60: 550 },
+  "長時間陪伴": { 120: 900 },
+};
+
+const MINUTE_OPTIONS = [30, 45, 60];
+
+/* ============================================================
+   時段定義
+============================================================ */
+const SLOT_DEFS = [
+  { id: "MORNING",   label: "早上", range: "09:00–12:00" },
+  { id: "AFTERNOON", label: "下午", range: "13:00–17:00" },
+  { id: "EVENING",   label: "晚上", range: "18:00–21:00" },
+  { id: "LATE",      label: "深夜", range: "22:00–23:00" },
+];
+
+/* ============================================================
+   DOM
+============================================================ */
+const stepDots = document.querySelectorAll(".step-dot");
+  
+// ✅ 放這裡：先宣告 mapping
+function getIndicatorIndex(step) {
+  if (step === 0) return 1; // 須知/車馬費
+  if (step === 1) return 2; // 日期
+  if (step === 4) return 3; // 頻率/時段
+  if (step === 2 || step === 3) return 4; // 服務類型 + 預設分鐘 → 都算「服務方案」
+  if (step === 5 || step === 6) return 5; // 毛孩 + 加購 → 都算「加購項目」
+  if (step === 7) return 6; // 試算報價/送出
+  return 1;
+}
+  
+
+
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const hintText = document.getElementById("hintText");
+
 const stepPanels = {
+  0: document.getElementById("step0"),
   1: document.getElementById("step1"),
   2: document.getElementById("step2"),
   3: document.getElementById("step3"),
-  4: document.getElementById("stepServiceType"),
-  5: document.getElementById("stepPlan"),
-  6: document.getElementById("stepPet"),
-  7: document.getElementById("stepAddons"),
-  8: document.getElementById("stepQuote"),
+  4: document.getElementById("step4"),
+  5: document.getElementById("step5"),
+  6: document.getElementById("step6"),
+  7: document.getElementById("step7"),
 };
 
-const stepDots = document.querySelectorAll(".step-dot");
-const prevBtn = document.getElementById("prevBtn");
-const nextBtn = document.getElementById('nextBtn');
-const hintText = document.getElementById("hintText");
+// Step0
+const distanceInput = document.getElementById("distanceKm");
+const fareResultBox = document.getElementById("fareResultBox");
+const agreeNotice = document.getElementById("agreeNotice");
+let hasValidDistance = false;
 
-/* ========== Step UI 更新 ========== */
+// Step1
+const startInput = document.getElementById("startDate");
+const endInput = document.getElementById("endDate");
+const step1Summary = document.getElementById("step1Summary");
+
+// Step2
+const serviceTypeCards = document.querySelectorAll("#serviceTypeGrid .option-card");
+const serviceTypeSummary = document.getElementById("serviceTypeSummary");
+
+// Step3
+const minuteCards = document.querySelectorAll("#minutesGrid .option-card");
+const minutesSummary = document.getElementById("minutesSummary");
+
+// Step4
+const templateCards = document.querySelectorAll("#templateGrid .option-card");
+const step4Summary = document.getElementById("step4Summary");
+const dayList = document.getElementById("dayList");
+const step4VisitSummary = document.getElementById("step4VisitSummary");
+
+// Step5
+const dogCountInput = document.getElementById("dogCount");
+const catCountInput = document.getElementById("catCount");
+const multiPetSummary = document.getElementById("multiPetSummary");
+
+// Step6
+const addonInputs = document.querySelectorAll('#step6 input[type="checkbox"]');
+const addonSummary = document.getElementById("addonSummary");
+const addonMultiDogRow = document.getElementById("addonMultiDogRow");
+
+// Step7
+const noteText = document.getElementById("noteText");
+const quoteRange = document.getElementById("quoteRange");
+const quoteServiceType = document.getElementById("quoteServiceType");
+const quoteTotal = document.getElementById("quoteTotal");
+const quoteDateRangeText = document.getElementById("quoteDateRangeText");
+const quoteVisitCount = document.getElementById("quoteVisitCount");
+const quoteMinuteDist = document.getElementById("quoteMinuteDist");
+const quoteServiceFee = document.getElementById("quoteServiceFee");
+const quoteFareText = document.getElementById("quoteFareText");
+const quoteMultiPet = document.getElementById("quoteMultiPet");
+const quoteAddons = document.getElementById("quoteAddons");
+const quoteSubtotal = document.getElementById("quoteSubtotal");
+const quoteDepositText = document.getElementById("quoteDepositText");
+const quoteDebugBox = document.getElementById("quoteDebugBox");
+
+/* ============================================================
+   Step UI
+============================================================ */
 function updateStepUI() {
-
-  // 隱藏所有 step
   Object.values(stepPanels).forEach(p => p.classList.add("hidden"));
   stepPanels[currentStep].classList.remove("hidden");
 
-  // Step indicator 樣式
-  stepDots.forEach(dot => {
-    const step = Number(dot.dataset.step);
-    dot.classList.toggle("active", step === currentStep);
-  });
+  // Indicator active
+  const ind = getIndicatorIndex(currentStep);
 
-  // 下方提示與按鈕文字
-  if (currentStep === 1) {
-    prevBtn.classList.add("hidden");
-    nextBtn.textContent = "下一步";
-    hintText.textContent = "先確認此次服務地區與車馬費，再進入日期設定 🐾";
-
-  } else if (currentStep === 2) {
-    prevBtn.classList.remove("hidden");
-    nextBtn.textContent = "下一步";
-    hintText.textContent = "之後還可針對個別日期調整時段唷 💛";
-
-  } else if (currentStep === 3) {
-    prevBtn.classList.remove("hidden");
-    nextBtn.textContent = "下一步";
-    hintText.textContent = "請勾選每日要到訪的時段。";
-
-  } else if (currentStep === 4) {
-    prevBtn.classList.remove("hidden");
-    nextBtn.textContent = "下一步";
-    hintText.textContent = "整段期間會採用相同服務類型。";
-
-  } else if (currentStep === 5) {
-    prevBtn.classList.remove("hidden");
-    nextBtn.textContent = "下一步";
-    hintText.textContent = "選擇每次到訪的時長方案。";
-
-  } else if (currentStep === 6) {
-    prevBtn.classList.remove("hidden");
-    nextBtn.textContent = "下一步";
-    hintText.textContent = "輸入毛孩數量以計算是否需要加價。";
-
-  } else if (currentStep === 7) {
-    prevBtn.classList.remove("hidden");
-    nextBtn.textContent = "試算報價";
-    hintText.textContent = "加購項目如餵藥等可在此選擇。";
-
-  } else if (currentStep === 8) {
-    prevBtn.classList.remove("hidden");
-    nextBtn.textContent = "送出預約需求";
-    hintText.textContent = "系統將產生試算金額，實際以 Pinyu 最終確認為主 🐾";
-  }
-}
-
-
-
-/* ========== 新客車馬費計算邏輯 ========== */
-
-const distanceInput = document.getElementById("distanceKm");
-const fareResultBox = document.getElementById("fareResultBox");
-
-function calcFareFromDistance(kmValue) {
-  const roundedKm = Math.round(kmValue);
-  if (roundedKm <= 5) return { km: roundedKm, fare: 0 };
-  return { km: roundedKm, fare: (roundedKm - 5) * 40 };
-}
-
-// 使用者輸入公里數 → 即時計算
-distanceInput?.addEventListener("input", () => {
-  const km = parseFloat(distanceInput.value);
-
-  if (isNaN(km) || km <= 0) {
-    fareResultBox.textContent = "尚未輸入公里數。";
-    farePerVisit = 0;
-    hasValidDistance = false;  // ✅ 無效輸入
-    return;
-  }
-
-  const result = calcFareFromDistance(km);
-
-  farePerVisit = result.fare;
-  hasValidDistance = true;     // ✅ 有輸入有效公里數
-
-  fareResultBox.innerHTML = `
-    四捨五入後距離：<strong>${result.km} 公里</strong><br>
-    預估車馬費：<strong>${result.fare} 元 / 次</strong>
-  `;
+stepDots.forEach(dot => {
+  const n = Number(dot.dataset.ind);   // ✅ 用 ind
+  dot.classList.toggle("active", n === ind);
 });
 
+  // 舊客不顯示 Step0 的 indicator 也可以：這裡簡化保留顯示，但會直接跳過
+  // 你若要隱藏也行，我之後再幫你改。
 
+  // Buttons + hints
+  prevBtn.classList.toggle("hidden", currentStep === 0);
 
+  if (currentStep === 0) {
+    prevBtn.classList.add("hidden");
+    nextBtn.textContent = "開始預約";
+    hintText.textContent = "請先閱讀須知並完成車馬費試算 🐾";
+  } else if (currentStep === 1) {
+    nextBtn.textContent = "下一步";
+    hintText.textContent = "先選日期，再選服務類型與頻率 💛";
+  } else if (currentStep === 2) {
+    nextBtn.textContent = "下一步";
+    hintText.textContent = "選擇主要服務類型。";
+  } else if (currentStep === 3) {
+    nextBtn.textContent = "下一步";
+    hintText.textContent = "先選預設分鐘，下一步可針對每次到訪調整。";
+  } else if (currentStep === 4) {
+    nextBtn.textContent = "下一步";
+    hintText.textContent = "請確認頻率與每次到訪時段（可調整分鐘）。";
+  } else if (currentStep === 5) {
+    nextBtn.textContent = "下一步";
+    hintText.textContent = "輸入毛孩數量以計算是否加價。";
+  } else if (currentStep === 6) {
+    nextBtn.textContent = "下一步";
+    hintText.textContent = "如需餵藥等需求，可加購。";
+  } else if (currentStep === 7) {
+    nextBtn.textContent = "送出預約需求";
+    hintText.textContent = "送出後我會再與您確認細節與最終金額 🐾";
+  }
 
-/* ========== 舊客／新客 InitBooking（Apps Script） ========== */
+  // Step6：依服務類型顯示加購列
+  if (currentStep === 6) updateAddonVisibility();
+}
 
-const mockUserId = "TEST_USER"; // 先讓程式能跑，之後換成 LIFF userId
-
-const oldCustomerBlock = document.getElementById("oldCustomerBlock");
-const newCustomerBlock = document.getElementById("newCustomerBlock");
-const oldCustomerSummary = document.getElementById("oldCustomerSummary");
-
+/* ============================================================
+   initBooking：向後端取得舊客/新客資料
+   - 成功：若舊客 → 跳到 Step1；新客 → 留在 Step0
+   - 失敗：當作新客
+============================================================ */
 function initBooking() {
   fetch("/api/booking", {
     method: "POST",
@@ -934,51 +931,350 @@ function initBooking() {
       userId: mockUserId,
     }),
   })
-    .then(r => r.json())
-    .then(data => {
-      if (!data || !data.ok) throw new Error("initBooking not ok");
+  .then(r => r.json())
+  .then(data => {
+    if (!data || !data.ok) throw new Error("initBooking not ok");
 
-      isNewCustomer = data.isNewCustomer;
-      familyId = data.familyId || "";
-      farePerVisit = data.farePerVisit || 0;
+    isNewCustomer = !!data.isNewCustomer;
+    familyId = data.familyId || "";
+    farePerVisit = Number(data.farePerVisit || 0);
 
-      depositText = data.isRegular
-        ? "免訂金（常客）"
-        : "需訂金（實際金額由 Pinyu 告知）";
+    depositText = data.isRegular
+      ? "免訂金（常客）"
+      : "需訂金（實際金額由 Pinyu 告知）";
 
-      if (isNewCustomer) {
-        newCustomerBlock.classList.remove("hidden");
-        oldCustomerBlock.classList.add("hidden");
-      } else {
-        newCustomerBlock.classList.add("hidden");
-        oldCustomerBlock.classList.remove("hidden");
-
-        oldCustomerSummary.innerHTML = `
-          <strong>常客資料</strong><br>
-          登記地址：${data.address || "未填寫"}<br>
-          車馬費：${farePerVisit} 元／次<br>
-          若有變更，可於備註告知 Pinyu。
-        `;
-      }
-    })
-    .catch(err => {
-      console.warn("initBooking failed:", err);
-      // 若失敗 → 當作新客
-      isNewCustomer = true;
-      newCustomerBlock.classList.remove("hidden");
-      oldCustomerBlock.classList.add("hidden");
-    });
+    // 舊客：直接跳到 Step1
+    if (!isNewCustomer) currentStep = 1;
+    updateStepUI();
+  })
+  .catch(err => {
+    console.warn("initBooking failed:", err);
+    // 失敗就當作新客
+    isNewCustomer = true;
+    currentStep = 0;
+    updateStepUI();
+  });
 }
 
-// 初始化
+/* ============================================================
+   Step0：新客車馬費試算
+============================================================ */
+function calcFareFromDistance(kmValue) {
+  const roundedKm = Math.round(kmValue);
+  if (roundedKm <= 5) return { km: roundedKm, fare: 0 };
+  return { km: roundedKm, fare: (roundedKm - 5) * 40 };
+}
+
+distanceInput.addEventListener("input", () => {
+  const km = parseFloat(distanceInput.value);
+
+  if (isNaN(km) || km <= 0) {
+    fareResultBox.textContent = "尚未輸入公里數。";
+    farePerVisit = 0;
+    hasValidDistance = false;
+    return;
+  }
+
+  const result = calcFareFromDistance(km);
+  farePerVisit = result.fare;
+  hasValidDistance = true;
+
+  fareResultBox.innerHTML = `
+    四捨五入後距離：<strong>${result.km} 公里</strong><br>
+    預估車馬費：<strong>${result.fare} 元 / 次</strong>
+  `;
+});
+
+/* ============================================================
+   Step1：日期
+============================================================ */
+startInput.addEventListener("change", handleDateChange);
+endInput.addEventListener("change", handleDateChange);
+
+function handleDateChange() {
+  startDate = parseDateStr(startInput.value);
+  endDate = parseDateStr(endInput.value);
+
+  if (startDate && endDate && endDate < startDate) {
+    alert("結束日期不可早於開始日期");
+    endInput.value = "";
+    endDate = null;
+  }
+
+  updateStep1Summary();
+}
+
+function updateStep1Summary() {
+  if (!startDate || !endDate) {
+    step1Summary.textContent = "尚未選擇日期。";
+    return;
+  }
+  const days = getDateRangeArray(startDate, endDate).length;
+  step1Summary.innerHTML = `已選擇：<strong>${startInput.value} ～ ${endInput.value}</strong>（共 ${days} 天）`;
+}
+
+/* ============================================================
+   Step2：服務類型
+============================================================ */
+serviceTypeCards.forEach(card => {
+  card.addEventListener("click", () => {
+    serviceTypeCards.forEach(c => c.classList.remove("active"));
+    card.classList.add("active");
+    serviceType = card.dataset.service;
+
+    serviceTypeSummary.textContent = `您選擇：${serviceType}`;
+
+    // 服務類型變更 → 重新計算毛孩加價、加購顯示
+    updateMultiPet();
+    updateAddonVisibility();
+
+    // 若已經有 defaultMinutes，更新 Step3 summary 文字
+    if (defaultMinutes) {
+      const unit = PRICE_TABLE[serviceType]?.[defaultMinutes] ?? 0;
+      minutesSummary.textContent = `預設每次 ${defaultMinutes} 分鐘（NT.${unit} / 次）`;
+      
+    }
+    if (!serviceType) {
+  alert("請先選擇主要服務類型");
+  return;
+}
+
+  });
+});
+
+/* ============================================================
+   Step3：預設分鐘
+============================================================ */
+minuteCards.forEach(card => {
+  card.addEventListener("click", () => {
+    minuteCards.forEach(c => c.classList.remove("active"));
+    card.classList.add("active");
+
+    defaultMinutes = Number(card.dataset.minutes);
+    const unit = PRICE_TABLE[serviceType]?.[defaultMinutes] ?? 0;
+
+    minutesSummary.textContent = `預設每次 ${defaultMinutes} 分鐘（NT.${unit} / 次）`;
+
+    // 若 Step4 已經有選過 schedule，未來要不要自動同步？
+    // 這裡採「不強制覆蓋」：避免使用者已經每次微調分鐘被重置。
+  });
+});
+
+/* ============================================================
+   Step4：頻率模板
+============================================================ */
+templateCards.forEach(card => {
+  card.addEventListener("click", () => {
+    templateCards.forEach(c => c.classList.remove("active"));
+    card.classList.add("active");
+    selectedTemplate = card.dataset.template;
+
+    updateStep4Summary();
+
+    // 套模板並渲染 day list
+    applyTemplateToSchedule(selectedTemplate);
+    renderDayList();
+  });
+});
+
+function updateStep4Summary() {
+  if (!selectedTemplate) {
+    step4Summary.textContent = "尚未選擇頻率模板。";
+    return;
+  }
+  const map = {
+    "daily1-evening": "每日 1 次（晚上）",
+    "daily2-morning-evening": "每日 2 次（早＋晚）",
+    "daily3-morning-afternoon-evening": "每日 3 次（早＋午＋晚）",
+    "custom-empty": "完全自訂",
+  };
+  step4Summary.innerHTML = `已選擇預設頻率：<strong>${map[selectedTemplate] || selectedTemplate}</strong>`;
+}
+
+/* ============================================================
+   Step5：毛孩數量
+============================================================ */
+dogCountInput.addEventListener("input", updateMultiPet);
+catCountInput.addEventListener("input", updateMultiPet);
+
+function updateMultiPet() {
+  dogCountValue = Number(dogCountInput.value || 0);
+  catCountValue = Number(catCountInput.value || 0);
+
+  if (serviceType === "遛狗散步") {
+    dogExtraFeePerVisit = Math.max(dogCountValue - 1, 0) * 100;
+  } else {
+    dogExtraFeePerVisit = 0;
+  }
+
+  catRequireEval = catCountValue >= 3;
+
+  let text = `狗狗加價：+${dogExtraFeePerVisit} 元 / 訪視<br>`;
+  text += catRequireEval ? `貓咪：第三隻以上由 Pinyu 評估是否加價（未自動計算）` : `貓咪：未達加價條件`;
+
+  multiPetSummary.innerHTML = text;
+}
+
+/* ============================================================
+   Step6：加購
+============================================================ */
+addonInputs.forEach(box => {
+  box.addEventListener("change", () => {
+    const key = box.dataset.addon;
+    const price = Number(box.dataset.price);
+
+    if (box.checked) addons[key] = price;
+    else delete addons[key];
+
+    updateAddonSummary();
+  });
+});
+
+function updateAddonVisibility() {
+  // multi-dog 只在遛狗散步顯示（你也可以改成 always 顯示但 disabled）
+  const show = serviceType === "遛狗散步";
+  addonMultiDogRow.classList.toggle("hidden", !show);
+
+  // 若切換成非散步，順便把 multi-dog 取消勾選與移除
+  if (!show) {
+    const multiDogCheckbox = addonMultiDogRow.querySelector('input[type="checkbox"]');
+    if (multiDogCheckbox) multiDogCheckbox.checked = false;
+    delete addons["multi-dog"];
+    updateAddonSummary();
+  }
+}
+
+function updateAddonSummary() {
+  const text = Object.entries(addons)
+    .map(([k, p]) => `${k} (+${p})`)
+    .join("、");
+  addonSummary.textContent = text || "尚未選擇加購項目。";
+}
+
+/* ============================================================
+   Step Buttons
+============================================================ */
+nextBtn.addEventListener("click", () => {
+  // Step0（新客 gate）
+  if (currentStep === 0) {
+    if (!agreeNotice.checked) {
+      alert("請先勾選同意預約須知");
+      return;
+    }
+    if (isNewCustomer && !hasValidDistance) {
+      alert("請先輸入公里數以試算車馬費");
+      return;
+    }
+    currentStep = 1;
+    updateStepUI();
+    return;
+  }
+
+  if (currentStep === 1) {
+    if (!startDate || !endDate) {
+      alert("請先選擇日期區間");
+      return;
+    }
+    currentStep = 2;
+    updateStepUI();
+    return;
+  }
+
+  if (currentStep === 2) {
+    if (!serviceType) {
+      alert("請先選擇主要服務類型");
+      return;
+    }
+    currentStep = 3;
+    updateStepUI();
+    return;
+  }
+
+  if (currentStep === 3) {
+    if (!defaultMinutes) {
+      alert("請先選擇預設分鐘（30/45/60）");
+      return;
+    }
+    currentStep = 4;
+    updateStepUI();
+    return;
+  }
+
+  if (currentStep === 4) {
+    if (!selectedTemplate) {
+      alert("請先選擇預設頻率");
+      return;
+    }
+    if (buildVisitArray().length === 0) {
+      alert("請至少勾選一個到訪時段");
+      return;
+    }
+    currentStep = 5;
+    updateStepUI();
+    return;
+  }
+
+  if (currentStep === 5) {
+    currentStep = 6;
+    updateStepUI();
+    return;
+  }
+
+  if (currentStep === 6) {
+    // 進入 Step7 就先試算一次
+    currentStep = 7;
+    calculatePrice();
+    updateStepUI();
+    return;
+  }
+
+  if (currentStep === 7) {
+    // 最終送出
+    const payload = buildPayload();
+    alert("將送出預約需求（示範）：\n" + JSON.stringify(payload, null, 2));
+
+    // 之後你接回後端可打開這段
+    /*
+    fetch("/api/booking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "createBooking", data: payload }),
+    })
+    .then(r => r.json())
+    .then(res => {
+      alert("預約已送出");
+    })
+    .catch(err => {
+      alert("送出失敗，請稍後再試");
+      console.warn(err);
+    });
+    */
+    return;
+  }
+});
+
+prevBtn.addEventListener("click", () => {
+  if (currentStep <= 0) return;
+
+  // 舊客從 Step1 往回不要回 Step0
+  if (!isNewCustomer && currentStep === 1) return;
+
+  currentStep--;
+  updateStepUI();
+});
+
+/* ============================================================
+   初始化
+============================================================ */
 updateStepUI();
 initBooking();
+</script>
 
-
-    /* ============================================================
-   日期處理工具
+<!-- 第3/3段：JS（下半）貼在這裡 -->
+<script>
+/* ============================================================
+   日期工具
 ============================================================ */
-
 function formatDateKey(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -1006,87 +1302,24 @@ function getWeekdayName(d) {
   return ["日", "一", "二", "三", "四", "五", "六"][d.getDay()];
 }
 
-
 /* ============================================================
-   Step 2：日期區間處理
+   schedule helpers（每次到訪 minutes）
 ============================================================ */
-
-const startInput = document.getElementById("startDate");
-const endInput = document.getElementById("endDate");
-const step2Summary = document.getElementById("step2Summary");
-const optionCards = document.querySelectorAll('#step2 .option-card');
-
-startInput.addEventListener("change", handleDateChange);
-endInput.addEventListener("change", handleDateChange);
-
-// 處理日期變動
-function handleDateChange() {
-  startDate = parseDateStr(startInput.value);
-  endDate = parseDateStr(endInput.value);
-
-  // 如果使用者輸入錯誤順序
-  if (startDate && endDate && endDate < startDate) {
-    alert("結束日期不可早於開始日期");
-    endInput.value = "";
-    endDate = null;
-  }
-
-  updateStep2Summary();
+function ensureDayObj(dateKey) {
+  if (!schedule[dateKey]) schedule[dateKey] = {};
 }
 
-// 更新 Step 2 摘要
-function updateStep2Summary() {
-  if (!startDate || !endDate) {
-    step2Summary.textContent = "尚未選擇期間與頻率。";
-    return;
-  }
-
-  const days = getDateRangeArray(startDate, endDate).length;
-
-  let freqText = "尚未選擇頻率";
-  if (selectedTemplate === "daily1-evening") freqText = "每日 1 次（晚上）";
-  else if (selectedTemplate === "daily2-morning-evening") freqText = "每日 2 次（早＋晚）";
-  else if (selectedTemplate === "daily3-morning-afternoon-evening") freqText = "每日 3 次（早＋午＋晚）";
-  else if (selectedTemplate === "custom-empty") freqText = "完全自訂";
-
-  step2Summary.innerHTML =
-    `已選擇：${startInput.value} ～ ${endInput.value}（共 ${days} 天）<br>
-    預設頻率：${freqText}`;
+function setVisit(dateKey, slotId, minutes) {
+  ensureDayObj(dateKey);
+  schedule[dateKey][slotId] = { minutes: Number(minutes || defaultMinutes || 30) };
 }
 
+function removeVisit(dateKey, slotId) {
+  if (!schedule[dateKey]) return;
+  delete schedule[dateKey][slotId];
+  if (Object.keys(schedule[dateKey]).length === 0) delete schedule[dateKey];
+}
 
-/* ============================================================
-   Step 2：頻率模板選擇
-============================================================ */
-
-optionCards.forEach(card => {
-  card.addEventListener("click", () => {
-    optionCards.forEach(c => c.classList.remove("active"));
-    card.classList.add("active");
-
-    selectedTemplate = card.dataset.template;
-    updateStep2Summary();
-  });
-});
-
-
-/* ============================================================
-   Step 3：每日時段微調
-============================================================ */
-
-// 時段定義表
-const SLOT_DEFS = [
-  { id: "MORNING",   label: "早上", range: "09:00–12:00" },
-  { id: "AFTERNOON", label: "下午", range: "13:00–17:00" },
-  { id: "EVENING",   label: "晚上", range: "18:00–21:00" },
-  { id: "LATE",      label: "深夜", range: "22:00–23:00" },
-];
-
-const dayList = document.getElementById("dayList");
-const step3Summary = document.getElementById("step3Summary");
-
-
-// 依模板生成 schedule
 function applyTemplateToSchedule(templateId) {
   schedule = {};
   if (!startDate || !endDate) return;
@@ -1095,28 +1328,25 @@ function applyTemplateToSchedule(templateId) {
 
   dates.forEach(d => {
     const key = formatDateKey(d);
-    schedule[key] = new Set();
 
     if (templateId === "daily1-evening") {
-      schedule[key].add("EVENING");
-
+      setVisit(key, "EVENING");
     } else if (templateId === "daily2-morning-evening") {
-      schedule[key].add("MORNING");
-      schedule[key].add("EVENING");
-
+      setVisit(key, "MORNING");
+      setVisit(key, "EVENING");
     } else if (templateId === "daily3-morning-afternoon-evening") {
-      schedule[key].add("MORNING");
-      schedule[key].add("AFTERNOON");
-      schedule[key].add("EVENING");
-
+      setVisit(key, "MORNING");
+      setVisit(key, "AFTERNOON");
+      setVisit(key, "EVENING");
     } else if (templateId === "custom-empty") {
-      // 完全空白，讓使用者自行選
+      // 空白
     }
   });
 }
 
-
-// 渲染每日時段 UI
+/* ============================================================
+   Step4：渲染每日時段 UI（勾選後可選分鐘）
+============================================================ */
 function renderDayList() {
   if (!startDate || !endDate) return;
 
@@ -1125,35 +1355,47 @@ function renderDayList() {
 
   dates.forEach(d => {
     const key = formatDateKey(d);
-    if (!schedule[key]) schedule[key] = new Set();
+    if (!schedule[key]) schedule[key] = {}; // 先確保日期存在（便於 render）
 
     const row = document.createElement("div");
     row.className = "day-row";
 
-    // 日期標題
     const header = document.createElement("div");
     header.className = "day-row-header";
     header.innerHTML = `
       <span>${d.getMonth() + 1}/${d.getDate()}（${getWeekdayName(d)}）</span>
-      <span>點選可勾選 / 取消</span>
+      <span>點選勾選 / 取消</span>
     `;
     row.appendChild(header);
 
-    // 時段 chips
     const chipsWrapper = document.createElement("div");
     chipsWrapper.className = "slot-chips";
 
     SLOT_DEFS.forEach(slot => {
+      const selected = !!schedule[key][slot.id];
+      const minutes = selected
+        ? Number(schedule[key][slot.id].minutes || defaultMinutes || 30)
+        : Number(defaultMinutes || 30);
+
       const chip = document.createElement("div");
-      chip.className = "slot-chip";
+      chip.className = "slot-chip" + (selected ? " active" : "");
       chip.dataset.date = key;
       chip.dataset.slot = slot.id;
 
-      if (schedule[key].has(slot.id)) chip.classList.add("active");
+      chip.innerHTML = `
+        <span>${slot.label} <small>${slot.range}</small></span>
+        ${selected ? `
+          <select class="minute-select" data-date="${key}" data-slot="${slot.id}">
+            ${MINUTE_OPTIONS.map(m => `<option value="${m}" ${m === minutes ? "selected" : ""}>${m}分</option>`).join("")}
+          </select>
+        ` : ``}
+      `;
 
-      chip.innerHTML = `${slot.label} <small>${slot.range}</small>`;
-
-      chip.addEventListener("click", () => toggleSlot(key, slot.id, chip));
+      // 點 chip 切換選取（點 select 不要觸發取消）
+chip.addEventListener("click", (e) => {
+  if (e.target.closest && e.target.closest(".minute-select")) return;
+  toggleVisit(key, slot.id);
+});
 
       chipsWrapper.appendChild(chip);
     });
@@ -1162,257 +1404,80 @@ function renderDayList() {
     dayList.appendChild(row);
   });
 
-  updateStep3Summary();
-}
+  // minute select change
+  dayList.querySelectorAll(".minute-select").forEach(sel => {
+    sel.addEventListener("change", () => {
+      const dateKey = sel.dataset.date;
+      const slotId = sel.dataset.slot;
+      const m = Number(sel.value);
 
+      if (schedule[dateKey] && schedule[dateKey][slotId]) {
+        schedule[dateKey][slotId].minutes = m;
+      }
 
-// 點選時段 → 切換 Set 資料
-function toggleSlot(dateKey, slotId, chipElement) {
-  const slotSet = schedule[dateKey];
-
-  if (slotSet.has(slotId)) {
-    slotSet.delete(slotId);
-    chipElement.classList.remove("active");
-  } else {
-    slotSet.add(slotId);
-    chipElement.classList.add("active");
-  }
-
-  schedule[dateKey] = slotSet;
-  updateStep3Summary();
-}
-
-
-// Step 3 Summary
-function updateStep3Summary() {
-  let total = 0;
-  let countMorning = 0,
-      countAfternoon = 0,
-      countEvening = 0,
-      countLate = 0;
-
-  Object.values(schedule).forEach(set => {
-    set.forEach(slot => {
-      total++;
-      if (slot === "MORNING") countMorning++;
-      if (slot === "AFTERNOON") countAfternoon++;
-      if (slot === "EVENING") countEvening++;
-      if (slot === "LATE") countLate++;
+      updateStep4VisitSummary();
     });
   });
 
+  updateStep4VisitSummary();
+}
+
+function toggleVisit(dateKey, slotId) {
+  const selected = !!(schedule[dateKey] && schedule[dateKey][slotId]);
+
+  if (selected) removeVisit(dateKey, slotId);
+  else setVisit(dateKey, slotId, defaultMinutes || 30);
+
+  renderDayList(); // 重畫以顯示/移除 minute select
+}
+
+function updateStep4VisitSummary() {
+  const visits = buildVisitArray();
+  const total = visits.length;
+
   if (total === 0) {
-    step3Summary.textContent = "尚未選擇任何到訪時段。";
+    step4VisitSummary.textContent = "尚未選擇任何到訪時段。";
     return;
   }
 
-  step3Summary.textContent =
-    `本次共預約 ${total} 次：早 ${countMorning}、午 ${countAfternoon}、晚 ${countEvening}、深夜 ${countLate}`;
+  let countMorning = 0, countAfternoon = 0, countEvening = 0, countLate = 0;
+  const minuteCount = {};
+
+  visits.forEach(v => {
+    if (v.slot === "MORNING") countMorning++;
+    if (v.slot === "AFTERNOON") countAfternoon++;
+    if (v.slot === "EVENING") countEvening++;
+    if (v.slot === "LATE") countLate++;
+
+    minuteCount[v.minutes] = (minuteCount[v.minutes] || 0) + 1;
+  });
+
+  const minuteText = Object.keys(minuteCount)
+    .sort((a,b) => Number(a)-Number(b))
+    .map(m => `${m}分×${minuteCount[m]}`)
+    .join("、");
+
+  step4VisitSummary.textContent =
+    `共 ${total} 次：早${countMorning}、午${countAfternoon}、晚${countEvening}、深夜${countLate} ｜ 分鐘：${minuteText}`;
 }
 
 /* ============================================================
-/* Step 4：服務類型選擇 */
-const serviceTypeCards = document.querySelectorAll('#stepServiceType .option-card');
-const serviceTypeSummary = document.getElementById("serviceTypeSummary");
-
-serviceTypeCards.forEach(card => {
-  card.addEventListener("click", () => {
-
-    // 移除其他卡片的 active 樣式
-    serviceTypeCards.forEach(c => c.classList.remove("active"));
-
-    // 加上目前選到的卡片
-    card.classList.add("active");
-
-    // 取得資料
-    serviceType = card.dataset.service;
-
-    // 填入下方提示框
-    serviceTypeSummary.textContent = `您選擇：${serviceType}`;
-  });
-});
-
-
-
-/* ============================================================
-   Step 5：服務方案（30 / 45 / 60）
+   Visits & Payload
 ============================================================ */
-
-const planCards = document.querySelectorAll('#stepPlan .option-card');
-const planSummary = document.getElementById("planSummary");
-
-planCards.forEach(card => {
-  card.addEventListener("click", () => {
-    planCards.forEach(c => c.classList.remove("active"));
-    card.classList.add("active");
-
-    selectedPlan = card.dataset.plan;
-    selectedPlanPrice = Number(card.dataset.price);
-
-    planSummary.textContent = `您選擇 ${selectedPlan} 分鐘（NT.${selectedPlanPrice} / 次）`;
-  });
-});
-
-
-/* ============================================================
-   Step 6：毛孩數量（加價邏輯）
-============================================================ */
-
-const dogCountInput = document.getElementById("dogCount");
-const catCountInput = document.getElementById("catCount");
-const multiPetSummary = document.getElementById("multiPetSummary");
-
-let dogExtraFeePerVisit = 0;
-let catRequireEval = false;
-
-dogCountInput.addEventListener("input", updateMultiPet);
-catCountInput.addEventListener("input", updateMultiPet);
-
-function updateMultiPet() {
-  dogCountValue = Number(dogCountInput.value);
-  catCountValue = Number(catCountInput.value);
-
-  /* 遛狗散步加價：第二隻起 +100 / 訪視 */
-  if (serviceType === "遛狗散步") {
-    dogExtraFeePerVisit = Math.max(dogCountValue - 1, 0) * 100;
-  } else {
-    dogExtraFeePerVisit = 0;
-  }
-
-  /* 貓咪：第三隻以上 → 不自動加價，但顯示需 Pinyu 評估 */
-  catRequireEval = catCountValue >= 3;
-
-  let text = `狗狗加價：+${dogExtraFeePerVisit} 元 / 訪視<br>`;
-
-  if (catRequireEval) {
-    text += `貓咪：第三隻以上由 Pinyu 評估是否加價（未自動計算）`;
-  } else {
-    text += `貓咪：未達加價條件`;
-  }
-
-  multiPetSummary.innerHTML = text;
-}
-
-
-/* ============================================================
-   Step 7：加購項目
-============================================================ */
-
-const addonInputs = document.querySelectorAll('#stepAddons input[type="checkbox"]');
-const addonSummary = document.getElementById("addonSummary");
-
-addonInputs.forEach(box => {
-  box.addEventListener("change", () => {
-    const key = box.dataset.addon;
-    const price = Number(box.dataset.price);
-
-    if (box.checked) {
-      addons[key] = price;
-    } else {
-      delete addons[key];
-    }
-
-    const text = Object.entries(addons)
-      .map(([k, p]) => `${k} (+${p})`)
-      .join(", ");
-
-    addonSummary.textContent = text || "尚未選擇加購項目。";
-  });
-});
-
-
-/* ============================================================
-   Step 8：試算報價
-============================================================ */
-
-const quoteRange = document.getElementById("quoteRange");
-const quoteServiceType = document.getElementById("quoteServiceType");
-const quoteTotal = document.getElementById("quoteTotal");
-const quoteDateRangeText = document.getElementById("quoteDateRangeText");
-const quoteDuration = document.getElementById("quoteDuration");
-const quoteVisitCount = document.getElementById("quoteVisitCount");
-const quoteUnitPriceText = document.getElementById("quoteUnitPriceText");
-const quoteFareText = document.getElementById("quoteFareText");
-const quoteMultiPet = document.getElementById("quoteMultiPet");
-const quoteAddons = document.getElementById("quoteAddons");
-const quoteSubtotal = document.getElementById("quoteSubtotal");
-const quoteDepositText = document.getElementById("quoteDepositText");
-const quoteDebugBox = document.getElementById("quoteDebugBox");
-
-function calculatePrice() {
-
-  const visits = buildVisitArray(); // 每訪視的日期＋時段
-  const visitCount = visits.length;
-
-  // ① 基本服務費
-  const serviceTotal = selectedPlanPrice * visitCount;
-
-  // ② 車馬費
-  const fareTotal = farePerVisit * visitCount;
-
-  // ③ 多寵家庭加價（遛狗散步第二隻起）
-  const dogExtraTotal = dogExtraFeePerVisit * visitCount;
-
-  // ④ 加購項目（固定每次服務收費）
-  const addonTotal = Object.values(addons)
-    .reduce((sum, p) => sum + p * visitCount, 0);
-
-  // 總計
-  const total = serviceTotal + fareTotal + dogExtraTotal + addonTotal;
-
-  /* ====== UI 顯示 ====== */
-
-  quoteRange.textContent = `${startInput.value} ～ ${endInput.value}`;
-  quoteServiceType.textContent = `${serviceType}（${selectedPlan} 分鐘）`;
-  quoteTotal.textContent = `${total.toLocaleString("zh-TW")} 元`;
-
-  const days = getDateRangeArray(startDate, endDate).length;
-  quoteDateRangeText.textContent = `${days} 天`;
-
-  quoteDuration.textContent = `${selectedPlan} 分鐘`;
-  quoteVisitCount.textContent = `${visitCount} 次`;
-
-  quoteUnitPriceText.textContent =
-    `${selectedPlanPrice} 元 × ${visitCount} 次 = ${serviceTotal}`;
-
-  quoteFareText.textContent =
-    `${farePerVisit} 元 × ${visitCount} 次 = ${fareTotal}`;
-
-  quoteMultiPet.textContent = `
-    狗：+${dogExtraFeePerVisit} × ${visitCount} = ${dogExtraTotal}
-    ${catRequireEval ? "｜貓：第三隻需 Pinyu 評估" : ""}
-  `;
-
-  quoteAddons.textContent = addonTotal
-    ? `加購合計：${addonTotal}`
-    : "無";
-
-  quoteSubtotal.textContent = `試算總額：${total.toLocaleString("zh-TW")} 元`;
-
-  quoteDepositText.textContent = depositText;
-
-  quoteDebugBox.textContent =
-    "DEBUG（送出 payload）\n" +
-    JSON.stringify(buildPayload(), null, 2);
-}
-
-
-/* ============================================================
-   打包 Payload（送到 Apps Script）
-============================================================ */
-
 function buildVisitArray() {
   const visits = [];
 
-  Object.entries(schedule).forEach(([dateKey, set]) => {
-    set.forEach(slot => {
-      visits.push({
-        date: dateKey,
-        slot: slot,
-      });
+  Object.entries(schedule).forEach(([dateKey, slotsObj]) => {
+    Object.entries(slotsObj).forEach(([slotId, info]) => {
+      const minutes = Number(info.minutes || defaultMinutes || 30);
+      const unitPrice = PRICE_TABLE[serviceType]?.[minutes] ?? 0;
+
+      visits.push({ date: dateKey, slot: slotId, minutes, unitPrice });
     });
   });
 
+  // 排序讓輸出穩定
+  visits.sort((a,b) => (a.date + a.slot).localeCompare(b.date + b.slot));
   return visits;
 }
 
@@ -1421,9 +1486,13 @@ function buildPayload() {
     familyId,
     isNewCustomer,
 
+    startDate: startInput.value,
+    endDate: endInput.value,
+
     serviceType,
-    planMinutes: selectedPlan,
-    planPrice: selectedPlanPrice,
+    defaultMinutes,
+
+    farePerVisit,
 
     dogCount: dogCountValue,
     catCount: catCountValue,
@@ -1432,104 +1501,82 @@ function buildPayload() {
 
     addons,
 
-    startDate: startInput.value,
-    endDate: endInput.value,
-    farePerVisit,
+    noteText: (noteText?.value || "").trim(),
 
     visits: buildVisitArray(),
 
     depositText,
+    agreedToNotice: isNewCustomer ? !!agreeNotice.checked : true,
   };
 }
 
-
 /* ============================================================
-   Step 按鈕：上一頁 / 下一頁
+   試算報價（Step7 進入時會呼叫）
 ============================================================ */
+function calculatePrice() {
+  const visits = buildVisitArray();
+  const visitCount = visits.length;
 
-nextBtn.addEventListener("click", () => {
-  if (currentStep === 1) {
-    if (isNewCustomer && !hasValidDistance) {
-      // 新客必填：至少輸入一次合法的公里數
-      alert("請先輸入距離以試算車馬費");
-      return;
-    }
-    currentStep = 2;
+  const serviceTotal = visits.reduce((sum, v) => sum + v.unitPrice, 0);
+  const fareTotal = farePerVisit * visitCount;
+  const dogExtraTotal = dogExtraFeePerVisit * visitCount;
+
+  const addonPerVisit = Object.values(addons).reduce((s, p) => s + p, 0);
+  const addonTotal = addonPerVisit * visitCount;
+
+  const total = serviceTotal + fareTotal + dogExtraTotal + addonTotal;
+
+  // UI
+  quoteRange.textContent = `${startInput.value} ～ ${endInput.value}`;
+  quoteServiceType.textContent = `${serviceType}`;
+  quoteTotal.textContent = `${total.toLocaleString("zh-TW")} 元`;
+
+  const days = (startDate && endDate) ? getDateRangeArray(startDate, endDate).length : 0;
+  quoteDateRangeText.textContent = `${days} 天`;
+  quoteVisitCount.textContent = `${visitCount} 次`;
+
+  // 分鐘分佈
+  const minuteCount = {};
+  visits.forEach(v => minuteCount[v.minutes] = (minuteCount[v.minutes] || 0) + 1);
+  const minuteText = Object.keys(minuteCount).length
+    ? Object.keys(minuteCount).sort((a,b)=>Number(a)-Number(b)).map(m => `${m}分×${minuteCount[m]}`).join("、")
+    : "-";
+  quoteMinuteDist.textContent = minuteText;
+
+  // 服務費明細（按分鐘彙總）
+  const breakdown = {};
+  visits.forEach(v => {
+    const k = String(v.minutes);
+    if (!breakdown[k]) breakdown[k] = { count: 0, unit: v.unitPrice };
+    breakdown[k].count += 1;
+  });
+
+  const serviceText = Object.keys(breakdown).length
+    ? Object.entries(breakdown)
+        .sort((a,b)=>Number(a[0])-Number(b[0]))
+        .map(([m, obj]) => `${m}分 ${obj.unit}×${obj.count}=${obj.unit*obj.count}`)
+        .join("；")
+    : "-";
+  quoteServiceFee.textContent = serviceText;
+
+  quoteFareText.textContent = `${farePerVisit} × ${visitCount} = ${fareTotal}`;
+
+  quoteMultiPet.textContent =
+    `狗：+${dogExtraFeePerVisit} × ${visitCount} = ${dogExtraTotal}` +
+    (catRequireEval ? "｜貓：第三隻需 Pinyu 評估" : "");
+
+  quoteAddons.textContent = addonPerVisit
+    ? `每次 +${addonPerVisit}，共 ${addonTotal}`
+    : "無";
+
+  quoteSubtotal.textContent = `試算總額：${total.toLocaleString("zh-TW")} 元`;
+  quoteDepositText.textContent = depositText;
+
+  quoteDebugBox.textContent =
+    "DEBUG（送出 payload）\n" +
+    JSON.stringify(buildPayload(), null, 2);
 }
- else if (currentStep === 2) {
-    if (!startDate || !endDate) {
-      alert("請先選擇日期區間");
-      return;
-    }
-    if (!selectedTemplate) {
-      alert("請先選擇預設頻率");
-      return;
-    }
-
-    applyTemplateToSchedule(selectedTemplate);
-    renderDayList();
-    currentStep = 3;
-
-  } else if (currentStep === 3) {
-    if (buildVisitArray().length === 0) {
-      alert("請至少勾選一個時段");
-      return;
-    }
-    currentStep = 4;
-
-  } else if (currentStep === 4) {
-    if (!serviceType) {
-      alert("請選擇服務類型");
-      return;
-    }
-    currentStep = 5;
-
-  } else if (currentStep === 5) {
-    if (!selectedPlan) {
-      alert("請選擇服務方案");
-      return;
-    }
-    currentStep = 6;
-
-  } else if (currentStep === 6) {
-    currentStep = 7;
-
-  } else if (currentStep === 7) {
-    calculatePrice();
-    currentStep = 8;
-
-  } else if (currentStep === 8) {
-    const payload = buildPayload();
-    alert("將送出預約需求：\n" + JSON.stringify(payload, null, 2));
-
-    // 你之後可打開這段，把資料送到 Apps Script
-    /*
-    fetch(WEB_APP_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "createBooking",
-        data: payload,
-      }),
-    }).then(r => r.json()).then(res => {
-      alert("預約已送出");
-    });
-    */
-  }
-
-  updateStepUI();
-});
-
-
-prevBtn.addEventListener("click", () => {
-  if (currentStep > 1) {
-    currentStep--;
-    updateStepUI();
-  }
-});
-
-    
-  </script>
+</script>
 
 </body>
 </html>
