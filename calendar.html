@@ -26,14 +26,73 @@
     .ev-closed { border: 1px solid #c7c7c7; background: #f2f2f2; color:#555; text-decoration: line-through; opacity:.75; }
 
     /* 簡易 modal */
-    .modalMask { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:12px; }
-    .modal { width:min(520px, 96vw); background:#fff; border-radius:14px; border:1px solid #e5e9f2; box-shadow: 0 8px 28px rgba(0,0,0,.18); padding:14px; }
-    .modal h3 { margin:0 0 8px; font-size:16px; }
-    .row { margin: 6px 0; }
-    .k { display:inline-block; width: 86px; color:#667085; }
-    .closeX { float:right; cursor:pointer; font-size:18px; padding: 2px 6px; border-radius: 8px; }
-    .closeX:hover { background:#f2f4f7; }
-    .pill { display:inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; border:1px solid #e5e9f2; background:#f8fafc; }
+ /* ===== Drawer UI ===== */
+.drawerMask{
+  position:fixed; inset:0;
+  background:rgba(16,24,40,.35);
+  backdrop-filter: blur(2px);
+  display:none;
+  justify-content:flex-end;
+}
+.drawer{
+  width:min(420px, 92vw);
+  height:100%;
+  background:#fff;
+  border-left:1px solid #e5e9f2;
+  box-shadow: -12px 0 28px rgba(0,0,0,.14);
+  padding:16px;
+  overflow:auto;
+  animation: slideIn .18s ease-out;
+}
+@keyframes slideIn { from { transform: translateX(10px); opacity:.7 } to { transform:none; opacity:1 } }
+
+.drawerHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.drawerTitle{
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:.2px;
+}
+.iconBtn{
+  border:1px solid #e5e9f2;
+  background:#fff;
+  border-radius:10px;
+  padding:8px 10px;
+  cursor:pointer;
+}
+.iconBtn:hover{ background:#f8fafc; }
+
+.infoCard{
+  border:1px solid #e5e9f2;
+  border-radius:14px;
+  padding:12px;
+  background:#fff;
+}
+.kv{ display:flex; gap:10px; padding:8px 0; border-bottom:1px dashed #eef2f7; }
+.kv:last-child{ border-bottom:none; }
+.k{ width:86px; color:#667085; font-size:13px; }
+.v{ flex:1; font-weight:650; color:#101828; }
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  border:1px solid #e5e9f2;
+  background:#f8fafc;
+}
+.badge.open{ border-color:#9cc3ff; background:#eef5ff; color:#123a66; }
+.badge.tight{ border-color:#ffcf70; background:#fff7e5; color:#6a4300; }
+.badge.full{ border-color:#f1a3a3; background:#ffecec; color:#7a1d1d; }
+.badge.closed{ border-color:#c7c7c7; background:#f2f2f2; color:#555; }
+.smallNote{ margin-top:10px; color:#667085; font-size:12px; line-height:1.5; }
+
   </style>
 </head>
 
@@ -69,20 +128,27 @@
   </div>
 
   <!-- Modal -->
-  <div class="modalMask" id="mask">
-    <div class="modal">
-      <div class="closeX" id="closeX">✕</div>
-      <h3 id="mTitle">時段資訊</h3>
-      <div class="row"><span class="k">日期</span><span id="mDate"></span></div>
-      <div class="row"><span class="k">時段</span><span id="mSlot"></span></div>
-      <div class="row"><span class="k">時間</span><span id="mTime"></span></div>
-      <div class="row"><span class="k">可用分鐘</span><span id="mMin"></span></div>
-      <div class="row"><span class="k">狀態</span><span id="mStatus"></span></div>
-      <div class="row"><span class="k">占用</span><span id="mOcc"></span></div>
-      <div class="row"><span class="k">備註</span><span id="mNote"></span></div>
-      <div style="margin-top:12px;" class="muted">＊下一步可加：點擊直接進預約流程（選 30/45/60 分）</div>
+<div class="drawerMask" id="mask">
+  <div class="drawer" role="dialog" aria-modal="true">
+    <div class="drawerHead">
+      <div class="drawerTitle">時段資訊</div>
+      <button class="iconBtn" id="closeX">關閉</button>
     </div>
+
+    <div class="infoCard">
+      <div class="kv"><div class="k">日期</div><div class="v" id="dDate"></div></div>
+      <div class="kv"><div class="k">時段</div><div class="v" id="dSlot"></div></div>
+      <div class="kv"><div class="k">時間</div><div class="v" id="dTime"></div></div>
+      <div class="kv"><div class="k">可用分鐘</div><div class="v" id="dMin"></div></div>
+      <div class="kv"><div class="k">狀態</div><div class="v" id="dStatus"></div></div>
+      <div class="kv"><div class="k">占用</div><div class="v" id="dOcc"></div></div>
+      <div class="kv"><div class="k">備註</div><div class="v" id="dNote"></div></div>
+    </div>
+
+    <div class="smallNote">＊緩衝時間不顯示於介面，但已納入分鐘扣除。</div>
   </div>
+</div>
+
 
   <script>
     // ====== 你只要改這行 ======
@@ -104,20 +170,43 @@
 
     // modal
     const mask = document.getElementById('mask');
-    const closeX = document.getElementById('closeX');
-    closeX.onclick = () => mask.style.display = 'none';
-    mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
+const closeX = document.getElementById('closeX');
+closeX.onclick = () => mask.style.display = 'none';
+mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
 
-    function openModal(info) {
-      document.getElementById('mDate').textContent = info.date;
-      document.getElementById('mSlot').textContent = `${slotLabel[info.slot] || info.slot} (${info.slot})`;
-      document.getElementById('mTime').textContent = `${info.start}–${info.end}`;
-      document.getElementById('mMin').textContent = String(info.availableMinutes);
-      document.getElementById('mStatus').textContent = info.status;
-      document.getElementById('mOcc').textContent = info.occupied || '—';
-      document.getElementById('mNote').textContent = info.note || '';
-      mask.style.display = 'flex';
-    }
+
+function statusBadgeClass(status, mins){
+  if (status !== '開放') return (status === '額滿') ? 'full' : 'closed';
+  if (mins > 0 && mins < 60) return 'tight';
+  return 'open';
+}
+
+function openDrawer(info) {
+  const mins = Number(info.availableMinutes || 0);
+  const status = (info.status || '').trim();
+
+  document.getElementById('dDate').textContent = info.date;
+  document.getElementById('dSlot').innerHTML =
+    `${slotLabel[info.slot] || info.slot} <span class="muted">(${info.slot})</span>`;
+
+  document.getElementById('dTime').textContent = `${info.start}–${info.end}`;
+  document.getElementById('dMin').textContent = `${mins} 分鐘`;
+
+  // 狀態做成 badge
+  const cls = statusBadgeClass(status, mins);
+  document.getElementById('dStatus').innerHTML =
+    `<span class="badge ${cls}">${status}</span>`;
+
+  // 占用：濾掉「緩衝」字樣
+  const occ = stripBufferText(info.occupied);
+  document.getElementById('dOcc').textContent = occ || '—';
+
+  // 備註：你可以保留（但你也可以選擇只留一點點）
+  document.getElementById('dNote').textContent = info.note || '';
+
+  mask.style.display = 'flex';
+}
+
 
     async function fetchMonth(year, month) {
       const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
@@ -173,7 +262,7 @@
           locale: 'zh-tw',
           events,
           eventClick: function(arg) {
-            openModal(arg.event.extendedProps);
+            openDrawer(arg.event.extendedProps);
           },
           eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false }
         });
@@ -203,6 +292,38 @@
         console.error(err);
       }
     };
+eventContent: function(arg){
+  const p = arg.event.extendedProps;
+  const mins = Number(p.availableMinutes || 0);
+  const label = slotLabel[p.slot] || p.slot;
+
+  // 顯示：13:00 下午｜240m（更乾淨）
+  const t = `${p.start} ${label}｜${mins}m`;
+
+  const wrap = document.createElement('div');
+  wrap.style.display = 'flex';
+  wrap.style.alignItems = 'center';
+  wrap.style.gap = '6px';
+
+  const dot = document.createElement('span');
+  dot.style.width = '8px';
+  dot.style.height = '8px';
+  dot.style.borderRadius = '999px';
+  dot.style.background = 'currentColor';
+  dot.style.opacity = '0.7';
+
+  const txt = document.createElement('div');
+  txt.style.whiteSpace = 'nowrap';
+  txt.style.overflow = 'hidden';
+  txt.style.textOverflow = 'ellipsis';
+  txt.style.fontWeight = '700';
+  txt.textContent = t;
+
+  wrap.appendChild(dot);
+  wrap.appendChild(txt);
+
+  return { domNodes: [wrap] };
+},
 
     // 首次載入
     (async () => {
@@ -213,6 +334,16 @@
         console.error(err);
       }
     })();
+
+    function stripBufferText(occupied) {
+  if (!occupied) return '';
+  // occupied 用 "；" 串起來：把含「緩衝」的段落濾掉
+  return String(occupied)
+    .split('；')
+    .map(s => s.trim())
+    .filter(s => s && !s.includes('緩衝'))
+    .join('；');
+}
   </script>
 </body>
 </html>
