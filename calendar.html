@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>可預約時間表</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    #calendar { max-width: 980px; margin: 16px auto; padding: 0 12px; }
+    .notice { max-width: 980px; margin: 12px auto 0; padding: 0 12px; color:#444; }
+  </style>
+</head>
+<body>
+  <div class="notice">
+    <b>提醒：</b>此頁僅顯示可預約時段；請回到 LINE 完成預約。
+  </div>
+
+  <div id="calendar"></div>
+
+  <script>
+    const FEED_URL = "你的WebApp_exec_URL?mode=out"; // ← 改這裡
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const calendarEl = document.getElementById('calendar');
+
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'zh-tw',
+        timeZone: 'Asia/Taipei',
+        initialView: 'timeGridWeek',
+        height: 'auto',
+        nowIndicator: true,
+        allDaySlot: false,
+
+        // 只讀
+        editable: false,
+        selectable: false,
+
+        // 你要顯示的時間範圍（可調）
+        slotMinTime: '08:00:00',
+        slotMaxTime: '23:30:00',
+
+        events: async (info, success, failure) => {
+          try {
+            const res = await fetch(https://script.google.com/macros/s/AKfycbxU-jUI0wF1KSdAcGb4e2BzIH3L9Chw0Pvs2dR_Ue4FtmE-hUZYrm54sWt-fGtz0lKsWA/exec, { cache: "no-store" });
+            const data = await res.json();
+            success(data);
+          } catch (err) {
+            failure(err);
+          }
+        },
+
+        eventClick: (info) => {
+          alert("此頁僅顯示可預約時段。\n請回到 LINE 完成預約。");
+        }
+      });
+
+      calendar.render();
+    });
+  </script>
+</body>
+</html>
