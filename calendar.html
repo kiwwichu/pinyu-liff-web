@@ -2,64 +2,217 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>可預約時間表</title>
 
+  <!-- FullCalendar (CDN) -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
   <style>
-    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-    #calendar { max-width: 980px; margin: 16px auto; padding: 0 12px; }
-    .notice { max-width: 980px; margin: 12px auto 0; padding: 0 12px; color:#444; }
+    body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background:#f6f8fb; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 14px; }
+    .topbar { display:flex; gap:10px; align-items:center; flex-wrap: wrap; margin-bottom: 12px; }
+    .card { background:#fff; border:1px solid #e5e9f2; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.04); padding: 12px; }
+    .btn { border:1px solid #cfd8ea; background:#fff; padding:10px 12px; border-radius: 10px; cursor:pointer; }
+    .btn:active { transform: translateY(1px); }
+    .muted { color:#667085; font-size: 13px; }
+    #calendar { background:#fff; border-radius: 12px; border:1px solid #e5e9f2; padding: 10px; }
+
+    /* event 狀態樣式：先用 class 控制，顏色你之後可換成品牌色 */
+    .ev-open   { border: 1px solid #8bb6ff; background: #eaf2ff; color:#123a66; }
+    .ev-tight  { border: 1px solid #ffcf70; background: #fff7e5; color:#6a4300; }
+    .ev-full   { border: 1px solid #f1a3a3; background: #ffecec; color:#7a1d1d; text-decoration: line-through; opacity:.75; }
+    .ev-closed { border: 1px solid #c7c7c7; background: #f2f2f2; color:#555; text-decoration: line-through; opacity:.75; }
+
+    /* 簡易 modal */
+    .modalMask { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:12px; }
+    .modal { width:min(520px, 96vw); background:#fff; border-radius:14px; border:1px solid #e5e9f2; box-shadow: 0 8px 28px rgba(0,0,0,.18); padding:14px; }
+    .modal h3 { margin:0 0 8px; font-size:16px; }
+    .row { margin: 6px 0; }
+    .k { display:inline-block; width: 86px; color:#667085; }
+    .closeX { float:right; cursor:pointer; font-size:18px; padding: 2px 6px; border-radius: 8px; }
+    .closeX:hover { background:#f2f4f7; }
+    .pill { display:inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; border:1px solid #e5e9f2; background:#f8fafc; }
   </style>
 </head>
+
 <body>
-  <div class="notice">
-    <b>提醒：</b>此頁僅顯示可預約時段；請回到 LINE 完成預約。
+  <div class="wrap">
+    <div class="topbar">
+      <div class="card" style="flex:1; min-width: 280px;">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
+          <div>
+            <div style="font-weight:700;">可預約時間表（分鐘制）</div>
+            <div class="muted">資料來源：可預約表（Apps Script API）</div>
+          </div>
+          <button class="btn" id="btnReload">重新載入</button>
+        </div>
+
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <label class="muted">Year</label>
+          <input id="year" class="btn" style="width:100px;" />
+          <label class="muted">Month</label>
+          <input id="month" class="btn" style="width:70px;" />
+          <span class="muted">（例：2026 / 1）</span>
+        </div>
+
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="pill">開放</span>
+          <span class="pill">黃：分鐘偏緊</span>
+          <span class="pill">額滿/不開放</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="calendar"></div>
   </div>
 
-  <div id="calendar"></div>
+  <!-- Modal -->
+  <div class="modalMask" id="mask">
+    <div class="modal">
+      <div class="closeX" id="closeX">✕</div>
+      <h3 id="mTitle">時段資訊</h3>
+      <div class="row"><span class="k">日期</span><span id="mDate"></span></div>
+      <div class="row"><span class="k">時段</span><span id="mSlot"></span></div>
+      <div class="row"><span class="k">時間</span><span id="mTime"></span></div>
+      <div class="row"><span class="k">可用分鐘</span><span id="mMin"></span></div>
+      <div class="row"><span class="k">狀態</span><span id="mStatus"></span></div>
+      <div class="row"><span class="k">占用</span><span id="mOcc"></span></div>
+      <div class="row"><span class="k">備註</span><span id="mNote"></span></div>
+      <div style="margin-top:12px;" class="muted">＊下一步可加：點擊直接進預約流程（選 30/45/60 分）</div>
+    </div>
+  </div>
 
   <script>
-    const FEED_URL = "你的WebApp_exec_URL?mode=out"; // ← 改這裡
+    // ====== 你只要改這行 ======
+    const API_URL = "https://script.google.com/macros/s/XXXXXXX/exec";
+    // ========================
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const calendarEl = document.getElementById('calendar');
+    const slotLabel = {
+      MORNING: "早上",
+      AFTERNOON: "下午",
+      EVENING: "晚上",
+      LATE: "深夜"
+    };
 
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        locale: 'zh-tw',
-        timeZone: 'Asia/Taipei',
-        initialView: 'timeGridWeek',
-        height: 'auto',
-        nowIndicator: true,
-        allDaySlot: false,
+    function ymdTodayInTaipei() {
+      // 不用精準到時區計算也行，先用本地
+      const d = new Date();
+      return { y: d.getFullYear(), m: d.getMonth() + 1 };
+    }
 
-        // 只讀
-        editable: false,
-        selectable: false,
+    // modal
+    const mask = document.getElementById('mask');
+    const closeX = document.getElementById('closeX');
+    closeX.onclick = () => mask.style.display = 'none';
+    mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
 
-        // 你要顯示的時間範圍（可調）
-        slotMinTime: '08:00:00',
-        slotMaxTime: '23:30:00',
+    function openModal(info) {
+      document.getElementById('mDate').textContent = info.date;
+      document.getElementById('mSlot').textContent = `${slotLabel[info.slot] || info.slot} (${info.slot})`;
+      document.getElementById('mTime').textContent = `${info.start}–${info.end}`;
+      document.getElementById('mMin').textContent = String(info.availableMinutes);
+      document.getElementById('mStatus').textContent = info.status;
+      document.getElementById('mOcc').textContent = info.occupied || '—';
+      document.getElementById('mNote').textContent = info.note || '';
+      mask.style.display = 'flex';
+    }
 
-        events: async (info, success, failure) => {
-          try {
-            const res = await fetch(https://script.google.com/macros/s/AKfycbxU-jUI0wF1KSdAcGb4e2BzIH3L9Chw0Pvs2dR_Ue4FtmE-hUZYrm54sWt-fGtz0lKsWA/exec, { cache: "no-store" });
-            const data = await res.json();
-            success(data);
-          } catch (err) {
-            failure(err);
-          }
-        },
+    async function fetchMonth(year, month) {
+      const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      return await res.json();
+    }
 
-        eventClick: (info) => {
-          alert("此頁僅顯示可預約時段。\n請回到 LINE 完成預約。");
-        }
-      });
+    function toEvent(item) {
+      const startISO = `${item.date}T${item.start}:00`;
+      const endISO   = `${item.date}T${item.end}:00`;
 
-      calendar.render();
-    });
+      const mins = Number(item.availableMinutes || 0);
+      const status = (item.status || '').trim();
+
+      // className 決定樣式：開放、分鐘緊、額滿、不開放
+      let className = 'ev-open';
+      if (status !== '開放') className = (status === '額滿') ? 'ev-full' : 'ev-closed';
+      else if (mins > 0 && mins < 60) className = 'ev-tight'; // 你可調門檻
+
+      const title = `${slotLabel[item.slot] || item.slot}｜${mins}m`;
+
+      return {
+        title,
+        start: startISO,
+        end: endISO,
+        allDay: false,
+        classNames: [className],
+        extendedProps: item
+      };
+    }
+
+    let calendar;
+
+    async function loadAndRender(year, month) {
+      // 拉資料
+      const data = await fetchMonth(year, month);
+
+      // 轉 events
+      const events = Array.isArray(data) ? data.map(toEvent) : [];
+
+      // 初始化 / 更新
+      const el = document.getElementById('calendar');
+      if (!calendar) {
+        calendar = new FullCalendar.Calendar(el, {
+          initialView: 'dayGridMonth',
+          height: 'auto',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          },
+          locale: 'zh-tw',
+          events,
+          eventClick: function(arg) {
+            openModal(arg.event.extendedProps);
+          },
+          eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false }
+        });
+        calendar.render();
+      } else {
+        calendar.removeAllEvents();
+        calendar.addEventSource(events);
+        // 同步跳到該月
+        calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
+      }
+    }
+
+    // UI init
+    const { y, m } = ymdTodayInTaipei();
+    const yearInput = document.getElementById('year');
+    const monthInput = document.getElementById('month');
+    yearInput.value = 2026; // 你現在主要跑 2026/01 就先鎖
+    monthInput.value = 1;
+
+    document.getElementById('btnReload').onclick = async () => {
+      const year = Number(yearInput.value);
+      const month = Number(monthInput.value);
+      try {
+        await loadAndRender(year, month);
+      } catch (err) {
+        alert('載入失敗：' + err.message);
+        console.error(err);
+      }
+    };
+
+    // 首次載入
+    (async () => {
+      try {
+        await loadAndRender(Number(yearInput.value), Number(monthInput.value));
+      } catch (err) {
+        alert('載入失敗：' + err.message + '\n\n請確認 API_URL 是否已換成你的 Apps Script Web App URL');
+        console.error(err);
+      }
+    })();
   </script>
 </body>
 </html>
