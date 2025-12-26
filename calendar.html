@@ -1,349 +1,198 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>可預約時間表</title>
+<script>
+  // ====== 你只要改這行 ======
+  const API_URL = "https://script.google.com/macros/s/AKfycbwLPWcww8-b4IFrNLTksQo2KrxfW5hjoiTdFfhmybH-Tb-xmzWd5sP8bCYwaKWo_Xz02w/exec";
+  // ========================
 
-  <!-- FullCalendar (CDN) -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  const slotLabel = {
+    MORNING: "早上",
+    AFTERNOON: "下午",
+    EVENING: "晚上",
+    LATE: "深夜"
+  };
 
-  <style>
-    body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background:#f6f8fb; }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 14px; }
-    .topbar { display:flex; gap:10px; align-items:center; flex-wrap: wrap; margin-bottom: 12px; }
-    .card { background:#fff; border:1px solid #e5e9f2; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.04); padding: 12px; }
-    .btn { border:1px solid #cfd8ea; background:#fff; padding:10px 12px; border-radius: 10px; cursor:pointer; }
-    .btn:active { transform: translateY(1px); }
-    .muted { color:#667085; font-size: 13px; }
-    #calendar { background:#fff; border-radius: 12px; border:1px solid #e5e9f2; padding: 10px; }
+  // ===== Drawer close =====
+  const mask = document.getElementById('mask');
+  const closeX = document.getElementById('closeX');
+  closeX.onclick = () => mask.style.display = 'none';
+  mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
 
-    /* event 狀態樣式：先用 class 控制，顏色你之後可換成品牌色 */
-    .ev-open   { border: 1px solid #8bb6ff; background: #eaf2ff; color:#123a66; }
-    .ev-tight  { border: 1px solid #ffcf70; background: #fff7e5; color:#6a4300; }
-    .ev-full   { border: 1px solid #f1a3a3; background: #ffecec; color:#7a1d1d; text-decoration: line-through; opacity:.75; }
-    .ev-closed { border: 1px solid #c7c7c7; background: #f2f2f2; color:#555; text-decoration: line-through; opacity:.75; }
+  function ymdToday() {
+    const d = new Date();
+    return { y: d.getFullYear(), m: d.getMonth() + 1 };
+  }
 
-    /* 簡易 modal */
- /* ===== Drawer UI ===== */
-.drawerMask{
-  position:fixed; inset:0;
-  background:rgba(16,24,40,.35);
-  backdrop-filter: blur(2px);
-  display:none;
-  justify-content:flex-end;
-}
-.drawer{
-  width:min(420px, 92vw);
-  height:100%;
-  background:#fff;
-  border-left:1px solid #e5e9f2;
-  box-shadow: -12px 0 28px rgba(0,0,0,.14);
-  padding:16px;
-  overflow:auto;
-  animation: slideIn .18s ease-out;
-}
-@keyframes slideIn { from { transform: translateX(10px); opacity:.7 } to { transform:none; opacity:1 } }
+  function stripBufferText(occupied) {
+    if (!occupied) return '';
+    // occupied 用 "；" 串起來：把含「緩衝」的段落濾掉
+    return String(occupied)
+      .split('；')
+      .map(s => s.trim())
+      .filter(s => s && !s.includes('緩衝'))
+      .join('；');
+  }
 
-.drawerHead{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-.drawerTitle{
-  font-size:16px;
-  font-weight:800;
-  letter-spacing:.2px;
-}
-.iconBtn{
-  border:1px solid #e5e9f2;
-  background:#fff;
-  border-radius:10px;
-  padding:8px 10px;
-  cursor:pointer;
-}
-.iconBtn:hover{ background:#f8fafc; }
+  function statusBadgeClass(status){
+    // 你要：藍=開放、黃=額滿、紅=暫不開放
+    if (status === '開放') return 'open';
+    if (status === '額滿') return 'full';
+    return 'closed'; // 不開放 / 暫不開放
+  }
 
-.infoCard{
-  border:1px solid #e5e9f2;
-  border-radius:14px;
-  padding:12px;
-  background:#fff;
-}
-.kv{ display:flex; gap:10px; padding:8px 0; border-bottom:1px dashed #eef2f7; }
-.kv:last-child{ border-bottom:none; }
-.k{ width:86px; color:#667085; font-size:13px; }
-.v{ flex:1; font-weight:650; color:#101828; }
-.badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:6px 10px;
-  border-radius:999px;
-  font-size:12px;
-  border:1px solid #e5e9f2;
-  background:#f8fafc;
-}
-.badge.open{ border-color:#9cc3ff; background:#eef5ff; color:#123a66; }
-.badge.tight{ border-color:#ffcf70; background:#fff7e5; color:#6a4300; }
-.badge.full{ border-color:#f1a3a3; background:#ffecec; color:#7a1d1d; }
-.badge.closed{ border-color:#c7c7c7; background:#f2f2f2; color:#555; }
-.smallNote{ margin-top:10px; color:#667085; font-size:12px; line-height:1.5; }
+  function openDrawer(info) {
+    const mins = Number(info.availableMinutes || 0);
+    const status = String(info.status || '').trim();
 
-  </style>
-</head>
+    document.getElementById('dDate').textContent = info.date;
+    document.getElementById('dSlot').innerHTML =
+      `${slotLabel[info.slot] || info.slot} <span class="muted">(${info.slot})</span>`;
 
-<body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="card" style="flex:1; min-width: 280px;">
-        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
-          <div>
-            <div style="font-weight:700;">可預約時間表（分鐘制）</div>
-            <div class="muted">資料來源：可預約表（Apps Script API）</div>
-          </div>
-          <button class="btn" id="btnReload">重新載入</button>
-        </div>
+    document.getElementById('dTime').textContent = `${info.start}–${info.end}`;
+    document.getElementById('dMin').textContent = `${mins} 分鐘`;
 
-        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-          <label class="muted">Year</label>
-          <input id="year" class="btn" style="width:100px;" />
-          <label class="muted">Month</label>
-          <input id="month" class="btn" style="width:70px;" />
-          <span class="muted">（例：2026 / 1）</span>
-        </div>
+    const cls = statusBadgeClass(status);
+    document.getElementById('dStatus').innerHTML =
+      `<span class="badge ${cls}">${status}</span>`;
 
-        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-          <span class="pill">開放</span>
-          <span class="pill">黃：分鐘偏緊</span>
-          <span class="pill">額滿/不開放</span>
-        </div>
-      </div>
-    </div>
+    // 占用：不顯示緩衝
+    const occ = stripBufferText(info.occupied);
+    document.getElementById('dOcc').textContent = occ || '—';
 
-    <div id="calendar"></div>
-  </div>
+    // 備註：也不顯示緩衝字眼（更乾淨）
+    const note = String(info.note || '').replace(/緩衝.*$/g,'').trim();
+    document.getElementById('dNote').textContent = note;
 
-  <!-- Modal -->
-<div class="drawerMask" id="mask">
-  <div class="drawer" role="dialog" aria-modal="true">
-    <div class="drawerHead">
-      <div class="drawerTitle">時段資訊</div>
-      <button class="iconBtn" id="closeX">關閉</button>
-    </div>
+    mask.style.display = 'flex';
+  }
 
-    <div class="infoCard">
-      <div class="kv"><div class="k">日期</div><div class="v" id="dDate"></div></div>
-      <div class="kv"><div class="k">時段</div><div class="v" id="dSlot"></div></div>
-      <div class="kv"><div class="k">時間</div><div class="v" id="dTime"></div></div>
-      <div class="kv"><div class="k">可用分鐘</div><div class="v" id="dMin"></div></div>
-      <div class="kv"><div class="k">狀態</div><div class="v" id="dStatus"></div></div>
-      <div class="kv"><div class="k">占用</div><div class="v" id="dOcc"></div></div>
-      <div class="kv"><div class="k">備註</div><div class="v" id="dNote"></div></div>
-    </div>
+  async function fetchMonth(year, month) {
+    const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    return await res.json();
+  }
 
-    <div class="smallNote">＊緩衝時間不顯示於介面，但已納入分鐘扣除。</div>
-  </div>
-</div>
+  // 你要的顏色對應：
+  // 開放=藍、額滿=黃、暫不開放=紅
+  function classByStatus(status){
+    status = String(status || '').trim();
+    if (status === '開放') return 'ev-open';
+    if (status === '額滿') return 'ev-full';     // 黃（我下面會把 ev-full 改成黃）
+    return 'ev-closed';                           // 紅（暫不開放）
+  }
 
+  function toEvent(item) {
+    const startISO = `${item.date}T${item.start}:00`;
+    const endISO   = `${item.date}T${item.end}:00`;
 
-  <script>
-    // ====== 你只要改這行 ======
-    const API_URL = "https://script.google.com/macros/s/AKfycbwLPWcww8-b4IFrNLTksQo2KrxfW5hjoiTdFfhmybH-Tb-xmzWd5sP8bCYwaKWo_Xz02w/exec";
-    // ========================
+    const mins = Number(item.availableMinutes || 0);
+    const status = String(item.status || '').trim();
 
-    const slotLabel = {
-      MORNING: "早上",
-      AFTERNOON: "下午",
-      EVENING: "晚上",
-      LATE: "深夜"
+    const className = classByStatus(status);
+
+    // 顯示：「13:00 下午｜240m」→ 我們用 eventContent 自訂，不用 title 擠爆
+    const title = `${slotLabel[item.slot] || item.slot}｜${mins}m`;
+
+    return {
+      title,
+      start: startISO,
+      end: endISO,
+      allDay: false,
+      classNames: [className],
+      extendedProps: item
     };
+  }
 
-    function ymdTodayInTaipei() {
-      // 不用精準到時區計算也行，先用本地
-      const d = new Date();
-      return { y: d.getFullYear(), m: d.getMonth() + 1 };
+  let calendar;
+
+  async function loadAndRender(year, month) {
+    const data = await fetchMonth(year, month);
+    const events = Array.isArray(data) ? data.map(toEvent) : [];
+
+    const el = document.getElementById('calendar');
+    if (!calendar) {
+      calendar = new FullCalendar.Calendar(el, {
+        initialView: 'dayGridMonth',
+        height: 'auto',
+        locale: 'zh-tw',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+
+        // ✅ 這裡才是 eventContent 正確位置
+        eventContent: function(arg){
+          const p = arg.event.extendedProps;
+          const mins = Number(p.availableMinutes || 0);
+          const label = slotLabel[p.slot] || p.slot;
+          const text = `${p.start} ${label}｜${mins}m`;
+
+          const wrap = document.createElement('div');
+          wrap.style.display = 'flex';
+          wrap.style.alignItems = 'center';
+          wrap.style.gap = '6px';
+
+          const dot = document.createElement('span');
+          dot.style.width = '8px';
+          dot.style.height = '8px';
+          dot.style.borderRadius = '999px';
+          dot.style.background = 'currentColor';
+          dot.style.opacity = '0.7';
+
+          const txt = document.createElement('div');
+          txt.style.whiteSpace = 'nowrap';
+          txt.style.overflow = 'hidden';
+          txt.style.textOverflow = 'ellipsis';
+          txt.style.fontWeight = '750';
+          txt.textContent = text;
+
+          wrap.appendChild(dot);
+          wrap.appendChild(txt);
+          return { domNodes: [wrap] };
+        },
+
+        events,
+
+        eventClick: function(arg) {
+          openDrawer(arg.event.extendedProps);
+        },
+
+        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false }
+      });
+
+      calendar.render();
+    } else {
+      calendar.removeAllEvents();
+      calendar.addEventSource(events);
+      calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
     }
+  }
 
-    // modal
-    const mask = document.getElementById('mask');
-const closeX = document.getElementById('closeX');
-closeX.onclick = () => mask.style.display = 'none';
-mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
+  // ===== UI init =====
+  const yearInput = document.getElementById('year');
+  const monthInput = document.getElementById('month');
 
+  yearInput.value = 2026;
+  monthInput.value = 1;
 
-function statusBadgeClass(status, mins){
-  if (status !== '開放') return (status === '額滿') ? 'full' : 'closed';
-  if (mins > 0 && mins < 60) return 'tight';
-  return 'open';
-}
-
-function openDrawer(info) {
-  const mins = Number(info.availableMinutes || 0);
-  const status = (info.status || '').trim();
-
-  document.getElementById('dDate').textContent = info.date;
-  document.getElementById('dSlot').innerHTML =
-    `${slotLabel[info.slot] || info.slot} <span class="muted">(${info.slot})</span>`;
-
-  document.getElementById('dTime').textContent = `${info.start}–${info.end}`;
-  document.getElementById('dMin').textContent = `${mins} 分鐘`;
-
-  // 狀態做成 badge
-  const cls = statusBadgeClass(status, mins);
-  document.getElementById('dStatus').innerHTML =
-    `<span class="badge ${cls}">${status}</span>`;
-
-  // 占用：濾掉「緩衝」字樣
-  const occ = stripBufferText(info.occupied);
-  document.getElementById('dOcc').textContent = occ || '—';
-
-  // 備註：你可以保留（但你也可以選擇只留一點點）
-  document.getElementById('dNote').textContent = info.note || '';
-
-  mask.style.display = 'flex';
-}
-
-
-    async function fetchMonth(year, month) {
-      const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`API error ${res.status}`);
-      return await res.json();
+  document.getElementById('btnReload').onclick = async () => {
+    const year = Number(yearInput.value);
+    const month = Number(monthInput.value);
+    try {
+      await loadAndRender(year, month);
+    } catch (err) {
+      alert('載入失敗：' + err.message);
+      console.error(err);
     }
+  };
 
-    function toEvent(item) {
-      const startISO = `${item.date}T${item.start}:00`;
-      const endISO   = `${item.date}T${item.end}:00`;
-
-      const mins = Number(item.availableMinutes || 0);
-      const status = (item.status || '').trim();
-
-      // className 決定樣式：開放、分鐘緊、額滿、不開放
-      let className = 'ev-open';
-      if (status !== '開放') className = (status === '額滿') ? 'ev-full' : 'ev-closed';
-      else if (mins > 0 && mins < 60) className = 'ev-tight'; // 你可調門檻
-
-      const title = `${slotLabel[item.slot] || item.slot}｜${mins}m`;
-
-      return {
-        title,
-        start: startISO,
-        end: endISO,
-        allDay: false,
-        classNames: [className],
-        extendedProps: item
-      };
+  // 首次載入
+  (async () => {
+    try {
+      await loadAndRender(Number(yearInput.value), Number(monthInput.value));
+    } catch (err) {
+      alert('載入失敗：' + err.message + '\n\n請確認 API_URL / Web App 權限');
+      console.error(err);
     }
-
-    let calendar;
-
-    async function loadAndRender(year, month) {
-      // 拉資料
-      const data = await fetchMonth(year, month);
-
-      // 轉 events
-      const events = Array.isArray(data) ? data.map(toEvent) : [];
-
-      // 初始化 / 更新
-      const el = document.getElementById('calendar');
-      if (!calendar) {
-        calendar = new FullCalendar.Calendar(el, {
-          initialView: 'dayGridMonth',
-          height: 'auto',
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-          },
-          locale: 'zh-tw',
-          events,
-          eventClick: function(arg) {
-            openDrawer(arg.event.extendedProps);
-          },
-          eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false }
-        });
-        calendar.render();
-      } else {
-        calendar.removeAllEvents();
-        calendar.addEventSource(events);
-        // 同步跳到該月
-        calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
-      }
-    }
-
-    // UI init
-    const { y, m } = ymdTodayInTaipei();
-    const yearInput = document.getElementById('year');
-    const monthInput = document.getElementById('month');
-    yearInput.value = 2026; // 你現在主要跑 2026/01 就先鎖
-    monthInput.value = 1;
-
-    document.getElementById('btnReload').onclick = async () => {
-      const year = Number(yearInput.value);
-      const month = Number(monthInput.value);
-      try {
-        await loadAndRender(year, month);
-      } catch (err) {
-        alert('載入失敗：' + err.message);
-        console.error(err);
-      }
-    };
-eventContent: function(arg){
-  const p = arg.event.extendedProps;
-  const mins = Number(p.availableMinutes || 0);
-  const label = slotLabel[p.slot] || p.slot;
-
-  // 顯示：13:00 下午｜240m（更乾淨）
-  const t = `${p.start} ${label}｜${mins}m`;
-
-  const wrap = document.createElement('div');
-  wrap.style.display = 'flex';
-  wrap.style.alignItems = 'center';
-  wrap.style.gap = '6px';
-
-  const dot = document.createElement('span');
-  dot.style.width = '8px';
-  dot.style.height = '8px';
-  dot.style.borderRadius = '999px';
-  dot.style.background = 'currentColor';
-  dot.style.opacity = '0.7';
-
-  const txt = document.createElement('div');
-  txt.style.whiteSpace = 'nowrap';
-  txt.style.overflow = 'hidden';
-  txt.style.textOverflow = 'ellipsis';
-  txt.style.fontWeight = '700';
-  txt.textContent = t;
-
-  wrap.appendChild(dot);
-  wrap.appendChild(txt);
-
-  return { domNodes: [wrap] };
-},
-
-    // 首次載入
-    (async () => {
-      try {
-        await loadAndRender(Number(yearInput.value), Number(monthInput.value));
-      } catch (err) {
-        alert('載入失敗：' + err.message + '\n\n請確認 API_URL 是否已換成你的 Apps Script Web App URL');
-        console.error(err);
-      }
-    })();
-
-    function stripBufferText(occupied) {
-  if (!occupied) return '';
-  // occupied 用 "；" 串起來：把含「緩衝」的段落濾掉
-  return String(occupied)
-    .split('；')
-    .map(s => s.trim())
-    .filter(s => s && !s.includes('緩衝'))
-    .join('；');
-}
-  </script>
-</body>
-</html>
+  })();
+</script>
