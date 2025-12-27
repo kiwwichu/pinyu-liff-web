@@ -479,7 +479,7 @@ left.appendChild(meta);
 
 const badge = document.createElement('div');
 badge.className = `badge ${cls}`;
-badge.textContent = (cls === 'open') ? '開放' : (cls === 'tight' ? '少量' : '額滿';
+badge.textContent = (cls === 'open') ? '開放' : (cls === 'tight' ? '少量' : '額滿');
 
 row.appendChild(left);
 row.appendChild(badge);
@@ -553,6 +553,17 @@ list.appendChild(row);
         renderDayCellSummary(dateStr, cell, groupedData);
       });
     }
+    let selectedDateStr = null;
+    
+    function applySelectedStyle(){
+      document.querySelectorAll('.fc-daygrid-day.is-selected')
+        .forEach(el => el.classList.remove('is-selected'));
+    
+      if (!selectedDateStr) return;
+    
+      const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
+      if (cell) cell.classList.add('is-selected');
+    }
 
     let calendar;
     let groupedData = new Map();
@@ -590,20 +601,6 @@ list.appendChild(row);
         });
 
         calendar.render();
-      }
-
-      let selectedDateStr = null;
-
-      function applySelectedStyle(){
-        // 先清掉舊選取
-        document.querySelectorAll('.fc-daygrid-day.is-selected')
-          .forEach(el => el.classList.remove('is-selected'));
-      
-        if (!selectedDateStr) return;
-      
-        // 再標記新選取
-        const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
-        if (cell) cell.classList.add('is-selected');
       }
 
 
