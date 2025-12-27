@@ -441,43 +441,50 @@
         const it = (dayObj && dayObj[s]) ? dayObj[s] : null;
 
         const start = it ? it.start : '—';
-        const end = it ? it.end : '—';
-        const mins = it ? Number(it.availableMinutes || 0) : 0;
-        const status = it ? String(it.status || '').trim() : '額滿';
+const end = it ? it.end : '—';
+const mins = it ? Number(it.availableMinutes || 0) : 0;
+const status = it ? String(it.status || '').trim() : '額滿';
 
-        const cls = classify(status, mins);
+const cls = classify(status, mins);
 
-        const blocked = it ? String(it.blocked ?? it.occupied ?? '') : '';
-        const remaining = it ? String(it.remaining ?? it.note ?? '') : '';
-        const blockedText = blocked ? blocked : '';
-        const remainingText = remaining ? remaining : '';
-        const row = document.createElement('div');
-        
-        row.className = 'rowCard';
+// ✅ 相容新舊欄位
+const blocked = it ? String(it.blocked ?? it.occupied ?? '') : '';
+const remaining = it ? String(it.remaining ?? it.note ?? '') : '';
+const blockedText = blocked ? blocked : '';
+const remainingText = remaining ? remaining : '';
 
-        const left = document.createElement('div');
-        left.className = 'rowLeft';
+const row = document.createElement('div');
+row.className = 'rowCard';
 
-        const top = document.createElement('div');
-        top.className = 'rowTop';
-        top.textContent = `${slotLabel[s]}  ·  ${start}–${end}`;
+const left = document.createElement('div');
+left.className = 'rowLeft';
 
-        const metaLines = [];
-        metaLines.push(`可用：${mins} 分鐘`);
-        if (remainingText) metaLines.push(`剩餘：${remainingText}`);       // ✅ 你要的重點
-        if (blockedText && blockedText !== '—') metaLines.push(`不可預約：${blockedText}`);
-        meta.textContent = metaLines.join('｜');
+const top = document.createElement('div');
+top.className = 'rowTop';
+top.textContent = `${slotLabel[s]}  ·  ${start}–${end}`;
 
-        left.appendChild(top);
-        left.appendChild(meta);
+// ✅ 你漏掉的 meta
+const meta = document.createElement('div');
+meta.className = 'rowMeta';
 
-        const badge = document.createElement('div');
-        badge.className = `badge ${cls}`;
-        badge.textContent = (cls === 'open') ? '開放' : (cls === 'tight' ? '少量' : '額滿');
+const metaLines = [];
+metaLines.push(`可用：${mins} 分鐘`);
+if (remainingText) metaLines.push(`剩餘：${remainingText}`);
+if (blockedText && blockedText !== '—') metaLines.push(`不可預約：${blockedText}`);
+meta.textContent = metaLines.join('｜');
 
-        row.appendChild(left);
-        row.appendChild(badge);
-        list.appendChild(row);
+// 組裝
+left.appendChild(top);
+left.appendChild(meta);
+
+const badge = document.createElement('div');
+badge.className = `badge ${cls}`;
+badge.textContent = (cls === 'open') ? '開放' : (cls === 'tight' ? '少量' : '額滿';
+
+row.appendChild(left);
+row.appendChild(badge);
+list.appendChild(row);
+
       }
 
       mask.style.display = 'flex';
