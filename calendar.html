@@ -356,7 +356,7 @@
       <div class="list" id="detailList"></div>
 
       <div class="drawerSub" style="margin-top:12px;">
-        ＊介面不顯示緩衝時間，但分鐘已納入扣除。
+        ＊實際時間還是以Pinyu為準。
       </div>
     </div>
   </div>
@@ -390,13 +390,19 @@
     }
 
     function classify(status, mins){
-      status = String(status || '').trim();
-      mins = Number(mins || 0);
+  status = String(status || '').trim();
+  mins = Number(mins || 0);
 
-      if (status === '額滿' || mins <= 0) return 'full';
-      if (status === '開放' && mins <= LOW_MIN_THRESHOLD) return 'tight';
-      return 'open';
-    }
+  if (status === '額滿') return 'full';
+  if (status === '少量') return 'tight';
+  if (status === '開放') return 'open';
+
+  // fallback：如果後端沒給狀態，才用分鐘推
+  if (mins <= 0) return 'full';
+  if (mins <= LOW_MIN_THRESHOLD) return 'tight';
+  return 'open';
+}
+
 
     async function fetchMonth(year, month) {
       const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
@@ -441,10 +447,12 @@
 
         const cls = classify(status, mins);
 
-        const occ = it ? stripBufferText(it.occupied) : '';
-        const note = it ? String(it.note || '') : '';
-
+        const blocked = it ? String(it.blocked ?? it.occupied ?? '') : '';
+        const remaining = it ? String(it.remaining ?? it.note ?? '') : '';
+        const blockedText = blocked ? blocked : '';
+        const remainingText = remaining ? remaining : '';
         const row = document.createElement('div');
+        
         row.className = 'rowCard';
 
         const left = document.createElement('div');
@@ -454,12 +462,10 @@
         top.className = 'rowTop';
         top.textContent = `${slotLabel[s]}  ·  ${start}–${end}`;
 
-        const meta = document.createElement('div');
-        meta.className = 'rowMeta';
         const metaLines = [];
         metaLines.push(`可用：${mins} 分鐘`);
-        if (occ) metaLines.push(`占用：${occ}`);
-        if (note) metaLines.push(`備註：${note}`);
+        if (remainingText) metaLines.push(`剩餘：${remainingText}`);       // ✅ 你要的重點
+        if (blockedText && blockedText !== '—') metaLines.push(`不可預約：${blockedText}`);
         meta.textContent = metaLines.join('｜');
 
         left.appendChild(top);
@@ -560,12 +566,13 @@
             right: 'dayGridMonth'
           },
           events: [],
-          dadatesSet: function(){
-            setTimeout(() => {
-              renderAllSummaries();
-              applySelectedStyle(); // ✅ 月切換/重繪後維持選取色
-            }, 0);
-          },
+          datesSet: function(){
+          setTimeout(() => {
+            renderAllSummaries();
+            applySelectedStyle();
+          }, 0);
+        },
+
           dateClick: function(info){
           selectedDateStr = info.dateStr; // ✅ 記住選到的日期
           applySelectedStyle();           // ✅ 立刻上色
