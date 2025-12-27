@@ -11,30 +11,29 @@
 
   <style>
     :root{
-  --bg:#f6f8fb;
-  --card:#ffffff;
-  --border:#e8edf6;
-  --text:#24324a;
-  --muted:#6b7a90;
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --border:#e8edf6;
+      --text:#24324a;
+      --muted:#6b7a90;
 
-  /* 品牌主色（藍） */
-  --brand:#48a2e8;
-  --brandBg:#eef8ff;
+      /* 品牌主色（藍） */
+      --brand:#48a2e8;
+      --brandBg:#eef8ff;
 
-  /* 狀態色：開放=綠、少量=黃、額滿=紅 */
-  --open:#20a56b;
-  --openBg:#eafaf2;
+      /* 狀態色：開放=綠、少量=黃、額滿=紅 */
+      --open:#20a56b;
+      --openBg:#eafaf2;
 
-  --yellow:#b78100;
-  --yellowBg:#fff7e5;
+      --yellow:#b78100;
+      --yellowBg:#fff7e5;
 
-  --red:#c43c3c;
-  --redBg:#ffecec;
+      --red:#c43c3c;
+      --redBg:#ffecec;
 
-  --shadow: 0 10px 30px rgba(15, 23, 42, .06);
-  --radius: 16px;
-}
-
+      --shadow: 0 10px 30px rgba(15, 23, 42, .06);
+      --radius: 16px;
+    }
 
     body{
       margin:0;
@@ -69,7 +68,7 @@
     }
     .title{
       font-size: 15px;
-      font-weight: 600; /* 不要太粗 */
+      font-weight: 600;
       margin: 0;
     }
     .sub{
@@ -117,7 +116,7 @@
       width:10px;height:10px;border-radius:99px; display:inline-block;
       border:1px solid var(--border);
     }
-    .dot.blue{ background: var(--brandBg); border-color: rgba(72,162,232,.35); }
+    .dot.blue{ background: var(--openBg); border-color: rgba(32,165,107,.35); }
     .dot.yellow{ background:var(--yellowBg); border-color:#ffe2a3; }
     .dot.red{ background:var(--redBg); border-color:#ffd0d0; }
 
@@ -131,18 +130,17 @@
     }
 
     /* FullCalendar typography soften */
-      .fc .fc-button:focus,
-      .fc .fc-button-primary:focus{
-        box-shadow: 0 0 0 3px rgba(72,162,232,.18) !important;
-      }
-      .fc .fc-button:hover{
-        border-color: rgba(72,162,232,.35) !important;
-        background: var(--brandBg) !important;
-      }
-      .fc .fc-toolbar-title{
-        color: var(--text);
-      }
-
+    .fc .fc-button:focus,
+    .fc .fc-button-primary:focus{
+      box-shadow: 0 0 0 3px rgba(72,162,232,.18) !important;
+    }
+    .fc .fc-button:hover{
+      border-color: rgba(72,162,232,.35) !important;
+      background: var(--brandBg) !important;
+    }
+    .fc .fc-toolbar-title{
+      color: var(--text);
+    }
 
     /* 我們不要事件塊長條，改成「日格摘要」：所以事件本體隱藏 */
     .fc .fc-daygrid-event{
@@ -195,11 +193,9 @@
       border:1px solid var(--border);
       background:#fff;
     }
-    .badge.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
-    .badge.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
-    .badge.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
-    }
-
+    .mark.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
+    .mark.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
+    .mark.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
 
     /* ===== drawer ===== */
     .mask{
@@ -291,7 +287,7 @@
       align-self:flex-start;
       font-weight: 500;
     }
-    .badge.open{ color:var(--blue); background:var(--blueBg); border-color:#bcd3ff; }
+    .badge.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
     .badge.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
     .badge.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
   </style>
@@ -410,7 +406,6 @@
 
       title.textContent = dateStr;
       sub.textContent = '早上 / 下午 / 晚上 / 深夜';
-
       list.innerHTML = '';
 
       for (const s of SLOT_ORDER){
@@ -453,7 +448,6 @@
 
         row.appendChild(left);
         row.appendChild(badge);
-
         list.appendChild(row);
       }
 
@@ -461,68 +455,68 @@
     }
 
     // 自訂：在月曆格子內放「摘要卡」
-function renderDayCellSummary(dateStr, cell, grouped){
-  const dayObj = grouped.get(dateStr);
-  if (!dayObj) return;
+    function renderDayCellSummary(dateStr, cell, grouped){
+      const dayObj = grouped.get(dateStr);
+      if (!dayObj) return;
 
-  const frame = cell.querySelector('.fc-daygrid-day-frame');
-  if (!frame) return;
+      const frame = cell.querySelector('.fc-daygrid-day-frame');
+      if (!frame) return;
 
-  // 避免重複
-  if (frame.querySelector('.daySummary')) return;
+      // 避免重複
+      if (frame.querySelector('.daySummary')) return;
 
-  const box = document.createElement('div');
-  box.className = 'daySummary';
-  box.title = '點擊查看四個時段詳細';
+      const box = document.createElement('div');
+      box.className = 'daySummary';
+      box.title = '點擊查看四個時段詳細';
 
-  for (const s of SLOT_ORDER){
-    const it = dayObj[s];
-    const mins = it ? Number(it.availableMinutes || 0) : 0;
-    const status = it ? String(it.status || '').trim() : '額滿';
-    const cls = classify(status, mins);
+      for (const s of SLOT_ORDER){
+        const it = dayObj[s];
+        const mins = it ? Number(it.availableMinutes || 0) : 0;
+        const status = it ? String(it.status || '').trim() : '額滿';
+        const cls = classify(status, mins);
 
-    const r = document.createElement('div');
-    r.className = 'sumRow';
+        const r = document.createElement('div');
+        r.className = 'sumRow';
 
-    const left = document.createElement('div');
-    left.className = 'left';
+        const left = document.createElement('div');
+        left.className = 'left';
 
-    const chip = document.createElement('span');
-    chip.className = 'chip';
-    chip.textContent = slotLabel[s];
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = slotLabel[s];
 
-    left.appendChild(chip);
+        left.appendChild(chip);
 
-    const mark = document.createElement('span');
-    mark.className = `mark ${cls}`;
-    mark.textContent = markIcon(cls);
+        const mark = document.createElement('span');
+        mark.className = `mark ${cls}`;
+        mark.textContent = markIcon(cls);
 
-    r.appendChild(left);
-    r.appendChild(mark);
+        r.appendChild(left);
+        r.appendChild(mark);
 
-    box.appendChild(r);
-  }
+        box.appendChild(r);
+      }
 
-  box.onclick = (e) => {
-    e.stopPropagation();
-    openDrawer(dateStr, dayObj);
-  };
+      box.onclick = (e) => {
+        e.stopPropagation();
+        openDrawer(dateStr, dayObj);
+      };
 
-  frame.appendChild(box);
-}
+      frame.appendChild(box);
+    }
 
-function renderAllSummaries(){
-  if (!calendar) return;
+    function renderAllSummaries(){
+      if (!calendar) return;
 
-  // 先清掉舊摘要（避免殘留）
-  document.querySelectorAll('.daySummary').forEach(el => el.remove());
+      // 先清掉舊摘要（避免殘留）
+      document.querySelectorAll('.daySummary').forEach(el => el.remove());
 
-  // 找到畫面上每個 day cell（FullCalendar dayGridMonth 每格都有 data-date）
-  document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
-    const dateStr = cell.getAttribute('data-date');
-    renderDayCellSummary(dateStr, cell, groupedData);
-  });
-}
+      // 找到畫面上每個 day cell（FullCalendar dayGridMonth 每格都有 data-date）
+      document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
+        const dateStr = cell.getAttribute('data-date');
+        renderDayCellSummary(dateStr, cell, groupedData);
+      });
+    }
 
     let calendar;
     let groupedData = new Map();
@@ -542,18 +536,11 @@ function renderAllSummaries(){
             center: 'title',
             right: 'dayGridMonth'
           },
-
-          // 不用事件展示，保留空事件源避免 FullCalendar 抱怨
           events: [],
-
-          // 每個日格渲染完後，插入摘要
           datesSet: function(){
-          // 等 DOM 真的畫完，再塞摘要（很重要）
-          setTimeout(renderAllSummaries, 0);
-        },
-
-
-          // 點日期數字也能開 drawer
+            // 等 DOM 真的畫完，再塞摘要（很重要）
+            setTimeout(renderAllSummaries, 0);
+          },
           dateClick: function(info){
             const dayObj = groupedData.get(info.dateStr);
             if (dayObj) openDrawer(info.dateStr, dayObj);
@@ -565,12 +552,10 @@ function renderAllSummaries(){
 
       // 同步到指定月份
       calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
+      renderAllSummaries();
+    }
 
-      // 重新渲染格子（讓 dayCellDidMount 重新跑）
-      calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
-renderAllSummaries();
-
-    // UI init
+    // UI init（✅ 一定要在 loadAndRender 外面）
     const yearInput = document.getElementById('year');
     const monthInput = document.getElementById('month');
     yearInput.value = 2026;
