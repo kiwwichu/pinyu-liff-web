@@ -560,18 +560,38 @@
             right: 'dayGridMonth'
           },
           events: [],
-          datesSet: function(){
-            // 等 DOM 真的畫完，再塞摘要（很重要）
-            setTimeout(renderAllSummaries, 0);
+          dadatesSet: function(){
+            setTimeout(() => {
+              renderAllSummaries();
+              applySelectedStyle(); // ✅ 月切換/重繪後維持選取色
+            }, 0);
           },
           dateClick: function(info){
-            const dayObj = groupedData.get(info.dateStr);
-            if (dayObj) openDrawer(info.dateStr, dayObj);
-          }
+          selectedDateStr = info.dateStr; // ✅ 記住選到的日期
+          applySelectedStyle();           // ✅ 立刻上色
+        
+          const dayObj = groupedData.get(info.dateStr);
+          if (dayObj) openDrawer(info.dateStr, dayObj);
+        }
         });
 
         calendar.render();
       }
+
+      let selectedDateStr = null;
+
+      function applySelectedStyle(){
+        // 先清掉舊選取
+        document.querySelectorAll('.fc-daygrid-day.is-selected')
+          .forEach(el => el.classList.remove('is-selected'));
+      
+        if (!selectedDateStr) return;
+      
+        // 再標記新選取
+        const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
+        if (cell) cell.classList.add('is-selected');
+      }
+
 
       // 同步到指定月份
       calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
