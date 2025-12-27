@@ -117,7 +117,7 @@
       width:10px;height:10px;border-radius:99px; display:inline-block;
       border:1px solid var(--border);
     }
-    .dot.blue{ background:var(--blueBg); border-color:#bcd3ff; }
+    .dot.blue{ background: var(--brandBg); border-color: rgba(72,162,232,.35); }
     .dot.yellow{ background:var(--yellowBg); border-color:#ffe2a3; }
     .dot.red{ background:var(--redBg); border-color:#ffd0d0; }
 
@@ -198,6 +198,7 @@
     .badge.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
     .badge.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
     .badge.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
+    }
 
 
     /* ===== drawer ===== */
@@ -460,59 +461,68 @@
     }
 
     // 自訂：在月曆格子內放「摘要卡」
-    function renderDayCellSummary(info, grouped){
-      const dateStr = info.dateStr; // yyyy-mm-dd
-      const cell = info.el;         // td
+function renderDayCellSummary(dateStr, cell, grouped){
+  const dayObj = grouped.get(dateStr);
+  if (!dayObj) return;
 
-      const dayObj = grouped.get(dateStr);
-      if (!dayObj) return;
+  const frame = cell.querySelector('.fc-daygrid-day-frame');
+  if (!frame) return;
 
-      // 找 daygrid 的 frame 裡面加摘要
-      const frame = cell.querySelector('.fc-daygrid-day-frame');
-      if (!frame) return;
+  // 避免重複
+  if (frame.querySelector('.daySummary')) return;
 
-      // 避免重複渲染
-      if (frame.querySelector('.daySummary')) return;
+  const box = document.createElement('div');
+  box.className = 'daySummary';
+  box.title = '點擊查看四個時段詳細';
 
-      const box = document.createElement('div');
-      box.className = 'daySummary';
-      box.title = '點擊查看四個時段詳細';
+  for (const s of SLOT_ORDER){
+    const it = dayObj[s];
+    const mins = it ? Number(it.availableMinutes || 0) : 0;
+    const status = it ? String(it.status || '').trim() : '額滿';
+    const cls = classify(status, mins);
 
-      // 4 rows
-      for (const s of SLOT_ORDER){
-        const it = dayObj[s];
-        const mins = it ? Number(it.availableMinutes || 0) : 0;
-        const status = it ? String(it.status || '').trim() : '額滿';
-        const cls = classify(status, mins);
+    const r = document.createElement('div');
+    r.className = 'sumRow';
 
-        const r = document.createElement('div');
-        r.className = 'sumRow';
+    const left = document.createElement('div');
+    left.className = 'left';
 
-        const left = document.createElement('div');
-        left.className = 'left';
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = slotLabel[s];
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.textContent = slotLabel[s];
 
-        left.appendChild(chip);
+    left.appendChild(chip);
 
-        const mark = document.createElement('span');
-        mark.className = `mark ${cls}`;
-        mark.textContent = markIcon(cls);
+    const mark = document.createElement('span');
+    mark.className = `mark ${cls}`;
+    mark.textContent = markIcon(cls);
 
-        r.appendChild(left);
-        r.appendChild(mark);
+    r.appendChild(left);
+    r.appendChild(mark);
 
-        box.appendChild(r);
-      }
+    box.appendChild(r);
+  }
 
-      box.onclick = (e) => {
-        e.stopPropagation();
-        openDrawer(dateStr, dayObj);
-      };
+  box.onclick = (e) => {
+    e.stopPropagation();
+    openDrawer(dateStr, dayObj);
+  };
 
-      frame.appendChild(box);
-    }
+  frame.appendChild(box);
+}
+
+function renderAllSummaries(){
+  if (!calendar) return;
+
+  // 先清掉舊摘要（避免殘留）
+  document.querySelectorAll('.daySummary').forEach(el => el.remove());
+
+  // 找到畫面上每個 day cell（FullCalendar dayGridMonth 每格都有 data-date）
+  document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
+    const dateStr = cell.getAttribute('data-date');
+    renderDayCellSummary(dateStr, cell, groupedData);
+  });
+}
 
     let calendar;
     let groupedData = new Map();
@@ -537,9 +547,11 @@
           events: [],
 
           // 每個日格渲染完後，插入摘要
-          dayCellDidMount: function(info){
-            renderDayCellSummary(info, groupedData);
-          },
+          datesSet: function(){
+          // 等 DOM 真的畫完，再塞摘要（很重要）
+          setTimeout(renderAllSummaries, 0);
+        },
+
 
           // 點日期數字也能開 drawer
           dateClick: function(info){
@@ -555,8 +567,8 @@
       calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
 
       // 重新渲染格子（讓 dayCellDidMount 重新跑）
-      calendar.render();
-    }
+      calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
+renderAllSummaries();
 
     // UI init
     const yearInput = document.getElementById('year');
