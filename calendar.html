@@ -10,292 +10,578 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
   <style>
-    body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background:#f6f8fb; }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 14px; }
-    .topbar { display:flex; gap:10px; align-items:center; flex-wrap: wrap; margin-bottom: 12px; }
-    .card { background:#fff; border:1px solid #e5e9f2; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.04); padding: 12px; }
-    .btn { border:1px solid #cfd8ea; background:#fff; padding:10px 12px; border-radius: 10px; cursor:pointer; }
-    .btn:active { transform: translateY(1px); }
-    .muted { color:#667085; font-size: 13px; }
-    #calendar { background:#fff; border-radius: 12px; border:1px solid #e5e9f2; padding: 10px; }
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --border:#e8edf6;
+      --text:#24324a;
+      --muted:#6b7a90;
 
-    /* event 狀態樣式：先用 class 控制，顏色你之後可換成品牌色 */
-    .ev-open{
-      border:1px solid #9cc3ff;
-      background:#eef5ff;
-      color:#123a66;
-    }
-    .ev-tight{
-      border:1px solid #ffcf70;
-      background:#fff7e5;
-      color:#6a4300;
-    }
-    .ev-full{
-      border:1px solid #f1a3a3;
-      background:#ffecec;
-      color:#7a1d1d;
+      /* brand-ish gentle */
+      --blue:#2f6fd8;
+      --blueBg:#eef5ff;
+
+      --yellow:#b78100;
+      --yellowBg:#fff7e5;
+
+      --red:#c43c3c;
+      --redBg:#ffecec;
+
+      --shadow: 0 10px 30px rgba(15, 23, 42, .06);
+      --radius: 16px;
     }
 
+    body{
+      margin:0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      letter-spacing:.2px;
+    }
+    .wrap{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
 
-    /* 簡易 modal */
-    .modalMask { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:12px; }
-    .modal { width:min(520px, 96vw); background:#fff; border-radius:14px; border:1px solid #e5e9f2; box-shadow: 0 8px 28px rgba(0,0,0,.18); padding:14px; }
-    .modal h3 { margin:0 0 8px; font-size:16px; }
-    .row { margin: 6px 0; }
-    .k { display:inline-block; width: 86px; color:#667085; }
-    .closeX { float:right; cursor:pointer; font-size:18px; padding: 2px 6px; border-radius: 8px; }
-    .closeX:hover { background:#f2f4f7; }
-    .pill { display:inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; border:1px solid #e5e9f2; background:#f8fafc; }
+    /* ===== top card ===== */
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .title{
+      font-size: 15px;
+      font-weight: 600; /* 不要太粗 */
+      margin: 0;
+    }
+    .sub{
+      margin-top:6px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .controls{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    .input{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+    }
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text);
+      cursor:pointer;
+    }
+    .btn:hover{ background:#fafcff; }
+
+    .legend{
+      margin-top: 10px;
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--muted);
+      align-items:center;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:99px; display:inline-block;
+      border:1px solid var(--border);
+    }
+    .dot.blue{ background:var(--blueBg); border-color:#bcd3ff; }
+    .dot.yellow{ background:var(--yellowBg); border-color:#ffe2a3; }
+    .dot.red{ background:var(--redBg); border-color:#ffd0d0; }
+
+    /* ===== calendar container ===== */
+    #calendar{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 10px;
+    }
+
+    /* FullCalendar typography soften */
+    .fc .fc-toolbar-title{
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .fc .fc-button{
+      border-radius: 12px !important;
+      border:1px solid var(--border) !important;
+      background:#fff !important;
+      color: var(--text) !important;
+      box-shadow:none !important;
+      font-weight: 500 !important;
+    }
+    .fc .fc-button:hover{ background:#fafcff !important; }
+    .fc .fc-daygrid-day-number{
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px;
+    }
+
+    /* 我們不要事件塊長條，改成「日格摘要」：所以事件本體隱藏 */
+    .fc .fc-daygrid-event{
+      display:none !important;
+    }
+
+    /* ===== day cell summary ===== */
+    .daySummary{
+      margin: 6px;
+      padding: 8px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background:#fbfcff;
+      display:grid;
+      gap: 6px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .daySummary:hover{
+      border-color:#d7e3fb;
+      background:#f7faff;
+    }
+    .sumRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .sumRow .left{
+      display:flex; align-items:center; gap: 8px;
+      color: var(--muted);
+    }
+    .chip{
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background:#fff;
+      color: var(--muted);
+    }
+    .mark{
+      width: 18px; height: 18px;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 12px;
+      border:1px solid var(--border);
+      background:#fff;
+    }
+    .mark.open{ color: var(--blue); background: var(--blueBg); border-color:#bcd3ff; }
+    .mark.tight{ color: var(--yellow); background: var(--yellowBg); border-color:#ffe2a3; }
+    .mark.full{ color: var(--red); background: var(--redBg); border-color:#ffd0d0; }
+
+    /* ===== drawer ===== */
+    .mask{
+      position:fixed; inset:0;
+      background:rgba(16,24,40,.28);
+      backdrop-filter: blur(2px);
+      display:none;
+      justify-content:flex-end;
+    }
+    .drawer{
+      width:min(420px, 92vw);
+      height:100%;
+      background:#fff;
+      border-left:1px solid var(--border);
+      box-shadow: -12px 0 28px rgba(0,0,0,.10);
+      padding:16px;
+      overflow:auto;
+      animation: slideIn .18s ease-out;
+    }
+    @keyframes slideIn { from { transform: translateX(10px); opacity:.7 } to { transform:none; opacity:1 } }
+
+    .drawerHead{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .drawerTitle{
+      font-size: 14px;
+      font-weight: 600;
+      margin:0;
+    }
+    .drawerSub{
+      margin-top:6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .iconBtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .iconBtn:hover{ background:#fafcff; }
+
+    .list{
+      margin-top: 12px;
+      display:grid;
+      gap: 10px;
+    }
+    .rowCard{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      background:#fff;
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      align-items:flex-start;
+    }
+    .rowLeft{
+      display:grid;
+      gap: 6px;
+      font-size: 13px;
+    }
+    .rowTop{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .rowMeta{
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .badge{
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      white-space:nowrap;
+      align-self:flex-start;
+      font-weight: 500;
+    }
+    .badge.open{ color:var(--blue); background:var(--blueBg); border-color:#bcd3ff; }
+    .badge.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
+    .badge.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="topbar">
-      <div class="card" style="flex:1; min-width: 280px;">
-        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
-          <div>
-            <div style="font-weight:700;">可預約時間表（分鐘制）</div>
-            <div class="muted">資料來源：可預約表（Apps Script API）</div>
-          </div>
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <div class="title">可預約時間表（分鐘制）</div>
+          <div class="sub">點日期可查看「早上 / 下午 / 晚上 / 深夜」四段詳細資訊。</div>
+        </div>
+
+        <div class="controls">
+          <input id="year" class="input" style="width:96px" placeholder="Year" />
+          <input id="month" class="input" style="width:70px" placeholder="Month" />
           <button class="btn" id="btnReload">重新載入</button>
         </div>
+      </div>
 
-        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-          <label class="muted">Year</label>
-          <input id="year" class="btn" style="width:100px;" />
-          <label class="muted">Month</label>
-          <input id="month" class="btn" style="width:70px;" />
-          <span class="muted">（例：2026 / 1）</span>
-        </div>
-
-        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-          <span class="pill">開放</span>
-          <span class="pill">黃：分鐘偏緊</span>
-          <span class="pill">額滿/不開放</span>
-        </div>
+      <div class="legend">
+        <span class="dot blue"></span><span>開放</span>
+        <span class="dot yellow"></span><span>少量（分鐘偏緊）</span>
+        <span class="dot red"></span><span>額滿</span>
       </div>
     </div>
 
     <div id="calendar"></div>
   </div>
 
-  <!-- Modal -->
-  <div class="modalMask" id="mask">
-    <div class="modal">
-      <div class="closeX" id="closeX">✕</div>
-      <h3 id="mTitle">時段資訊</h3>
-      <div class="row"><span class="k">日期</span><span id="mDate"></span></div>
-      <div class="row"><span class="k">時段</span><span id="mSlot"></span></div>
-      <div class="row"><span class="k">時間</span><span id="mTime"></span></div>
-      <div class="row"><span class="k">可用分鐘</span><span id="mMin"></span></div>
-      <div class="row"><span class="k">狀態</span><span id="mStatus"></span></div>
-      <div class="row"><span class="k">占用</span><span id="mOcc"></span></div>
-      <div class="row"><span class="k">備註</span><span id="mNote"></span></div>
-      <div style="margin-top:12px;" class="muted">＊下一步可加：點擊直接進預約流程（選 30/45/60 分）</div>
+  <!-- Drawer -->
+  <div class="mask" id="mask">
+    <div class="drawer" role="dialog" aria-modal="true">
+      <div class="drawerHead">
+        <div>
+          <div class="drawerTitle" id="dTitle">日期詳情</div>
+          <div class="drawerSub" id="dSub">—</div>
+        </div>
+        <button class="iconBtn" id="closeX">關閉</button>
+      </div>
+
+      <div class="list" id="detailList"></div>
+
+      <div class="drawerSub" style="margin-top:12px;">
+        ＊介面不顯示緩衝時間，但分鐘已納入扣除。
+      </div>
     </div>
   </div>
-  
+
   <script>
-  // ====== 你只要改這行 ======
-  const API_URL = "/api/avail";
-  // ========================
+    // ====== Vercel API ======
+    const API_URL = "/api/avail";
 
-  const slotLabel = {
-    MORNING: "早上",
-    AFTERNOON: "下午",
-    EVENING: "晚上",
-    LATE: "深夜"
-  };
-  const LOW_MIN_THRESHOLD = 60;
-  // ===== Drawer close =====
-  const mask = document.getElementById('mask');
-  const closeX = document.getElementById('closeX');
-  closeX.onclick = () => mask.style.display = 'none';
-  mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
-
-  function ymdToday() {
-    const d = new Date();
-    return { y: d.getFullYear(), m: d.getMonth() + 1 };
-  }
-
-  function stripBufferText(occupied) {
-    if (!occupied) return '';
-    // occupied 用 "；" 串起來：把含「緩衝」的段落濾掉
-    return String(occupied)
-      .split('；')
-      .map(s => s.trim())
-      .filter(s => s && !s.includes('緩衝'))
-      .join('；');
-  }
-
-function statusBadgeClass(status, mins){
-  status = String(status || '').trim();
-  mins = Number(mins || 0);
-
-  if (status === '額滿' || mins <= 0) return 'full';     // 🔴
-  if (status === '開放' && mins <= LOW_MIN_THRESHOLD) return 'tight'; // 🟡
-  return 'open'; // 🔵
-}
-
-  function openDrawer(info) {
-    const mins = Number(info.availableMinutes || 0);
-    const status = String(info.status || '').trim();
-
-    document.getElementById('dDate').textContent = info.date;
-    document.getElementById('dSlot').innerHTML =
-      `${slotLabel[info.slot] || info.slot} <span class="muted">(${info.slot})</span>`;
-
-    document.getElementById('dTime').textContent = `${info.start}–${info.end}`;
-    document.getElementById('dMin').textContent = `${mins} 分鐘`;
-
-    const cls = statusBadgeClass(status, mins);
-    document.getElementById('dStatus').innerHTML =
-      `<span class="badge ${cls}">${status}</span>`;
-
-    // 占用：不顯示緩衝
-    const occ = stripBufferText(info.occupied);
-    document.getElementById('dOcc').textContent = occ || '—';
-
-    // 備註：也不顯示緩衝字眼（更乾淨）
-    const note = String(info.note || '').replace(/緩衝.*$/g,'').trim();
-    document.getElementById('dNote').textContent = note;
-
-    mask.style.display = 'flex';
-  }
-
-  async function fetchMonth(year, month) {
-    const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`API error ${res.status}`);
-    return await res.json();
-  }
-
-  // 你要的顏色對應：
-  // 開放=藍、額滿=黃、暫不開放=紅
-function classByStatus(status, mins){
-  status = String(status || '').trim();
-  mins = Number(mins || 0);
-
-  if (status === '額滿' || mins <= 0) return 'ev-full';          // 🔴 額滿
-  if (status === '開放' && mins <= LOW_MIN_THRESHOLD) return 'ev-tight'; // 🟡 少量
-  return 'ev-open';                                             // 🔵 開放
-}
-
-
-  function toEvent(item) {
-    const startISO = `${item.date}T${item.start}:00`;
-    const endISO   = `${item.date}T${item.end}:00`;
-
-    const mins = Number(item.availableMinutes || 0);
-    const status = String(item.status || '').trim();
-
-    const className = classByStatus(status, mins);
-
-    // 顯示：「13:00 下午｜240m」→ 我們用 eventContent 自訂，不用 title 擠爆
-    const title = `${slotLabel[item.slot] || item.slot}｜${mins}m`;
-
-    return {
-      title,
-      start: startISO,
-      end: endISO,
-      allDay: false,
-      classNames: [className],
-      extendedProps: item
+    const slotLabel = {
+      MORNING: "早上",
+      AFTERNOON: "下午",
+      EVENING: "晚上",
+      LATE: "深夜"
     };
-  }
+    const SLOT_ORDER = ["MORNING","AFTERNOON","EVENING","LATE"];
+    const LOW_MIN_THRESHOLD = 60; // 少量門檻：<=60 分鐘 → 黃
 
-  let calendar;
+    // drawer close
+    const mask = document.getElementById('mask');
+    const closeX = document.getElementById('closeX');
+    closeX.onclick = () => mask.style.display = 'none';
+    mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
 
-  async function loadAndRender(year, month) {
-    const data = await fetchMonth(year, month);
-    const events = Array.isArray(data) ? data.map(toEvent) : [];
+    function stripBufferText(occupied) {
+      if (!occupied) return '';
+      return String(occupied)
+        .split('；')
+        .map(s => s.trim())
+        .filter(s => s && !s.includes('緩衝'))
+        .join('；');
+    }
 
-    const el = document.getElementById('calendar');
-    if (!calendar) {
-      calendar = new FullCalendar.Calendar(el, {
-        initialView: 'dayGridMonth',
-        height: 'auto',
-        locale: 'zh-tw',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
+    function classify(status, mins){
+      status = String(status || '').trim();
+      mins = Number(mins || 0);
 
-        // ✅ 這裡才是 eventContent 正確位置
-        eventContent: function(arg){
-          const p = arg.event.extendedProps;
-          const mins = Number(p.availableMinutes || 0);
-          const label = slotLabel[p.slot] || p.slot;
-          const text = `${p.start} ${label}｜${mins}m`;
+      if (status === '額滿' || mins <= 0) return 'full';
+      if (status === '開放' && mins <= LOW_MIN_THRESHOLD) return 'tight';
+      return 'open';
+    }
 
-          const wrap = document.createElement('div');
-          wrap.style.display = 'flex';
-          wrap.style.alignItems = 'center';
-          wrap.style.gap = '6px';
+    async function fetchMonth(year, month) {
+      const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      return await res.json();
+    }
 
-          const dot = document.createElement('span');
-          dot.style.width = '8px';
-          dot.style.height = '8px';
-          dot.style.borderRadius = '999px';
-          dot.style.background = 'currentColor';
-          dot.style.opacity = '0.7';
+    // 資料整理：date -> {slot->item}
+    function groupByDate(data){
+      const map = new Map();
+      for (const it of (Array.isArray(data) ? data : [])) {
+        const date = it.date;
+        if (!map.has(date)) map.set(date, {});
+        map.get(date)[it.slot] = it;
+      }
+      return map;
+    }
 
-          const txt = document.createElement('div');
-          txt.style.whiteSpace = 'nowrap';
-          txt.style.overflow = 'hidden';
-          txt.style.textOverflow = 'ellipsis';
-          txt.style.fontWeight = '750';
-          txt.textContent = text;
+    function markIcon(cls){
+      if (cls === 'open') return '✓';
+      if (cls === 'tight') return '△';
+      return '✕';
+    }
 
-          wrap.appendChild(dot);
-          wrap.appendChild(txt);
-          return { domNodes: [wrap] };
-        },
+    function openDrawer(dateStr, dayObj){
+      const title = document.getElementById('dTitle');
+      const sub = document.getElementById('dSub');
+      const list = document.getElementById('detailList');
 
-        events,
+      title.textContent = dateStr;
+      sub.textContent = '早上 / 下午 / 晚上 / 深夜';
 
-        eventClick: function(arg) {
-          openDrawer(arg.event.extendedProps);
-        },
+      list.innerHTML = '';
 
-        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false }
-      });
+      for (const s of SLOT_ORDER){
+        const it = (dayObj && dayObj[s]) ? dayObj[s] : null;
 
-      calendar.render();
-    } else {
-      calendar.removeAllEvents();
-      calendar.addEventSource(events);
+        const start = it ? it.start : '—';
+        const end = it ? it.end : '—';
+        const mins = it ? Number(it.availableMinutes || 0) : 0;
+        const status = it ? String(it.status || '').trim() : '額滿';
+
+        const cls = classify(status, mins);
+
+        const occ = it ? stripBufferText(it.occupied) : '';
+        const note = it ? String(it.note || '') : '';
+
+        const row = document.createElement('div');
+        row.className = 'rowCard';
+
+        const left = document.createElement('div');
+        left.className = 'rowLeft';
+
+        const top = document.createElement('div');
+        top.className = 'rowTop';
+        top.textContent = `${slotLabel[s]}  ·  ${start}–${end}`;
+
+        const meta = document.createElement('div');
+        meta.className = 'rowMeta';
+        const metaLines = [];
+        metaLines.push(`可用：${mins} 分鐘`);
+        if (occ) metaLines.push(`占用：${occ}`);
+        if (note) metaLines.push(`備註：${note}`);
+        meta.textContent = metaLines.join('｜');
+
+        left.appendChild(top);
+        left.appendChild(meta);
+
+        const badge = document.createElement('div');
+        badge.className = `badge ${cls}`;
+        badge.textContent = (cls === 'open') ? '開放' : (cls === 'tight' ? '少量' : '額滿');
+
+        row.appendChild(left);
+        row.appendChild(badge);
+
+        list.appendChild(row);
+      }
+
+      mask.style.display = 'flex';
+    }
+
+    // 自訂：在月曆格子內放「摘要卡」
+    function renderDayCellSummary(info, grouped){
+      const dateStr = info.dateStr; // yyyy-mm-dd
+      const cell = info.el;         // td
+
+      const dayObj = grouped.get(dateStr);
+      if (!dayObj) return;
+
+      // 找 daygrid 的 frame 裡面加摘要
+      const frame = cell.querySelector('.fc-daygrid-day-frame');
+      if (!frame) return;
+
+      // 避免重複渲染
+      if (frame.querySelector('.daySummary')) return;
+
+      const box = document.createElement('div');
+      box.className = 'daySummary';
+      box.title = '點擊查看四個時段詳細';
+
+      // 4 rows
+      for (const s of SLOT_ORDER){
+        const it = dayObj[s];
+        const mins = it ? Number(it.availableMinutes || 0) : 0;
+        const status = it ? String(it.status || '').trim() : '額滿';
+        const cls = classify(status, mins);
+
+        const r = document.createElement('div');
+        r.className = 'sumRow';
+
+        const left = document.createElement('div');
+        left.className = 'left';
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = slotLabel[s];
+
+        left.appendChild(chip);
+
+        const mark = document.createElement('span');
+        mark.className = `mark ${cls}`;
+        mark.textContent = markIcon(cls);
+
+        r.appendChild(left);
+        r.appendChild(mark);
+
+        box.appendChild(r);
+      }
+
+      box.onclick = (e) => {
+        e.stopPropagation();
+        openDrawer(dateStr, dayObj);
+      };
+
+      frame.appendChild(box);
+    }
+
+    let calendar;
+    let groupedData = new Map();
+
+    async function loadAndRender(year, month) {
+      const data = await fetchMonth(year, month);
+      groupedData = groupByDate(data);
+
+      const el = document.getElementById('calendar');
+      if (!calendar) {
+        calendar = new FullCalendar.Calendar(el, {
+          initialView: 'dayGridMonth',
+          height: 'auto',
+          locale: 'zh-tw',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth'
+          },
+
+          // 不用事件展示，保留空事件源避免 FullCalendar 抱怨
+          events: [],
+
+          // 每個日格渲染完後，插入摘要
+          dayCellDidMount: function(info){
+            renderDayCellSummary(info, groupedData);
+          },
+
+          // 點日期數字也能開 drawer
+          dateClick: function(info){
+            const dayObj = groupedData.get(info.dateStr);
+            if (dayObj) openDrawer(info.dateStr, dayObj);
+          }
+        });
+
+        calendar.render();
+      }
+
+      // 同步到指定月份
       calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
-    }
-  }
-  // ===== UI init =====
-  const yearInput = document.getElementById('year');
-  const monthInput = document.getElementById('month');
 
-  yearInput.value = 2026;
-  monthInput.value = 1;
-
-  document.getElementById('btnReload').onclick = async () => {
-    const year = Number(yearInput.value);
-    const month = Number(monthInput.value);
-    try {
-      await loadAndRender(year, month);
-    } catch (err) {
-      alert('載入失敗：' + err.message);
-      console.error(err);
+      // 重新渲染格子（讓 dayCellDidMount 重新跑）
+      calendar.render();
     }
-  };
 
-  // 首次載入
-  (async () => {
-    try {
-      await loadAndRender(Number(yearInput.value), Number(monthInput.value));
-    } catch (err) {
-      alert('載入失敗：' + err.message + '\n\n請確認 API_URL / Web App 權限');
-      console.error(err);
-    }
-  })();
-  
-</script>
+    // UI init
+    const yearInput = document.getElementById('year');
+    const monthInput = document.getElementById('month');
+    yearInput.value = 2026;
+    monthInput.value = 1;
+
+    document.getElementById('btnReload').onclick = async () => {
+      try {
+        await loadAndRender(Number(yearInput.value), Number(monthInput.value));
+      } catch (err) {
+        alert('載入失敗：' + err.message);
+        console.error(err);
+      }
+    };
+
+    (async () => {
+      try {
+        await loadAndRender(Number(yearInput.value), Number(monthInput.value));
+      } catch (err) {
+        alert('載入失敗：' + err.message + '\n\n請確認 /api/avail 是否可回傳 JSON');
+        console.error(err);
+      }
+    })();
+  </script>
+</body>
+</html>
