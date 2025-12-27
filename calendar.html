@@ -1,4 +1,90 @@
-<script>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>可預約時間表</title>
+
+  <!-- FullCalendar (CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+  <style>
+    body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background:#f6f8fb; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 14px; }
+    .topbar { display:flex; gap:10px; align-items:center; flex-wrap: wrap; margin-bottom: 12px; }
+    .card { background:#fff; border:1px solid #e5e9f2; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.04); padding: 12px; }
+    .btn { border:1px solid #cfd8ea; background:#fff; padding:10px 12px; border-radius: 10px; cursor:pointer; }
+    .btn:active { transform: translateY(1px); }
+    .muted { color:#667085; font-size: 13px; }
+    #calendar { background:#fff; border-radius: 12px; border:1px solid #e5e9f2; padding: 10px; }
+
+    /* event 狀態樣式：先用 class 控制，顏色你之後可換成品牌色 */
+    .ev-open   { border: 1px solid #8bb6ff; background: #eaf2ff; color:#123a66; }
+    .ev-tight  { border: 1px solid #ffcf70; background: #fff7e5; color:#6a4300; }
+    .ev-full   { border: 1px solid #f1a3a3; background: #ffecec; color:#7a1d1d; text-decoration: line-through; opacity:.75; }
+    .ev-closed { border: 1px solid #c7c7c7; background: #f2f2f2; color:#555; text-decoration: line-through; opacity:.75; }
+
+    /* 簡易 modal */
+    .modalMask { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:12px; }
+    .modal { width:min(520px, 96vw); background:#fff; border-radius:14px; border:1px solid #e5e9f2; box-shadow: 0 8px 28px rgba(0,0,0,.18); padding:14px; }
+    .modal h3 { margin:0 0 8px; font-size:16px; }
+    .row { margin: 6px 0; }
+    .k { display:inline-block; width: 86px; color:#667085; }
+    .closeX { float:right; cursor:pointer; font-size:18px; padding: 2px 6px; border-radius: 8px; }
+    .closeX:hover { background:#f2f4f7; }
+    .pill { display:inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; border:1px solid #e5e9f2; background:#f8fafc; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="card" style="flex:1; min-width: 280px;">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
+          <div>
+            <div style="font-weight:700;">可預約時間表（分鐘制）</div>
+            <div class="muted">資料來源：可預約表（Apps Script API）</div>
+          </div>
+          <button class="btn" id="btnReload">重新載入</button>
+        </div>
+
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <label class="muted">Year</label>
+          <input id="year" class="btn" style="width:100px;" />
+          <label class="muted">Month</label>
+          <input id="month" class="btn" style="width:70px;" />
+          <span class="muted">（例：2026 / 1）</span>
+        </div>
+
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="pill">開放</span>
+          <span class="pill">黃：分鐘偏緊</span>
+          <span class="pill">額滿/不開放</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="calendar"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modalMask" id="mask">
+    <div class="modal">
+      <div class="closeX" id="closeX">✕</div>
+      <h3 id="mTitle">時段資訊</h3>
+      <div class="row"><span class="k">日期</span><span id="mDate"></span></div>
+      <div class="row"><span class="k">時段</span><span id="mSlot"></span></div>
+      <div class="row"><span class="k">時間</span><span id="mTime"></span></div>
+      <div class="row"><span class="k">可用分鐘</span><span id="mMin"></span></div>
+      <div class="row"><span class="k">狀態</span><span id="mStatus"></span></div>
+      <div class="row"><span class="k">占用</span><span id="mOcc"></span></div>
+      <div class="row"><span class="k">備註</span><span id="mNote"></span></div>
+      <div style="margin-top:12px;" class="muted">＊下一步可加：點擊直接進預約流程（選 30/45/60 分）</div>
+    </div>
+  </div>
+  
+  <script>
   // ====== 你只要改這行 ======
   const API_URL = "/api/avail";
   // ========================
@@ -172,22 +258,6 @@ function classByStatus(status, mins){
       calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
     }
   }
-  
-.ev-open{
-  border:1px solid #9cc3ff;
-  background:#eef5ff;
-  color:#123a66;
-}
-.ev-tight{
-  border:1px solid #ffcf70;
-  background:#fff7e5;
-  color:#6a4300;
-}
-.ev-full{
-  border:1px solid #f1a3a3;
-  background:#ffecec;
-  color:#7a1d1d;
-}
   // ===== UI init =====
   const yearInput = document.getElementById('year');
   const monthInput = document.getElementById('month');
