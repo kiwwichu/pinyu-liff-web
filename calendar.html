@@ -11,25 +11,30 @@
 
   <style>
     :root{
-      --bg:#f6f8fb;
-      --card:#ffffff;
-      --border:#e8edf6;
-      --text:#24324a;
-      --muted:#6b7a90;
+  --bg:#f6f8fb;
+  --card:#ffffff;
+  --border:#e8edf6;
+  --text:#24324a;
+  --muted:#6b7a90;
 
-      /* brand-ish gentle */
-      --blue:#2f6fd8;
-      --blueBg:#eef5ff;
+  /* 品牌主色（藍） */
+  --brand:#48a2e8;
+  --brandBg:#eef8ff;
 
-      --yellow:#b78100;
-      --yellowBg:#fff7e5;
+  /* 狀態色：開放=綠、少量=黃、額滿=紅 */
+  --open:#20a56b;
+  --openBg:#eafaf2;
 
-      --red:#c43c3c;
-      --redBg:#ffecec;
+  --yellow:#b78100;
+  --yellowBg:#fff7e5;
 
-      --shadow: 0 10px 30px rgba(15, 23, 42, .06);
-      --radius: 16px;
-    }
+  --red:#c43c3c;
+  --redBg:#ffecec;
+
+  --shadow: 0 10px 30px rgba(15, 23, 42, .06);
+  --radius: 16px;
+}
+
 
     body{
       margin:0;
@@ -126,25 +131,18 @@
     }
 
     /* FullCalendar typography soften */
-    .fc .fc-toolbar-title{
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .fc .fc-button{
-      border-radius: 12px !important;
-      border:1px solid var(--border) !important;
-      background:#fff !important;
-      color: var(--text) !important;
-      box-shadow:none !important;
-      font-weight: 500 !important;
-    }
-    .fc .fc-button:hover{ background:#fafcff !important; }
-    .fc .fc-daygrid-day-number{
-      font-size: 12px;
-      color: var(--muted);
-      padding: 6px;
-    }
+      .fc .fc-button:focus,
+      .fc .fc-button-primary:focus{
+        box-shadow: 0 0 0 3px rgba(72,162,232,.18) !important;
+      }
+      .fc .fc-button:hover{
+        border-color: rgba(72,162,232,.35) !important;
+        background: var(--brandBg) !important;
+      }
+      .fc .fc-toolbar-title{
+        color: var(--text);
+      }
+
 
     /* 我們不要事件塊長條，改成「日格摘要」：所以事件本體隱藏 */
     .fc .fc-daygrid-event{
@@ -197,9 +195,10 @@
       border:1px solid var(--border);
       background:#fff;
     }
-    .mark.open{ color: var(--blue); background: var(--blueBg); border-color:#bcd3ff; }
-    .mark.tight{ color: var(--yellow); background: var(--yellowBg); border-color:#ffe2a3; }
-    .mark.full{ color: var(--red); background: var(--redBg); border-color:#ffd0d0; }
+    .badge.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
+    .badge.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
+    .badge.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
+
 
     /* ===== drawer ===== */
     .mask{
