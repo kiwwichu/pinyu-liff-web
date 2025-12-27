@@ -290,6 +290,29 @@
     .badge.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
     .badge.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
     .badge.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
+
+    /* 點選日期：整格變品牌色 */
+.fc .fc-daygrid-day.is-selected{
+  background: var(--brandBg);
+}
+.fc .fc-daygrid-day.is-selected .fc-daygrid-day-frame{
+  outline: 2px solid rgba(72,162,232,.45);
+  outline-offset: -2px;
+  border-radius: 14px;
+}
+
+/* 日期數字也順便變深一點 */
+.fc .fc-daygrid-day.is-selected .fc-daygrid-day-number{
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* 讓你塞的摘要卡也一起跟著變色更協調 */
+.fc .fc-daygrid-day.is-selected .daySummary{
+  background: #ffffff;
+  border-color: rgba(72,162,232,.35);
+}
+
   </style>
 </head>
 
