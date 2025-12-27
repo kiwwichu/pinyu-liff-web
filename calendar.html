@@ -9,7 +9,7 @@
     EVENING: "晚上",
     LATE: "深夜"
   };
-
+  const LOW_MIN_THRESHOLD = 60;
   // ===== Drawer close =====
   const mask = document.getElementById('mask');
   const closeX = document.getElementById('closeX');
@@ -31,12 +31,14 @@
       .join('；');
   }
 
-  function statusBadgeClass(status){
-    // 你要：藍=開放、黃=額滿、紅=暫不開放
-    if (status === '開放') return 'open';
-    if (status === '額滿') return 'full';
-    return 'closed'; // 不開放 / 暫不開放
-  }
+function statusBadgeClass(status, mins){
+  status = String(status || '').trim();
+  mins = Number(mins || 0);
+
+  if (status === '額滿' || mins <= 0) return 'full';     // 🔴
+  if (status === '開放' && mins <= LOW_MIN_THRESHOLD) return 'tight'; // 🟡
+  return 'open'; // 🔵
+}
 
   function openDrawer(info) {
     const mins = Number(info.availableMinutes || 0);
@@ -49,7 +51,7 @@
     document.getElementById('dTime').textContent = `${info.start}–${info.end}`;
     document.getElementById('dMin').textContent = `${mins} 分鐘`;
 
-    const cls = statusBadgeClass(status);
+    const cls = statusBadgeClass(status, mins);
     document.getElementById('dStatus').innerHTML =
       `<span class="badge ${cls}">${status}</span>`;
 
@@ -73,12 +75,15 @@
 
   // 你要的顏色對應：
   // 開放=藍、額滿=黃、暫不開放=紅
-  function classByStatus(status){
-    status = String(status || '').trim();
-    if (status === '開放') return 'ev-open';
-    if (status === '額滿') return 'ev-full';     // 黃（我下面會把 ev-full 改成黃）
-    return 'ev-closed';                           // 紅（暫不開放）
-  }
+function classByStatus(status, mins){
+  status = String(status || '').trim();
+  mins = Number(mins || 0);
+
+  if (status === '額滿' || mins <= 0) return 'ev-full';          // 🔴 額滿
+  if (status === '開放' && mins <= LOW_MIN_THRESHOLD) return 'ev-tight'; // 🟡 少量
+  return 'ev-open';                                             // 🔵 開放
+}
+
 
   function toEvent(item) {
     const startISO = `${item.date}T${item.start}:00`;
@@ -87,7 +92,7 @@
     const mins = Number(item.availableMinutes || 0);
     const status = String(item.status || '').trim();
 
-    const className = classByStatus(status);
+    const className = classByStatus(status, mins);
 
     // 顯示：「13:00 下午｜240m」→ 我們用 eventContent 自訂，不用 title 擠爆
     const title = `${slotLabel[item.slot] || item.slot}｜${mins}m`;
@@ -167,7 +172,22 @@
       calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
     }
   }
-
+  
+.ev-open{
+  border:1px solid #9cc3ff;
+  background:#eef5ff;
+  color:#123a66;
+}
+.ev-tight{
+  border:1px solid #ffcf70;
+  background:#fff7e5;
+  color:#6a4300;
+}
+.ev-full{
+  border:1px solid #f1a3a3;
+  background:#ffecec;
+  color:#7a1d1d;
+}
   // ===== UI init =====
   const yearInput = document.getElementById('year');
   const monthInput = document.getElementById('month');
@@ -195,4 +215,5 @@
       console.error(err);
     }
   })();
+  
 </script>
