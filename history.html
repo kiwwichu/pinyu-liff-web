@@ -323,38 +323,39 @@
   // 狀態 → 顯示文字 + 顏色 class
   // -----------------------------
   function mapOrderStatus(rawStatus) {
-    const s = rawStatus || '';
-    
-    // 🔴 未付訂金 → 紅色
-    if (s.includes('未付訂金') || s.includes('逾期') || s.includes('失效') || s.includes('退款')) {
-      return {
-        // 如果你想直接顯示表格裡的字，就用 rawStatus
-        label: rawStatus || '未付訂金，訂單未成立',
-        className: 'status-red'
-      };
-      
-    // 未付尾款
-    if (s.includes('未付尾款')) {
-      return {
-        label: '服務完成，待付尾款',
-        className: 'status-orange'
-      };
-    }
+  const s = String(rawStatus || '');
 
-    // 含「完成」就當作服務完成
-    if (s.includes('完成')) {
-      return {
-        label: '已完成',
-        className: 'status-green'
-      };
-    }
-
-    // 其他（含 常客／待執行／已確認…）都視為「訂單已成立，待服務」
+  // 🔴 未付訂金 → 紅色
+  if (s.includes('未付訂金') || s.includes('逾期') || s.includes('失效') || s.includes('退款')) {
     return {
-      label: '訂單已成立，待服務',
-      className: 'status-blue'
+      label: rawStatus || '未付訂金，訂單未成立',
+      className: 'status-red'
     };
   }
+
+  // 🟠 未付尾款 → 橘色
+  if (s.includes('未付尾款')) {
+    return {
+      label: '服務完成，待付尾款',
+      className: 'status-orange'
+    };
+  }
+
+  // 🟢 完成 → 綠色
+  if (s.includes('完成')) {
+    return {
+      label: '已完成',
+      className: 'status-green'
+    };
+  }
+
+  // 🔵 其他都視為待服務
+  return {
+    label: '訂單已成立，待服務',
+    className: 'status-blue'
+  };
+}
+
 
   // -----------------------------
   // 初始化
