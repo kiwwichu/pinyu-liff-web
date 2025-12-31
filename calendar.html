@@ -431,6 +431,64 @@
     @media (min-width: 521px){
       .mBars{ display:none !important; }
     }
+    /* ===============================
+   App 月曆格子：三排短色條＋文字
+   =============================== */
+
+/* 讓格子本身更接近 App 密度 */
+.fc .fc-daygrid-day-frame{
+  padding: 4px 4px 2px !important;
+}
+
+/* 三排容器 */
+.appSlots{
+  margin: 4px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* 三排之間的距離 */
+}
+
+/* 單一色條 */
+.appSlot{
+  height: 14px;
+  border-radius: 6px;
+  font-size: 10px;
+  line-height: 14px;
+  padding: 0 6px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+}
+
+/* ===== 三種狀態顏色（照你說的語意） ===== */
+
+/* 早：打勾（綠） */
+.appSlot.morning{
+  background: #20a56b;
+  color: #ffffff;
+}
+
+/* 午：少量（黃） */
+.appSlot.afternoon{
+  background: #ffe8b3;
+  color: #8a5a00;
+}
+
+/* 晚：不開放（灰） */
+.appSlot.evening{
+  background: #eceff3;
+  color: #8a8f98;
+}
+
+/* 手機 / 桌機都用這一套（不要卡片） */
+.daySummary,
+.mBars{
+  display: none !important;
+}
+
   </style>
 </head>
 
@@ -597,82 +655,65 @@
     }
 
     // ===== ✅ App 風格：桌機顯示三行摘要 / 手機顯示三條色條 =====
-    function renderDayCellSummary(dateStr, cell, grouped){
-      const dayObj = grouped.get(dateStr);
-      if (!dayObj) return;
+   function renderDayCellSummary(dateStr, cell, grouped){
+  const dayObj = grouped.get(dateStr);
+  if (!dayObj) return;
 
-      const frame = cell.querySelector('.fc-daygrid-day-frame');
-      if (!frame) return;
+  const frame = cell.querySelector('.fc-daygrid-day-frame');
+  if (!frame) return;
 
-      // 避免重複
-      if (frame.querySelector('.daySummary') || frame.querySelector('.mBars')) return;
+  // 避免重複渲染
+  if (frame.querySelector('.appSlots')) return;
 
-      // ---- 桌機摘要 ----
-      const box = document.createElement('div');
-      box.className = 'daySummary';
-      box.title = '點擊查看詳細';
+  const wrap = document.createElement('div');
+  wrap.className = 'appSlots';
 
-      for (const s of SLOT_ORDER){
-        const it = dayObj[s];
-        const mins = it ? Number(it.availableMinutes || 0) : 0;
-        const status = it ? String(it.status || '').trim() : '額滿';
-        const cls = classify(status, mins);
+  // 固定順序：早 / 午 / 晚
+  const map = {
+    MORNING: { cls: 'morning', label: '✓ 可預約' },
+    AFTERNOON: { cls: 'afternoon', label: '少量' },
+    EVENING: { cls: 'evening', label: '不開放' }
+  };
 
-        const r = document.createElement('div');
-        r.className = 'sumRow';
+  for (const key of ['MORNING','AFTERNOON','EVENING']){
+    const it = dayObj[key];
 
-        const left = document.createElement('div');
-        left.className = 'left';
+    // 如果該時段完全沒資料，也顯示「不開放」
+    let slotClass = map[key].cls;
+    let text = map[key].label;
 
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = slotLabel[s];
-
-        left.appendChild(chip);
-
-        const mark = document.createElement('span');
-        mark.className = `mark ${cls}`;
-        mark.textContent = markIcon(cls);
-
-        r.appendChild(left);
-        r.appendChild(mark);
-
-        box.appendChild(r);
+    if (it){
+      const status = String(it.status || '').trim();
+      if (key === 'MORNING' && status === '開放') {
+        slotClass = 'morning';
+        text = '✓ 可預約';
       }
-
-      box.onclick = (e) => {
-        e.stopPropagation();
-        selectedDateStr = dateStr;
-        applySelectedStyle();
-        openDrawer(dateStr, dayObj);
-      };
-
-      // ---- 手機色條 ----
-      const bars = document.createElement('div');
-      bars.className = 'mBars';
-      bars.title = '點擊查看詳細';
-
-      for (const s of SLOT_ORDER){
-        const it = dayObj[s];
-        const mins = it ? Number(it.availableMinutes || 0) : 0;
-        const status = it ? String(it.status || '').trim() : '額滿';
-        const cls = classify(status, mins);
-
-        const b = document.createElement('div');
-        b.className = `mBar ${cls}`;
-        bars.appendChild(b);
+      if (key === 'AFTERNOON' && status === '少量') {
+        slotClass = 'afternoon';
+        text = '少量';
       }
-
-      bars.onclick = (e) => {
-        e.stopPropagation();
-        selectedDateStr = dateStr;
-        applySelectedStyle();
-        openDrawer(dateStr, dayObj);
-      };
-
-      frame.appendChild(box);
-      frame.appendChild(bars);
+      if (status === '額滿') {
+        slotClass = 'evening';
+        text = '不開放';
+      }
     }
+
+    const bar = document.createElement('div');
+    bar.className = `appSlot ${slotClass}`;
+    bar.textContent = text;
+
+    wrap.appendChild(bar);
+  }
+
+  wrap.onclick = (e) => {
+    e.stopPropagation();
+    selectedDateStr = dateStr;
+    applySelectedStyle();
+    openDrawer(dateStr, dayObj);
+  };
+
+  frame.appendChild(wrap);
+}
 
     function renderAllSummaries(){
       if (!calendar) return;
