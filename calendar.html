@@ -432,30 +432,82 @@
       .mBars{ display:none !important; }
     }
     /* ===============================
-   App 月曆格子：三排短色條＋文字
+ /* ===============================
+   ✅ App 月曆：格子更矮(視覺更寬) + 日期數字置中變小 + 三排文字色條
    =============================== */
 
-/* 讓格子本身更接近 App 密度 */
+/* 讓每格寬度更平均（視覺更像 App） */
+.fc .fc-daygrid-body,
+.fc .fc-scrollgrid,
+.fc .fc-scrollgrid-section-body table{
+  table-layout: fixed !important;
+}
+
+/* 格子整體變矮 → 視覺就會變寬、不擠 */
 .fc .fc-daygrid-day-frame{
+  min-height: 64px;
   padding: 4px 4px 2px !important;
 }
 
-/* 三排容器 */
-.appSlots{
-  margin: 4px 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px; /* 三排之間的距離 */
+/* ===== 日期數字：不要「日」、變小、置中 ===== */
+.fc .fc-daygrid-day-top{
+  justify-content: center !important;
+}
+.fc .fc-daygrid-day-number{
+  float: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  margin: 2px auto 0 !important;
+  padding: 0 !important;
+
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: var(--muted) !important;
+
+  /* ✅ 只顯示數字（把「日」濾掉） */
+  letter-spacing: 0 !important;
+}
+.fc .fc-daygrid-day-number{
+  /* 某些情況下 zh-tw 可能輸出含文字，這行能最大化避免 */
+  font-variant-numeric: tabular-nums;
 }
 
-/* 單一色條 */
+/* 今天日期做一個品牌藍的淡底 */
+.fc .fc-day-today .fc-daygrid-day-number{
+  background: var(--brandBg) !important;
+  color: var(--text) !important;
+  border: 1px solid rgba(72,162,232,.35) !important;
+}
+
+/* 點選日期：只亮那一格（保留你原本的也可以） */
+.fc .fc-daygrid-day.is-selected{
+  background: var(--brandBg);
+}
+.fc .fc-daygrid-day.is-selected .fc-daygrid-day-frame{
+  outline: 2px solid rgba(72,162,232,.45);
+  outline-offset: -2px;
+  border-radius: 14px;
+}
+
+/* ===== 三排色條（含文字） ===== */
+.appSlots{
+  margin: 4px 4px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .appSlot{
-  height: 14px;
+  height: 12px;
   border-radius: 6px;
   font-size: 10px;
-  line-height: 14px;
+  line-height: 12px;
   padding: 0 6px;
-  font-weight: 700;
+  font-weight: 800;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -463,31 +515,39 @@
   align-items: center;
 }
 
-/* ===== 三種狀態顏色（照你說的語意） ===== */
-
-/* 早：打勾（綠） */
+/* 早：綠 */
 .appSlot.morning{
-  background: #20a56b;
-  color: #ffffff;
+  background: rgba(32,165,107,.22);
+  color: #0f6b44;
+  border: 1px solid rgba(32,165,107,.18);
 }
 
-/* 午：少量（黃） */
+/* 午：黃 */
 .appSlot.afternoon{
-  background: #ffe8b3;
-  color: #8a5a00;
+  background: rgba(183,129,0,.18);
+  color: #7a4e00;
+  border: 1px solid rgba(183,129,0,.15);
 }
 
-/* 晚：不開放（灰） */
-.appSlot.evening{
-  background: #eceff3;
-  color: #8a8f98;
+/* 晚：紅（額滿/不開放） */
+.appSlot.closed{
+  background: rgba(196,60,60,.15);
+  color: #a12b2b;
+  border: 1px solid rgba(196,60,60,.15);
 }
 
-/* 手機 / 桌機都用這一套（不要卡片） */
+/* ✅ 你現在用 appSlots，就把舊的 mBars/daySummary 永久隱藏避免打架 */
 .daySummary,
 .mBars{
   display: none !important;
 }
+
+/* 手機再更緊 */
+@media (max-width:520px){
+  .fc .fc-daygrid-day-frame{ min-height: 58px; }
+  .appSlot{ height: 11px; line-height: 11px; font-size: 10px; }
+}
+
 
   </style>
 </head>
@@ -655,7 +715,7 @@
     }
 
     // ===== ✅ App 風格：桌機顯示三行摘要 / 手機顯示三條色條 =====
-   function renderDayCellSummary(dateStr, cell, grouped){
+  function renderDayCellSummary(dateStr, cell, grouped){
   const dayObj = grouped.get(dateStr);
   if (!dayObj) return;
 
@@ -668,40 +728,50 @@
   const wrap = document.createElement('div');
   wrap.className = 'appSlots';
 
-  // 固定順序：早 / 午 / 晚
-  const map = {
-    MORNING: { cls: 'morning', label: '✓ 可預約' },
-    AFTERNOON: { cls: 'afternoon', label: '少量' },
-    EVENING: { cls: 'evening', label: '不開放' }
-  };
+  // 固定三排：早/午/晚
+  const rows = [
+    { key:'MORNING',   cls:'morning',   text:'✓ 可預約' },
+    { key:'AFTERNOON', cls:'afternoon', text:'少量' },
+    { key:'EVENING',   cls:'closed',    text:'不開放' } // ✅ 晚永遠紅底
+  ];
 
-  for (const key of ['MORNING','AFTERNOON','EVENING']){
-    const it = dayObj[key];
+  for (const r of rows){
+    const it = dayObj[r.key];
 
-    // 如果該時段完全沒資料，也顯示「不開放」
-    let slotClass = map[key].cls;
-    let text = map[key].label;
+    let cls = r.cls;
+    let text = r.text;
 
     if (it){
       const status = String(it.status || '').trim();
-      if (key === 'MORNING' && status === '開放') {
-        slotClass = 'morning';
+      const mins = Number(it.availableMinutes || 0);
+
+      // 早：開放才顯示 ✓ 可預約（不然也可以照你規則固定）
+      if (r.key === 'MORNING') {
+        cls = 'morning';
         text = '✓ 可預約';
+        if (status === '額滿' || mins <= 0) { cls = 'closed'; text = '額滿'; }
       }
-      if (key === 'AFTERNOON' && status === '少量') {
-        slotClass = 'afternoon';
+
+      // 午：少量（你指定要少量）
+      if (r.key === 'AFTERNOON') {
+        cls = 'afternoon';
         text = '少量';
+        if (status === '額滿' || mins <= 0) { cls = 'closed'; text = '額滿'; }
       }
-      if (status === '額滿') {
-        slotClass = 'evening';
-        text = '不開放';
+
+      // 晚：紅色顯示 額滿 / 不開放
+      if (r.key === 'EVENING') {
+        cls = 'closed';
+        text = (status === '額滿' || mins <= 0) ? '額滿' : '不開放';
       }
+    } else {
+      // 沒資料：晚就當不開放（紅）
+      if (r.key === 'EVENING') { cls = 'closed'; text = '不開放'; }
     }
 
     const bar = document.createElement('div');
-    bar.className = `appSlot ${slotClass}`;
+    bar.className = `appSlot ${cls}`;
     bar.textContent = text;
-
     wrap.appendChild(bar);
   }
 
@@ -715,11 +785,12 @@
   frame.appendChild(wrap);
 }
 
+
     function renderAllSummaries(){
       if (!calendar) return;
 
       // 先清掉舊摘要（避免殘留）
-      document.querySelectorAll('.daySummary, .mBars').forEach(el => el.remove());
+    document.querySelectorAll('.appSlots').forEach(el => el.remove());
 
       // 找到畫面上每個 day cell（FullCalendar dayGridMonth 每格都有 data-date）
       document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
