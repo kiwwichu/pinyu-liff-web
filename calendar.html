@@ -138,25 +138,10 @@
       overflow:hidden;
     }
 
-    /* FullCalendar typography soften */
-    .fc .fc-button:focus,
-    .fc .fc-button-primary:focus{
-      box-shadow: 0 0 0 3px rgba(72,162,232,.18) !important;
-    }
-    .fc .fc-button:hover{
-      border-color: rgba(72,162,232,.35) !important;
-      background: var(--brandBg) !important;
-    }
-    .fc .fc-toolbar-title{
-      color: var(--text);
-    }
+    /* FullCalendar soften */
+    .fc .fc-daygrid-event{ display:none !important; } /* hide real events */
 
-    /* 我們不要事件塊長條，改成「日格摘要」：所以事件本體隱藏 */
-    .fc .fc-daygrid-event{
-      display:none !important;
-    }
-
-    /* ===== day cell summary ===== */
+    /* ===== day cell summary (desktop/tablet) ===== */
     .daySummary{
       margin: 6px;
       padding: 8px;
@@ -277,12 +262,7 @@
       gap: 12px;
       align-items:flex-start;
     }
-    .rowLeft{
-      display:grid;
-      gap: 6px;
-      font-size: 13px;
-      min-width: 0;
-    }
+    .rowLeft{ display:grid; gap: 6px; font-size: 13px; min-width: 0; }
     .rowTop{
       display:flex;
       gap: 8px;
@@ -311,9 +291,7 @@
     .badge.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
 
     /* ✅ 點選日期：只讓那一格變品牌色 */
-    .fc .fc-daygrid-day.is-selected{
-      background: var(--brandBg);
-    }
+    .fc .fc-daygrid-day.is-selected{ background: var(--brandBg); }
     .fc .fc-daygrid-day.is-selected .fc-daygrid-day-frame{
       outline: 2px solid rgba(72,162,232,.45);
       outline-offset: -2px;
@@ -328,6 +306,59 @@
       border-color: rgba(72,162,232,.35);
     }
 
+    /* =========================
+       FullCalendar 手機工具列優化 + 品牌色
+       ========================= */
+    .fc .fc-button{
+      border-radius: 12px !important;
+      border: 1px solid var(--border) !important;
+      background: #fff !important;
+      color: var(--text) !important;
+      padding: 8px 10px !important;
+      font-weight: 600 !important;
+    }
+    .fc .fc-today-button{
+      background: var(--brand) !important;
+      border-color: rgba(72,162,232,.35) !important;
+      color: #fff !important;
+    }
+    .fc .fc-today-button:disabled{ opacity: .55 !important; }
+    .fc .fc-button:hover{
+      border-color: rgba(72,162,232,.35) !important;
+      background: var(--brandBg) !important;
+    }
+    .fc .fc-toolbar-title{
+      font-size: 16px !important;
+      font-weight: 800 !important;
+      color: var(--text) !important;
+    }
+
+    /* =========================
+       手機用：月曆格子三顆狀態點
+       ========================= */
+    .mDots{
+      margin: 4px 6px;
+      display:flex;
+      gap: 6px;
+      align-items:center;
+      justify-content:flex-start;
+      padding: 6px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fbfcff;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mDot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .mDot.open{ background: var(--open); border-color: rgba(32,165,107,.25); }
+    .mDot.tight{ background: var(--yellow); border-color: rgba(183,129,0,.25); }
+    .mDot.full{ background: var(--red); border-color: rgba(196,60,60,.25); }
+
     /* ===== ✅ Mobile / LINE in-app browser optimize ===== */
     @media (max-width: 520px){
       .wrap{ padding: 12px; }
@@ -336,17 +367,34 @@
       .input{ flex: 1; min-width: 0; }
       .btn{ width: 100%; }
 
-      /* toolbar buttons wrap nicer */
-      .fc .fc-toolbar{ flex-wrap: wrap; gap: 8px; }
-      .fc .fc-toolbar-title{ font-size: 16px; }
-      .fc .fc-button{ padding: 8px 10px; }
+      /* toolbar: title一行 + buttons一行，不擠 */
+      .fc .fc-header-toolbar{
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        align-items: center !important;
+      }
+      .fc .fc-toolbar-chunk:nth-child(2){ justify-self: center !important; }
+      .fc .fc-toolbar-chunk:nth-child(1),
+      .fc .fc-toolbar-chunk:nth-child(3){
+        display:flex !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        width: 100% !important;
+      }
 
-      /* day cells compact */
-      .daySummary{ margin: 4px; padding: 6px; border-radius: 12px; }
-      .chip{ padding: 4px 6px; font-size: 10px; }
-      .sumRow{ font-size: 11px; }
+      /* 週標題字小一點 */
+      .fc .fc-col-header-cell-cushion{
+        font-size: 12px !important;
+        color: var(--muted) !important;
+        font-weight: 600 !important;
+      }
 
-      /* ✅ drawer becomes bottom sheet */
+      /* 手機時：隱藏三行摘要，顯示三顆點 */
+      .daySummary{ display:none !important; }
+      .mDots{ display:flex !important; }
+
+      /* drawer becomes bottom sheet */
       .mask{ justify-content: flex-end; align-items: flex-end; }
       .drawer{
         width: 100%;
@@ -360,118 +408,11 @@
       }
       @keyframes slideUp { from { transform: translateY(14px); opacity:.7 } to { transform:none; opacity:1 } }
     }
-    /* =========================
-   FullCalendar 手機工具列優化 + 品牌色
-   ========================= */
 
-/* 按鈕統一像 iOS chip */
-.fc .fc-button{
-  border-radius: 12px !important;
-  border: 1px solid var(--border) !important;
-  background: #fff !important;
-  color: var(--text) !important;
-  padding: 8px 10px !important;
-  font-weight: 600 !important;
-}
-
-/* Today 改品牌色（重點） */
-.fc .fc-today-button{
-  background: var(--brand) !important;
-  border-color: rgba(72,162,232,.35) !important;
-  color: #fff !important;
-}
-.fc .fc-today-button:disabled{
-  opacity: .55 !important; /* 已在今天時，維持質感 */
-}
-
-/* prev/next hover */
-.fc .fc-button:hover{
-  border-color: rgba(72,162,232,.35) !important;
-  background: var(--brandBg) !important;
-}
-
-/* 標題更像 App */
-.fc .fc-toolbar-title{
-  font-size: 16px !important;
-  font-weight: 800 !important;
-}
-
-/* 手機：工具列兩行、按鈕不擠、title 置中 */
-@media (max-width: 520px){
-  /* 工具列改成 grid：第一行 title，第二行 buttons */
-  .fc .fc-header-toolbar{
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
-    align-items: center !important;
-  }
-
-  /* title 一行置中 */
-  .fc .fc-toolbar-chunk:nth-child(2){
-    justify-self: center !important;
-  }
-
-  /* buttons 那行：左右分開、避免擠成一團 */
-  .fc .fc-toolbar-chunk:nth-child(1),
-  .fc .fc-toolbar-chunk:nth-child(3){
-    display: flex !important;
-    justify-content: space-between !important;
-    gap: 8px !important;
-    width: 100% !important;
-  }
-
-  /* 讓 today 不要太長、避免擠 */
-  .fc .fc-today-button{
-    padding: 8px 12px !important;
-  }
-
-  /* 週標題字小一點 */
-  .fc .fc-col-header-cell-cushion{
-    font-size: 12px !important;
-    color: var(--muted) !important;
-    font-weight: 600 !important;
-  }
-
-  /* 月曆格子 padding 降低，整體更像截圖那種密度 */
-  .fc .fc-daygrid-day-frame{
-    padding: 2px !important;
-  }
-}
-/* =========================
-   手機用：月曆格子三顆狀態點
-   ========================= */
-.mDots{
-  margin: 4px 6px;
-  display:flex;
-  gap: 6px;
-  align-items:center;
-  justify-content:flex-start;
-  padding: 6px 8px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: #fbfcff;
-  cursor:pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.mDot{
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-}
-.mDot.open{ background: var(--open); border-color: rgba(32,165,107,.25); }
-.mDot.tight{ background: var(--yellow); border-color: rgba(183,129,0,.25); }
-.mDot.full{ background: var(--red); border-color: rgba(196,60,60,.25); }
-
-/* 手機時：隱藏你原本的三行 daySummary，改顯示 mDots */
-@media (max-width: 520px){
-  .daySummary{ display:none !important; }
-  .mDots{ display:flex !important; }
-}
-@media (min-width: 521px){
-  .mDots{ display:none !important; }
-}
-
+    /* 桌機/平板：顯示三行摘要，隱藏點 */
+    @media (min-width: 521px){
+      .mDots{ display:none !important; }
+    }
   </style>
 </head>
 
@@ -524,15 +465,14 @@
     // ====== Vercel API ======
     const API_URL = "/api/avail";
 
-    // ✅ 1) 移除深夜：只剩 3 段
+    // ✅ 只剩 3 段
     const slotLabel = {
       MORNING: "早上",
       AFTERNOON: "下午",
       EVENING: "晚上"
     };
     const SLOT_ORDER = ["MORNING","AFTERNOON","EVENING"];
-
-    const LOW_MIN_THRESHOLD = 60; // 少量門檻：<=60 分鐘 → 黃
+    const LOW_MIN_THRESHOLD = 60;
 
     // drawer close
     const mask = document.getElementById('mask');
@@ -543,12 +483,9 @@
     function classify(status, mins){
       status = String(status || '').trim();
       mins = Number(mins || 0);
-
       if (status === '額滿') return 'full';
       if (status === '少量') return 'tight';
       if (status === '開放') return 'open';
-
-      // fallback：如果後端沒給狀態，才用分鐘推
       if (mins <= 0) return 'full';
       if (mins <= LOW_MIN_THRESHOLD) return 'tight';
       return 'open';
@@ -561,7 +498,6 @@
       return await res.json();
     }
 
-    // 資料整理：date -> {slot->item}
     function groupByDate(data){
       const map = new Map();
       for (const it of (Array.isArray(data) ? data : [])) {
@@ -594,14 +530,10 @@
         const end = it ? it.end : '—';
         const mins = it ? Number(it.availableMinutes || 0) : 0;
         const status = it ? String(it.status || '').trim() : '額滿';
-
         const cls = classify(status, mins);
 
-        // ✅ 相容新舊欄位
         const blocked = it ? String(it.blocked ?? it.occupied ?? '') : '';
         const remaining = it ? String(it.remaining ?? it.note ?? '') : '';
-        const blockedText = blocked ? blocked : '';
-        const remainingText = remaining ? remaining : '';
 
         const row = document.createElement('div');
         row.className = 'rowCard';
@@ -618,8 +550,8 @@
 
         const metaLines = [];
         metaLines.push(`可用：${mins} 分鐘`);
-        if (remainingText) metaLines.push(`剩餘：${remainingText}`);
-        if (blockedText && blockedText !== '—') metaLines.push(`不可預約：${blockedText}`);
+        if (remaining) metaLines.push(`剩餘：${remaining}`);
+        if (blocked) metaLines.push(`不可預約：${blocked}`);
         meta.textContent = metaLines.join('｜');
 
         left.appendChild(top);
@@ -637,119 +569,96 @@
       mask.style.display = 'flex';
     }
 
-    // 自訂：在月曆格子內放「摘要卡」
-  function renderDayCellSummary(dateStr, cell, grouped){
-  const dayObj = grouped.get(dateStr);
-  if (!dayObj) return;
+    let selectedDateStr = null;
+    function applySelectedStyle(){
+      document.querySelectorAll('.fc-daygrid-day.is-selected')
+        .forEach(el => el.classList.remove('is-selected'));
+      if (!selectedDateStr) return;
+      const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
+      if (cell) cell.classList.add('is-selected');
+    }
 
-  const frame = cell.querySelector('.fc-daygrid-day-frame');
-  if (!frame) return;
+    // ✅ 這段是「唯一正確版本」：同時渲染 daySummary + mDots
+    function renderDayCellSummary(dateStr, cell, grouped){
+      const dayObj = grouped.get(dateStr);
+      if (!dayObj) return;
 
-  // 避免重複
-  if (frame.querySelector('.daySummary') || frame.querySelector('.mDots')) return;
+      const frame = cell.querySelector('.fc-daygrid-day-frame');
+      if (!frame) return;
 
-  // ===== 桌機版：保留原本三行摘要 =====
-  const box = document.createElement('div');
-  box.className = 'daySummary';
-  box.title = '點擊查看詳細';
+      // 避免重複
+      if (frame.querySelector('.daySummary') || frame.querySelector('.mDots')) return;
 
-  for (const s of SLOT_ORDER){
-    const it = dayObj[s];
-    const mins = it ? Number(it.availableMinutes || 0) : 0;
-    const status = it ? String(it.status || '').trim() : '額滿';
-    const cls = classify(status, mins);
+      // 桌機摘要
+      const box = document.createElement('div');
+      box.className = 'daySummary';
+      box.title = '點擊查看詳細';
 
-    const r = document.createElement('div');
-    r.className = 'sumRow';
+      for (const s of SLOT_ORDER){
+        const it = dayObj[s];
+        const mins = it ? Number(it.availableMinutes || 0) : 0;
+        const status = it ? String(it.status || '').trim() : '額滿';
+        const cls = classify(status, mins);
 
-    const left = document.createElement('div');
-    left.className = 'left';
+        const r = document.createElement('div');
+        r.className = 'sumRow';
 
-    const chip = document.createElement('span');
-    chip.className = 'chip';
-    chip.textContent = slotLabel[s];
+        const left = document.createElement('div');
+        left.className = 'left';
 
-    left.appendChild(chip);
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = slotLabel[s];
 
-    const mark = document.createElement('span');
-    mark.className = `mark ${cls}`;
-    mark.textContent = markIcon(cls);
+        const mark = document.createElement('span');
+        mark.className = `mark ${cls}`;
+        mark.textContent = markIcon(cls);
 
-    r.appendChild(left);
-    r.appendChild(mark);
+        left.appendChild(chip);
+        r.appendChild(left);
+        r.appendChild(mark);
+        box.appendChild(r);
+      }
 
-    box.appendChild(r);
-  }
+      // 手機三顆點
+      const dots = document.createElement('div');
+      dots.className = 'mDots';
+      dots.title = '點擊查看詳細';
 
-  box.onclick = (e) => {
-    e.stopPropagation();
-    selectedDateStr = dateStr;
-    applySelectedStyle();
-    openDrawer(dateStr, dayObj);
-  };
+      for (const s of SLOT_ORDER){
+        const it = dayObj[s];
+        const mins = it ? Number(it.availableMinutes || 0) : 0;
+        const status = it ? String(it.status || '').trim() : '額滿';
+        const cls = classify(status, mins);
 
-  // ===== 手機版：三顆狀態點（更乾淨） =====
-  const dots = document.createElement('div');
-  dots.className = 'mDots';
-  dots.title = '點擊查看詳細';
+        const d = document.createElement('span');
+        d.className = `mDot ${cls}`;
+        dots.appendChild(d);
+      }
 
-  for (const s of SLOT_ORDER){
-    const it = dayObj[s];
-    const mins = it ? Number(it.availableMinutes || 0) : 0;
-    const status = it ? String(it.status || '').trim() : '額滿';
-    const cls = classify(status, mins);
-
-    const d = document.createElement('span');
-    d.className = `mDot ${cls}`;
-    dots.appendChild(d);
-  }
-
-  dots.onclick = (e) => {
-    e.stopPropagation();
-    selectedDateStr = dateStr;
-    applySelectedStyle();
-    openDrawer(dateStr, dayObj);
-  };
-
-  frame.appendChild(box);
-  frame.appendChild(dots);
-}
-
-
-      // ✅ 2) 點摘要卡：同時「選取那一天」＋開 drawer（只亮那格）
-      box.onclick = (e) => {
+      const onOpen = (e) => {
         e.stopPropagation();
         selectedDateStr = dateStr;
         applySelectedStyle();
         openDrawer(dateStr, dayObj);
       };
+      box.onclick = onOpen;
+      dots.onclick = onOpen;
 
       frame.appendChild(box);
+      frame.appendChild(dots);
     }
 
     function renderAllSummaries(){
       if (!calendar) return;
 
-      // 先清掉舊摘要（避免殘留）
-      document.querySelectorAll('.daySummary').forEach(el => el.remove());
+      // ✅ 一次清掉兩種（避免越疊越多）
+      document.querySelectorAll('.daySummary, .mDots').forEach(el => el.remove());
 
-      // 找到畫面上每個 day cell（FullCalendar dayGridMonth 每格都有 data-date）
       document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
         const dateStr = cell.getAttribute('data-date');
         renderDayCellSummary(dateStr, cell, groupedData);
       });
-    }
-
-    let selectedDateStr = null;
-
-    function applySelectedStyle(){
-      document.querySelectorAll('.fc-daygrid-day.is-selected')
-        .forEach(el => el.classList.remove('is-selected'));
-
-      if (!selectedDateStr) return;
-
-      const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
-      if (cell) cell.classList.add('is-selected');
     }
 
     let calendar;
@@ -780,7 +689,6 @@
           dateClick: function(info){
             selectedDateStr = info.dateStr;
             applySelectedStyle();
-
             const dayObj = groupedData.get(info.dateStr);
             if (dayObj) openDrawer(info.dateStr, dayObj);
           }
@@ -789,7 +697,6 @@
         calendar.render();
       }
 
-      // 同步到指定月份
       calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
       renderAllSummaries();
       applySelectedStyle();
@@ -798,7 +705,6 @@
     // UI init
     const yearInput = document.getElementById('year');
     const monthInput = document.getElementById('month');
-
     yearInput.value = 2026;
     monthInput.value = 1;
 
