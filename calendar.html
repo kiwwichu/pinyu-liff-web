@@ -108,6 +108,7 @@
       color: var(--text);
       cursor:pointer;
       -webkit-tap-highlight-color: transparent;
+      font-weight: 700;
     }
     .btn:hover{ background:#fafcff; }
 
@@ -151,7 +152,7 @@
       background: #fff !important;
       color: var(--text) !important;
       padding: 8px 10px !important;
-      font-weight: 700 !important;
+      font-weight: 800 !important;
     }
     .fc .fc-button:hover{
       border-color: rgba(72,162,232,.35) !important;
@@ -169,89 +170,13 @@
     .fc .fc-toolbar-title{
       color: var(--text);
       font-size: 16px !important;
-      font-weight: 800 !important;
+      font-weight: 900 !important;
     }
 
-    /* 我們不要事件塊長條，改成「日格摘要」：所以事件本體隱藏 */
+    /* 不顯示事件塊 */
     .fc .fc-daygrid-event{ display:none !important; }
 
-    /* ===== 桌機版：三行摘要卡（保留） ===== */
-    .daySummary{
-      margin: 6px;
-      padding: 8px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background:#fbfcff;
-      display:grid;
-      gap: 6px;
-      cursor:pointer;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .daySummary:hover{
-      border-color:#d7e3fb;
-      background:#f7faff;
-    }
-    .sumRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      font-size: 12px;
-      color: var(--text);
-    }
-    .sumRow .left{
-      display:flex; align-items:center; gap: 8px;
-      color: var(--muted);
-    }
-    .chip{
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background:#fff;
-      color: var(--muted);
-      line-height: 1;
-    }
-    .mark{
-      width: 18px; height: 18px;
-      border-radius: 999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size: 12px;
-      border:1px solid var(--border);
-      background:#fff;
-      line-height: 1;
-    }
-    .mark.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
-    .mark.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
-    .mark.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
-
-    /* ===== 手機版：App 風格短色條 ===== */
-    .mBars{
-      margin: 4px 6px;
-      display:flex;
-      flex-direction: column;
-      gap: 5px;
-      padding: 6px 8px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: #fbfcff;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .mBar{
-      height: 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,.04);
-      opacity: .95;
-    }
-    .mBar.open{ background: rgba(32,165,107,.25); border-color: rgba(32,165,107,.22); }
-    .mBar.tight{ background: rgba(183,129,0,.22); border-color: rgba(183,129,0,.20); }
-    .mBar.full{ background: rgba(196,60,60,.18); border-color: rgba(196,60,60,.18); }
-
-    /* 點選日期：只讓那一格變品牌色 */
+    /* 點選日期：只亮那一格 */
     .fc .fc-daygrid-day.is-selected{
       background: var(--brandBg);
     }
@@ -260,15 +185,102 @@
       outline-offset: -2px;
       border-radius: 14px;
     }
-    .fc .fc-daygrid-day.is-selected .fc-daygrid-day-number{
-      color: var(--text);
-      font-weight: 800;
+
+    /* ===============================
+       ✅ App 月曆：格子更矮(視覺更寬) + 日期數字置中變小 + 三排符號條
+       =============================== */
+
+    /* 讓每格寬度更平均（視覺更像 App） */
+    .fc .fc-daygrid-body,
+    .fc .fc-scrollgrid,
+    .fc .fc-scrollgrid-section-body table{
+      table-layout: fixed !important;
     }
-    .fc .fc-daygrid-day.is-selected .daySummary,
-    .fc .fc-daygrid-day.is-selected .mBars{
-      background: #ffffff;
-      border-color: rgba(72,162,232,.35);
+
+    /* 格子整體變矮 → 視覺就會變寬、不擠 */
+    .fc .fc-daygrid-day-frame{
+      min-height: 64px;
+      padding: 4px 4px 2px !important;
     }
+
+    /* ===== 日期數字：置中/變小（實際去掉「日」用 dayCellContent 處理） ===== */
+    .fc .fc-daygrid-day-top{
+      justify-content: center !important;
+    }
+    .fc .fc-daygrid-day-number{
+      float: none !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      margin: 2px auto 0 !important;
+      padding: 0 !important;
+
+      font-size: 12px !important;
+      font-weight: 900 !important;
+      color: var(--muted) !important;
+
+      letter-spacing: 0 !important;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 今天日期：淡藍圓點 */
+    .fc .fc-day-today .fc-daygrid-day-number{
+      background: var(--brandBg) !important;
+      color: var(--text) !important;
+      border: 1px solid rgba(72,162,232,.35) !important;
+    }
+
+    /* 三排容器 */
+    .appSlots{
+      margin: 4px 4px 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* 單列符號：置中 */
+    .appSlot{
+      height: 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 12px;
+      font-weight: 900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      letter-spacing: .5px;
+      border: 1px solid transparent;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 開放（綠） */
+    .appSlot.open{
+      background: var(--openBg);
+      color: var(--open);
+      border-color: rgba(32,165,107,.22);
+    }
+
+    /* 少量（黃） */
+    .appSlot.tight{
+      background: var(--yellowBg);
+      color: var(--yellow);
+      border-color: rgba(183,129,0,.18);
+    }
+
+    /* 額滿/不開放（紅） */
+    .appSlot.full{
+      background: var(--redBg);
+      color: var(--red);
+      border-color: rgba(196,60,60,.18);
+    }
+
+    /* 避免你之前版本的元素混進來 */
+    .daySummary, .mBars{ display:none !important; }
 
     /* ===== drawer ===== */
     .mask{
@@ -302,7 +314,7 @@
     }
     .drawerTitle{
       font-size: 14px;
-      font-weight: 800;
+      font-weight: 900;
       margin:0;
     }
     .drawerSub{
@@ -320,7 +332,7 @@
       font-size: 12px;
       color: var(--text);
       -webkit-tap-highlight-color: transparent;
-      font-weight: 700;
+      font-weight: 800;
     }
     .iconBtn:hover{ background:#fafcff; }
 
@@ -350,7 +362,7 @@
       gap: 8px;
       align-items:center;
       color: var(--text);
-      font-weight: 800;
+      font-weight: 900;
       flex-wrap: wrap;
     }
     .rowMeta{
@@ -366,7 +378,7 @@
       border:1px solid var(--border);
       white-space:nowrap;
       align-self:flex-start;
-      font-weight: 800;
+      font-weight: 900;
     }
     .badge.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
     .badge.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
@@ -402,17 +414,10 @@
       .fc .fc-col-header-cell-cushion{
         font-size: 12px !important;
         color: var(--muted) !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
       }
 
-      /* 月曆格子更像 App 密度 */
-      .fc .fc-daygrid-day-frame{ padding: 2px !important; }
-
-      /* ✅ 手機：隱藏桌機摘要卡，只顯示色條 */
-      .daySummary{ display:none !important; }
-      .mBars{ display:flex !important; }
-
-      /* ✅ drawer 變底部 sheet */
+      /* drawer 變底部 sheet */
       .mask{ justify-content:flex-end; align-items:flex-end; }
       .drawer{
         width: 100%;
@@ -425,130 +430,10 @@
         padding-bottom: calc(16px + env(safe-area-inset-bottom));
       }
       @keyframes slideUp { from { transform: translateY(14px); opacity:.7 } to { transform:none; opacity:1 } }
+
+      .fc .fc-daygrid-day-frame{ min-height: 58px; }
+      .appSlot{ height: 11px; line-height: 11px; font-size: 10px; }
     }
-
-    /* 桌機：不顯示手機色條（避免重複） */
-    @media (min-width: 521px){
-      .mBars{ display:none !important; }
-    }
-    /* ===============================
- /* ===============================
-   ✅ App 月曆：格子更矮(視覺更寬) + 日期數字置中變小 + 三排文字色條
-   =============================== */
-
-/* 讓每格寬度更平均（視覺更像 App） */
-.fc .fc-daygrid-body,
-.fc .fc-scrollgrid,
-.fc .fc-scrollgrid-section-body table{
-  table-layout: fixed !important;
-}
-
-/* 格子整體變矮 → 視覺就會變寬、不擠 */
-.fc .fc-daygrid-day-frame{
-  min-height: 64px;
-  padding: 4px 4px 2px !important;
-}
-
-/* ===== 日期數字：不要「日」、變小、置中 ===== */
-.fc .fc-daygrid-day-top{
-  justify-content: center !important;
-}
-.fc .fc-daygrid-day-number{
-  float: none !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  margin: 2px auto 0 !important;
-  padding: 0 !important;
-
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  color: var(--muted) !important;
-
-  /* ✅ 只顯示數字（把「日」濾掉） */
-  letter-spacing: 0 !important;
-}
-.fc .fc-daygrid-day-number{
-  /* 某些情況下 zh-tw 可能輸出含文字，這行能最大化避免 */
-  font-variant-numeric: tabular-nums;
-}
-
-/* 今天日期做一個品牌藍的淡底 */
-.fc .fc-day-today .fc-daygrid-day-number{
-  background: var(--brandBg) !important;
-  color: var(--text) !important;
-  border: 1px solid rgba(72,162,232,.35) !important;
-}
-
-/* 點選日期：只亮那一格（保留你原本的也可以） */
-.fc .fc-daygrid-day.is-selected{
-  background: var(--brandBg);
-}
-.fc .fc-daygrid-day.is-selected .fc-daygrid-day-frame{
-  outline: 2px solid rgba(72,162,232,.45);
-  outline-offset: -2px;
-  border-radius: 14px;
-}
-
-/* ===== 三排色條（含文字） ===== */
-.appSlots{
-  margin: 4px 4px 2px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.appSlot{
-  height: 12px;
-  border-radius: 6px;
-  font-size: 10px;
-  line-height: 12px;
-  padding: 0 6px;
-  font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: flex;
-  align-items: center;
-}
-
-/* 早：綠 */
-.appSlot.morning{
-  background: rgba(32,165,107,.22);
-  color: #0f6b44;
-  border: 1px solid rgba(32,165,107,.18);
-}
-
-/* 午：黃 */
-.appSlot.afternoon{
-  background: rgba(183,129,0,.18);
-  color: #7a4e00;
-  border: 1px solid rgba(183,129,0,.15);
-}
-
-/* 晚：紅（額滿/不開放） */
-.appSlot.closed{
-  background: rgba(196,60,60,.15);
-  color: #a12b2b;
-  border: 1px solid rgba(196,60,60,.15);
-}
-
-/* ✅ 你現在用 appSlots，就把舊的 mBars/daySummary 永久隱藏避免打架 */
-.daySummary,
-.mBars{
-  display: none !important;
-}
-
-/* 手機再更緊 */
-@media (max-width:520px){
-  .fc .fc-daygrid-day-frame{ min-height: 58px; }
-  .appSlot{ height: 11px; line-height: 11px; font-size: 10px; }
-}
-
-
   </style>
 </head>
 
@@ -714,85 +599,52 @@
       mask.style.display = 'flex';
     }
 
-    // ===== ✅ App 風格：桌機顯示三行摘要 / 手機顯示三條色條 =====
-  function renderDayCellSummary(dateStr, cell, grouped){
-  const dayObj = grouped.get(dateStr);
-  if (!dayObj) return;
+    // ===== 月曆格內三排符號：與 drawer 同一套 classify，保證一致 =====
+    function renderDayCellSummary(dateStr, cell, grouped){
+      const dayObj = grouped.get(dateStr);
+      if (!dayObj) return;
 
-  const frame = cell.querySelector('.fc-daygrid-day-frame');
-  if (!frame) return;
+      const frame = cell.querySelector('.fc-daygrid-day-frame');
+      if (!frame) return;
 
-  // 避免重複渲染
-  if (frame.querySelector('.appSlots')) return;
+      // 避免重複渲染
+      if (frame.querySelector('.appSlots')) return;
 
-  const wrap = document.createElement('div');
-  wrap.className = 'appSlots';
+      const wrap = document.createElement('div');
+      wrap.className = 'appSlots';
 
-  // 固定三排：早/午/晚
-  const rows = [
-    { key:'MORNING',   cls:'morning',   text:'✓ 可預約' },
-    { key:'AFTERNOON', cls:'afternoon', text:'少量' },
-    { key:'EVENING',   cls:'closed',    text:'不開放' } // ✅ 晚永遠紅底
-  ];
+      for (const key of SLOT_ORDER){
+        const it = dayObj[key] || null;
+        const mins = it ? Number(it.availableMinutes || 0) : 0;
+        const status = it ? String(it.status || '').trim() : '額滿';
 
-  for (const r of rows){
-    const it = dayObj[r.key];
+        const cls = classify(status, mins);    // open/tight/full
+        const icon = markIcon(cls);            // ✓/△/✕
 
-    let cls = r.cls;
-    let text = r.text;
+        const bar = document.createElement('div');
+        bar.className = `appSlot ${cls}`;
+        bar.textContent = icon;
 
-    if (it){
-      const status = String(it.status || '').trim();
-      const mins = Number(it.availableMinutes || 0);
-
-      // 早：開放才顯示 ✓ 可預約（不然也可以照你規則固定）
-      if (r.key === 'MORNING') {
-        cls = 'morning';
-        text = '✓ 可預約';
-        if (status === '額滿' || mins <= 0) { cls = 'closed'; text = '額滿'; }
+        wrap.appendChild(bar);
       }
 
-      // 午：少量（你指定要少量）
-      if (r.key === 'AFTERNOON') {
-        cls = 'afternoon';
-        text = '少量';
-        if (status === '額滿' || mins <= 0) { cls = 'closed'; text = '額滿'; }
-      }
+      wrap.onclick = (e) => {
+        e.stopPropagation();
+        selectedDateStr = dateStr;
+        applySelectedStyle();
+        openDrawer(dateStr, dayObj);
+      };
 
-      // 晚：紅色顯示 額滿 / 不開放
-      if (r.key === 'EVENING') {
-        cls = 'closed';
-        text = (status === '額滿' || mins <= 0) ? '額滿' : '不開放';
-      }
-    } else {
-      // 沒資料：晚就當不開放（紅）
-      if (r.key === 'EVENING') { cls = 'closed'; text = '不開放'; }
+      frame.appendChild(wrap);
     }
-
-    const bar = document.createElement('div');
-    bar.className = `appSlot ${cls}`;
-    bar.textContent = text;
-    wrap.appendChild(bar);
-  }
-
-  wrap.onclick = (e) => {
-    e.stopPropagation();
-    selectedDateStr = dateStr;
-    applySelectedStyle();
-    openDrawer(dateStr, dayObj);
-  };
-
-  frame.appendChild(wrap);
-}
-
 
     function renderAllSummaries(){
       if (!calendar) return;
 
       // 先清掉舊摘要（避免殘留）
-    document.querySelectorAll('.appSlots').forEach(el => el.remove());
+      document.querySelectorAll('.appSlots').forEach(el => el.remove());
 
-      // 找到畫面上每個 day cell（FullCalendar dayGridMonth 每格都有 data-date）
+      // 每個 day cell（FullCalendar dayGridMonth 每格都有 data-date）
       document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
         const dateStr = cell.getAttribute('data-date');
         renderDayCellSummary(dateStr, cell, groupedData);
@@ -824,11 +676,19 @@
           initialView: 'dayGridMonth',
           height: 'auto',
           locale: 'zh-tw',
+
           headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth'
           },
+
+          // ✅ 強制 day number 只顯示數字（去掉「日」）
+          dayCellContent: function(arg){
+            const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
+            return { html: `<span class="fc-daygrid-day-number">${n}</span>` };
+          },
+
           events: [],
 
           datesSet: function(){
