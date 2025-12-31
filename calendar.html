@@ -142,57 +142,50 @@
     .fc .fc-daygrid-event{ display:none !important; } /* hide real events */
 
     /* ===== day cell summary (desktop/tablet) ===== */
-    .daySummary{
-      margin: 6px;
-      padding: 8px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background:#fbfcff;
-      display:grid;
-      gap: 6px;
-      cursor:pointer;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-    }
+   .daySummary{
+  margin: 2px 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  gap: 2px;
+}
     .daySummary:hover{
       border-color:#d7e3fb;
       background:#f7faff;
     }
     .sumRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      font-size: 12px;
-      color: var(--text);
-    }
+  font-size: 11px;
+  line-height: 1.1;
+  padding: 1px 0;
+  justify-content: space-between;
+}
     .sumRow .left{
       display:flex; align-items:center; gap: 8px;
       color: var(--muted);
     }
-    .chip{
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background:#fff;
-      color: var(--muted);
-      line-height: 1;
-    }
-    .mark{
-      width: 18px; height: 18px;
-      border-radius: 999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size: 12px;
-      border:1px solid var(--border);
-      background:#fff;
-      line-height: 1;
-    }
-    .mark.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
-    .mark.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
-    .mark.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
+   .chip{
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+   .mark{
+  width: auto;
+  height: auto;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0;
+}
+  
+.mark.open{ color: var(--open); }
+.mark.tight{ color: var(--yellow); }
+.mark.full{ color: var(--red); }
 
     /* ===== drawer ===== */
     .mask{
@@ -389,10 +382,6 @@
         color: var(--muted) !important;
         font-weight: 600 !important;
       }
-
-      /* 手機時：隱藏三行摘要，顯示三顆點 */
-      .daySummary{ display:none !important; }
-      .mDots{ display:flex !important; }
 
       /* drawer becomes bottom sheet */
       .mask{ justify-content: flex-end; align-items: flex-end; }
@@ -608,7 +597,7 @@
 
         const chip = document.createElement('span');
         chip.className = 'chip';
-        chip.textContent = slotLabel[s];
+        chip.textContent = `${slotLabel[s]}：`;
 
         const mark = document.createElement('span');
         mark.className = `mark ${cls}`;
