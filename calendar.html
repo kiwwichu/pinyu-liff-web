@@ -360,6 +360,118 @@
       }
       @keyframes slideUp { from { transform: translateY(14px); opacity:.7 } to { transform:none; opacity:1 } }
     }
+    /* =========================
+   FullCalendar 手機工具列優化 + 品牌色
+   ========================= */
+
+/* 按鈕統一像 iOS chip */
+.fc .fc-button{
+  border-radius: 12px !important;
+  border: 1px solid var(--border) !important;
+  background: #fff !important;
+  color: var(--text) !important;
+  padding: 8px 10px !important;
+  font-weight: 600 !important;
+}
+
+/* Today 改品牌色（重點） */
+.fc .fc-today-button{
+  background: var(--brand) !important;
+  border-color: rgba(72,162,232,.35) !important;
+  color: #fff !important;
+}
+.fc .fc-today-button:disabled{
+  opacity: .55 !important; /* 已在今天時，維持質感 */
+}
+
+/* prev/next hover */
+.fc .fc-button:hover{
+  border-color: rgba(72,162,232,.35) !important;
+  background: var(--brandBg) !important;
+}
+
+/* 標題更像 App */
+.fc .fc-toolbar-title{
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+
+/* 手機：工具列兩行、按鈕不擠、title 置中 */
+@media (max-width: 520px){
+  /* 工具列改成 grid：第一行 title，第二行 buttons */
+  .fc .fc-header-toolbar{
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    align-items: center !important;
+  }
+
+  /* title 一行置中 */
+  .fc .fc-toolbar-chunk:nth-child(2){
+    justify-self: center !important;
+  }
+
+  /* buttons 那行：左右分開、避免擠成一團 */
+  .fc .fc-toolbar-chunk:nth-child(1),
+  .fc .fc-toolbar-chunk:nth-child(3){
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  /* 讓 today 不要太長、避免擠 */
+  .fc .fc-today-button{
+    padding: 8px 12px !important;
+  }
+
+  /* 週標題字小一點 */
+  .fc .fc-col-header-cell-cushion{
+    font-size: 12px !important;
+    color: var(--muted) !important;
+    font-weight: 600 !important;
+  }
+
+  /* 月曆格子 padding 降低，整體更像截圖那種密度 */
+  .fc .fc-daygrid-day-frame{
+    padding: 2px !important;
+  }
+}
+/* =========================
+   手機用：月曆格子三顆狀態點
+   ========================= */
+.mDots{
+  margin: 4px 6px;
+  display:flex;
+  gap: 6px;
+  align-items:center;
+  justify-content:flex-start;
+  padding: 6px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fbfcff;
+  cursor:pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mDot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.mDot.open{ background: var(--open); border-color: rgba(32,165,107,.25); }
+.mDot.tight{ background: var(--yellow); border-color: rgba(183,129,0,.25); }
+.mDot.full{ background: var(--red); border-color: rgba(196,60,60,.25); }
+
+/* 手機時：隱藏你原本的三行 daySummary，改顯示 mDots */
+@media (max-width: 520px){
+  .daySummary{ display:none !important; }
+  .mDots{ display:flex !important; }
+}
+@media (min-width: 521px){
+  .mDots{ display:none !important; }
+}
+
   </style>
 </head>
 
@@ -526,47 +638,83 @@
     }
 
     // 自訂：在月曆格子內放「摘要卡」
-    function renderDayCellSummary(dateStr, cell, grouped){
-      const dayObj = grouped.get(dateStr);
-      if (!dayObj) return;
+  function renderDayCellSummary(dateStr, cell, grouped){
+  const dayObj = grouped.get(dateStr);
+  if (!dayObj) return;
 
-      const frame = cell.querySelector('.fc-daygrid-day-frame');
-      if (!frame) return;
+  const frame = cell.querySelector('.fc-daygrid-day-frame');
+  if (!frame) return;
 
-      // 避免重複
-      if (frame.querySelector('.daySummary')) return;
+  // 避免重複
+  if (frame.querySelector('.daySummary') || frame.querySelector('.mDots')) return;
 
-      const box = document.createElement('div');
-      box.className = 'daySummary';
-      box.title = '點擊查看詳細';
+  // ===== 桌機版：保留原本三行摘要 =====
+  const box = document.createElement('div');
+  box.className = 'daySummary';
+  box.title = '點擊查看詳細';
 
-      for (const s of SLOT_ORDER){
-        const it = dayObj[s];
-        const mins = it ? Number(it.availableMinutes || 0) : 0;
-        const status = it ? String(it.status || '').trim() : '額滿';
-        const cls = classify(status, mins);
+  for (const s of SLOT_ORDER){
+    const it = dayObj[s];
+    const mins = it ? Number(it.availableMinutes || 0) : 0;
+    const status = it ? String(it.status || '').trim() : '額滿';
+    const cls = classify(status, mins);
 
-        const r = document.createElement('div');
-        r.className = 'sumRow';
+    const r = document.createElement('div');
+    r.className = 'sumRow';
 
-        const left = document.createElement('div');
-        left.className = 'left';
+    const left = document.createElement('div');
+    left.className = 'left';
 
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = slotLabel[s];
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.textContent = slotLabel[s];
 
-        left.appendChild(chip);
+    left.appendChild(chip);
 
-        const mark = document.createElement('span');
-        mark.className = `mark ${cls}`;
-        mark.textContent = markIcon(cls);
+    const mark = document.createElement('span');
+    mark.className = `mark ${cls}`;
+    mark.textContent = markIcon(cls);
 
-        r.appendChild(left);
-        r.appendChild(mark);
+    r.appendChild(left);
+    r.appendChild(mark);
 
-        box.appendChild(r);
-      }
+    box.appendChild(r);
+  }
+
+  box.onclick = (e) => {
+    e.stopPropagation();
+    selectedDateStr = dateStr;
+    applySelectedStyle();
+    openDrawer(dateStr, dayObj);
+  };
+
+  // ===== 手機版：三顆狀態點（更乾淨） =====
+  const dots = document.createElement('div');
+  dots.className = 'mDots';
+  dots.title = '點擊查看詳細';
+
+  for (const s of SLOT_ORDER){
+    const it = dayObj[s];
+    const mins = it ? Number(it.availableMinutes || 0) : 0;
+    const status = it ? String(it.status || '').trim() : '額滿';
+    const cls = classify(status, mins);
+
+    const d = document.createElement('span');
+    d.className = `mDot ${cls}`;
+    dots.appendChild(d);
+  }
+
+  dots.onclick = (e) => {
+    e.stopPropagation();
+    selectedDateStr = dateStr;
+    applySelectedStyle();
+    openDrawer(dateStr, dayObj);
+  };
+
+  frame.appendChild(box);
+  frame.appendChild(dots);
+}
+
 
       // ✅ 2) 點摘要卡：同時「選取那一天」＋開 drawer（只亮那格）
       box.onclick = (e) => {
