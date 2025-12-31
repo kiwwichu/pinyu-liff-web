@@ -121,6 +121,34 @@
       color: var(--muted);
       align-items:center;
     }
+    .legendMark{
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 900;
+  font-size: 12px;
+  border: 1px solid transparent;
+  margin-right: 2px;
+}
+.legendMark.open{
+  background: var(--openBg);
+  color: var(--open);
+  border-color: rgba(32,165,107,.22);
+}
+.legendMark.tight{
+  background: var(--yellowBg);
+  color: var(--yellow);
+  border-color: rgba(183,129,0,.18);
+}
+.legendMark.full{
+  background: var(--redBg);
+  color: var(--red);
+  border-color: rgba(196,60,60,.18);
+}
+
     .dot{
       width:10px;height:10px;border-radius:99px; display:inline-block;
       border:1px solid var(--border);
@@ -454,10 +482,11 @@
       </div>
 
       <div class="legend">
-        <span class="dot blue"></span><span>開放</span>
-        <span class="dot yellow"></span><span>少量（分鐘偏緊）</span>
-        <span class="dot red"></span><span>額滿</span>
-      </div>
+  <span class="legendMark open">✓</span><span>開放</span>
+  <span class="legendMark tight">△</span><span>少量（分鐘偏緊）</span>
+  <span class="legendMark full">✕</span><span>額滿 / 不開放</span>
+</div>
+
     </div>
 
     <div id="calendar"></div>
