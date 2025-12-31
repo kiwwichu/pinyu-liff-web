@@ -5,7 +5,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing year/month" });
     }
 
-    const GAS_URL = process.env.GAS_URL;
+    const GAS_URL = process.env.GAS_CALENDAR_URL;
     if (!GAS_URL) {
       return res.status(500).json({ error: "Missing GAS_URL env" });
     }
