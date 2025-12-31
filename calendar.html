@@ -506,9 +506,15 @@
       <div class="list" id="detailList"></div>
 
       <div class="drawerSub" style="margin-top:12px;">
-        ＊為確保每位毛孩都能得到妥善的照顧，預約以 早/中/晚 區段預約為主，若需指定時間，請提早一個月前預約告知唷~
-        ＊網頁還在測試階段，若有疑問或是錯誤，請盡速告訴pinyu，謝謝您的配合
-        ＊實際時間還是以 Pinyu 為準。
+        ＊為確保每位毛孩都能得到妥善的照顧，<br>
+          預約以「早／中／晚」區段為主。<br>
+          若需指定時間，請於一個月前提前告知唷～<br><br>
+          
+          ＊本網頁仍在測試階段，<br>
+          若有任何疑問或發現錯誤，<br>
+          請盡速告訴 Pinyu，謝謝您的配合。<br><br>
+          
+          ＊實際服務時間仍以 Pinyu 最終確認為準。
       </div>
     </div>
   </div>
@@ -610,10 +616,10 @@
         meta.className = 'rowMeta';
 
         const metaLines = [];
-        metaLines.push(`可用：${mins} 分鐘`);
         if (remainingText) metaLines.push(`剩餘：${remainingText}`);
         if (blockedText && blockedText !== '—') metaLines.push(`不可預約：${blockedText}`);
         meta.textContent = metaLines.join('｜');
+
 
         left.appendChild(top);
         left.appendChild(meta);
