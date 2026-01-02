@@ -10,6 +10,15 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
   <style>
+    /* 螢光筆 highlight（品牌藍淡底 + 圓角） */
+.hl{
+  display: inline;
+  padding: 0 .22em;
+  border-radius: .45em;
+  background: linear-gradient(transparent 55%, rgba(72,162,232,.22) 55%);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
     :root{
       --bg:#f6f8fb;
       --card:#ffffff;
@@ -508,13 +517,23 @@
       <div class="drawerSub" style="margin-top:12px;">
         ＊為確保每位毛孩都能得到妥善的照顧，<br>
           預約以「早／中／晚」區段為主。<br>
-          若需指定時間，請於半個月至一個月提前預約唷～<br><br>
+          <span class="hl">若需指定時間，請於半個月至一個月提前預約唷～</span><br><br>
+          
+          為能讓每趟到府服務能準時進行，<br>
+          並維持穩定且良好的照顧品質，<br>
+          行程將盡量避開上下班尖峰時段安排。<br><br>
+          
+          <span class="hl">
+          若需指定於尖峰時段（17:00–19:00）到府，<br>
+          將酌收 NT$200／次 之時段補貼。
+          </span><br><br>
           
           ＊本網頁仍在測試階段，<br>
           若有任何疑問或發現錯誤，<br>
           請盡速告訴 Pinyu，謝謝您的配合。<br><br>
           
           ＊實際服務時間仍以 Pinyu 最終確認為準。
+
       </div>
     </div>
   </div>
