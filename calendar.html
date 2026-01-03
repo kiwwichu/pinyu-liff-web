@@ -744,12 +744,27 @@
 
           events: [],
 
-          datesSet: function(){
-            setTimeout(() => {
-              renderAllSummaries();
-              applySelectedStyle();
-            }, 0);
-          },
+          datesSet: async function(info){
+  const d = info.start; // 這個月份畫面的起始日
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1; // JS 月份從 0 開始
+
+  // 同步更新輸入框（可留可刪）
+  yearInput.value = year;
+  monthInput.value = month;
+
+  // 🔥 關鍵：自動抓該月份資料
+  try {
+    const data = await fetchMonth(year, month);
+    groupedData = groupByDate(data);
+
+    renderAllSummaries();
+    applySelectedStyle();
+  } catch (e) {
+    console.error('載入月份失敗', e);
+  }
+},
+
 
           dateClick: function(info){
             selectedDateStr = info.dateStr;
