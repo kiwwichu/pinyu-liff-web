@@ -10,6 +10,9 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
   <style>
+    /* ✅ 避免開 drawer 造成 scrollbar 消失→頁面寬度變動→FullCalendar 重畫 */
+    html{ overflow-y: scroll; }
+
     /* 螢光筆 highlight（品牌藍淡底 + 圓角） */
     .hl{
       display: inline;
@@ -43,8 +46,6 @@
       --shadow: 0 10px 30px rgba(15, 23, 42, .06);
       --radius: 16px;
     }
-/* ✅ 避免開 drawer 造成 scrollbar 消失→頁面寬度變動→FullCalendar 重畫 */
-html { overflow-y: scroll; }
 
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
@@ -547,15 +548,15 @@ html { overflow-y: scroll; }
     // ====== Vercel API ======
     const API_URL = "/api/avail";
 
-    // ✅ 春節期間（含起訖）——移到全域，避免 openDrawer 讀不到
+    // ✅ 春節期間（含起訖）
     const CNY_START = '2026-02-16';
     const CNY_END   = '2026-02-22';
 
     function isBetweenInclusive(dateStr, startStr, endStr){
-      return dateStr >= startStr && dateStr <= endStr; // YYYY-MM-DD 可直接比字串
+      return dateStr >= startStr && dateStr <= endStr;
     }
 
-    // 避免用 toISOString 造成時區偏一天：用本地年月日組字串
+    // 避免 toISOString 造成時區偏一天：用本地年月日組字串
     function toLocalDateStr(d){
       const y = d.getFullYear();
       const m = String(d.getMonth()+1).padStart(2,'0');
@@ -573,28 +574,26 @@ html { overflow-y: scroll; }
 
     const LOW_MIN_THRESHOLD = 60; // 少量門檻：<=60 分鐘 → 黃
 
-   // drawer close/open flag
-let isModalOpen = false;
+    function classify(status, mins){
+      status = String(status || '').trim();
+      mins = Number(mins || 0);
 
-function afterOverlayChangeRerender(){
-  // 讓 FullCalendar 有機會重畫後，再把 appSlots 補回去
-  requestAnimationFrame(() => {
-    renderAllSummaries();
-    applySelectedStyle();
-  });
-}
+      if (status === '額滿') return 'full';
+      if (status === '少量') return 'tight';
+      if (status === '開放') return 'open';
 
-const mask = document.getElementById('mask');
-const closeX = document.getElementById('closeX');
+      // fallback：如果後端沒給狀態，才用分鐘推
+      if (mins <= 0) return 'full';
+      if (mins <= LOW_MIN_THRESHOLD) return 'tight';
+      return 'open';
+    }
 
-function closeDrawer(){
-  isModalOpen = false;
-  mask.style.display = 'none';
-  afterOverlayChangeRerender();
-}
-
-closeX.onclick = closeDrawer;
-mask.onclick = (e) => { if (e.target === mask) closeDrawer(); };
+    async function fetchMonth(year, month) {
+      const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      return await res.json();
+    }
 
     // 資料整理：date -> {slot->item}
     function groupByDate(data){
@@ -612,6 +611,27 @@ mask.onclick = (e) => { if (e.target === mask) closeDrawer(); };
       if (cls === 'tight') return '△';
       return '✕';
     }
+
+    // ===== drawer open/close + 防 FullCalendar 因 overlay 重畫把符號洗掉 =====
+    let isModalOpen = false;
+    const mask = document.getElementById('mask');
+    const closeX = document.getElementById('closeX');
+
+    function afterOverlayChangeRerender(){
+      requestAnimationFrame(() => {
+        renderAllSummaries();
+        applySelectedStyle();
+      });
+    }
+
+    function closeDrawer(){
+      isModalOpen = false;
+      mask.style.display = 'none';
+      afterOverlayChangeRerender();
+    }
+
+    closeX.onclick = closeDrawer;
+    mask.onclick = (e) => { if (e.target === mask) closeDrawer(); };
 
     // ✅ 永遠可開 drawer（就算當天沒資料，也顯示預設額滿）
     function openDrawer(dateStr, dayObj){
@@ -674,20 +694,21 @@ mask.onclick = (e) => { if (e.target === mask) closeDrawer(); };
         list.appendChild(row);
       }
 
+      isModalOpen = true;
       mask.style.display = 'flex';
+      afterOverlayChangeRerender();
     }
 
     // ===== 月曆格內三排符號 =====
     function renderDayCellSummary(dateStr, cell, grouped){
       const dayObj = grouped.get(dateStr);
-
       const frame = cell.querySelector('.fc-daygrid-day-frame');
       if (!frame) return;
 
       // 避免重複渲染
       if (frame.querySelector('.appSlots')) return;
 
-      // ✅ 即使沒有資料，仍然可點日期格開 drawer（但不強迫渲染三排）
+      // 沒資料就不顯示三排，但仍可點日期格開 drawer
       if (!dayObj) return;
 
       const wrap = document.createElement('div');
@@ -744,6 +765,13 @@ mask.onclick = (e) => { if (e.target === mask) closeDrawer(); };
     let calendar;
     let groupedData = new Map();
 
+    // UI init
+    const yearInput = document.getElementById('year');
+    const monthInput = document.getElementById('month');
+
+    yearInput.value = 2026;
+    monthInput.value = 1;
+
     async function loadAndRender(year, month) {
       const data = await fetchMonth(year, month);
       groupedData = groupByDate(data);
@@ -766,7 +794,7 @@ mask.onclick = (e) => { if (e.target === mask) closeDrawer(); };
             return { html: `<span class="fc-daygrid-day-number">${n}</span>` };
           },
 
-          // ✅ 春節標記 + 角標（每格渲染時做）
+          // ✅ 春節標記 + 角標
           dayCellDidMount: function(arg){
             const dateStr = toLocalDateStr(arg.date);
             const isCny = isBetweenInclusive(dateStr, CNY_START, CNY_END);
@@ -791,8 +819,10 @@ mask.onclick = (e) => { if (e.target === mask) closeDrawer(); };
 
           events: [],
 
-                  datesSet: async function(info){
-  if (isModalOpen) return; // ✅ drawer 開啟時不要因 re-render 去重抓/月輸入框跳掉
+          // ✅ drawer 開著時，避免因 re-render 觸發 datesSet → 輸入框跳掉/資料重抓
+          datesSet: async function(info){
+            if (isModalOpen) return;
+
             const d = info.start;
             const y = d.getFullYear();
             const m = d.getMonth() + 1;
@@ -803,19 +833,20 @@ mask.onclick = (e) => { if (e.target === mask) closeDrawer(); };
             try {
               const data = await fetchMonth(y, m);
               groupedData = groupByDate(data);
-
               renderAllSummaries();
               applySelectedStyle();
             } catch (e) {
               console.error('載入月份失敗', e);
             }
           },
-windowResize: function(){
-  renderAllSummaries();
-  applySelectedStyle();
-}
 
-          // ✅ 修正：不管有沒有資料，都要能跳出 drawer
+          // ✅ 保險：尺寸變動也補畫 ✓/△/✕
+          windowResize: function(){
+            renderAllSummaries();
+            applySelectedStyle();
+          },
+
+          // ✅ 不管有沒有資料，都能跳出 drawer
           dateClick: function(info){
             selectedDateStr = info.dateStr;
             applySelectedStyle();
@@ -832,13 +863,6 @@ windowResize: function(){
       renderAllSummaries();
       applySelectedStyle();
     }
-
-    // UI init
-    const yearInput = document.getElementById('year');
-    const monthInput = document.getElementById('month');
-
-    yearInput.value = 2026;
-    monthInput.value = 1;
 
     document.getElementById('btnReload').onclick = async () => {
       try {
