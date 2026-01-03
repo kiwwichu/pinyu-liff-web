@@ -43,6 +43,8 @@
       --shadow: 0 10px 30px rgba(15, 23, 42, .06);
       --radius: 16px;
     }
+/* ✅ 避免開 drawer 造成 scrollbar 消失→頁面寬度變動→FullCalendar 重畫 */
+html { overflow-y: scroll; }
 
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
@@ -571,32 +573,28 @@
 
     const LOW_MIN_THRESHOLD = 60; // 少量門檻：<=60 分鐘 → 黃
 
-    // drawer close
-    const mask = document.getElementById('mask');
-    const closeX = document.getElementById('closeX');
-    closeX.onclick = () => mask.style.display = 'none';
-    mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
+   // drawer close/open flag
+let isModalOpen = false;
 
-    function classify(status, mins){
-      status = String(status || '').trim();
-      mins = Number(mins || 0);
+function afterOverlayChangeRerender(){
+  // 讓 FullCalendar 有機會重畫後，再把 appSlots 補回去
+  requestAnimationFrame(() => {
+    renderAllSummaries();
+    applySelectedStyle();
+  });
+}
 
-      if (status === '額滿') return 'full';
-      if (status === '少量') return 'tight';
-      if (status === '開放') return 'open';
+const mask = document.getElementById('mask');
+const closeX = document.getElementById('closeX');
 
-      // fallback：如果後端沒給狀態，才用分鐘推
-      if (mins <= 0) return 'full';
-      if (mins <= LOW_MIN_THRESHOLD) return 'tight';
-      return 'open';
-    }
+function closeDrawer(){
+  isModalOpen = false;
+  mask.style.display = 'none';
+  afterOverlayChangeRerender();
+}
 
-    async function fetchMonth(year, month) {
-      const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`API error ${res.status}`);
-      return await res.json();
-    }
+closeX.onclick = closeDrawer;
+mask.onclick = (e) => { if (e.target === mask) closeDrawer(); };
 
     // 資料整理：date -> {slot->item}
     function groupByDate(data){
@@ -793,7 +791,8 @@
 
           events: [],
 
-          datesSet: async function(info){
+                  datesSet: async function(info){
+  if (isModalOpen) return; // ✅ drawer 開啟時不要因 re-render 去重抓/月輸入框跳掉
             const d = info.start;
             const y = d.getFullYear();
             const m = d.getMonth() + 1;
@@ -811,6 +810,10 @@
               console.error('載入月份失敗', e);
             }
           },
+windowResize: function(){
+  renderAllSummaries();
+  applySelectedStyle();
+}
 
           // ✅ 修正：不管有沒有資料，都要能跳出 drawer
           dateClick: function(info){
