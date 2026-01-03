@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8" />
@@ -523,19 +523,9 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
 請於服務日前半個月至一個月提前預約唷～ </span><br>
 <span class="hl"> 若需指定於尖峰時段（17:00–19:00）到府<br>
 將酌收 NT$200／次 之時段補貼。 </span><br><br>
-          
-          ＊本網頁目前仍為測試階段，
-                 
-          ＊實際服務時間仍以 Pinyu 最終確認為準。<br><br>
-        
-        ＊本網頁目前仍為測試階段，
-若有任何疑問或發現錯誤，
-歡迎隨時告訴 Pinyu，謝謝您的體諒與配合 🤍<br><br>
-          
-          ＊實際服務時間仍以 Pinyu 最終確認為準。
-                    ＊實際服務時間仍以 Pinyu 最終確認為準。
-    
 
+＊本網頁目前仍為測試階段，若有任何疑問或發現錯誤，歡迎隨時告訴 Pinyu，謝謝您的體諒與配合 🤍<br><br>
+＊實際服務時間仍以 Pinyu 最終確認為準。
 </div>
 </div>
 </div>
@@ -546,9 +536,9 @@ const API_URL = "/api/avail";
 
 // ✅ 只有 3 段（無深夜）
 const slotLabel = {
-MORNING: "早上",
-AFTERNOON: "下午",
-EVENING: "晚上"
+  MORNING: "早上",
+  AFTERNOON: "下午",
+  EVENING: "晚上"
 };
 const SLOT_ORDER = ["MORNING","AFTERNOON","EVENING"];
 
@@ -561,216 +551,206 @@ closeX.onclick = () => mask.style.display = 'none';
 mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
 
 function classify(status, mins){
-status = String(status || '').trim();
-mins = Number(mins || 0);
+  status = String(status || '').trim();
+  mins = Number(mins || 0);
 
-if (status === '額滿') return 'full';
-if (status === '少量') return 'tight';
-if (status === '開放') return 'open';
+  if (status === '額滿') return 'full';
+  if (status === '少量') return 'tight';
+  if (status === '開放') return 'open';
 
-// fallback：如果後端沒給狀態，才用分鐘推
-if (mins <= 0) return 'full';
-if (mins <= LOW_MIN_THRESHOLD) return 'tight';
-return 'open';
+  // fallback：如果後端沒給狀態，才用分鐘推
+  if (mins <= 0) return 'full';
+  if (mins <= LOW_MIN_THRESHOLD) return 'tight';
+  return 'open';
 }
 
 async function fetchMonth(year, month) {
-const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
-const res = await fetch(url, { cache: 'no-store' });
-if (!res.ok) throw new Error(`API error ${res.status}`);
-return await res.json();
+  const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  return await res.json();
 }
 
 // 資料整理：date -> {slot->item}
 function groupByDate(data){
-const map = new Map();
-for (const it of (Array.isArray(data) ? data : [])) {
-const date = it.date;
-if (!map.has(date)) map.set(date, {});
-map.get(date)[it.slot] = it;
-}
-return map;
+  const map = new Map();
+  for (const it of (Array.isArray(data) ? data : [])) {
+    const date = it.date;
+    if (!map.has(date)) map.set(date, {});
+    map.get(date)[it.slot] = it;
+  }
+  return map;
 }
 
 function markIcon(cls){
-if (cls === 'open') return '✓';
-if (cls === 'tight') return '△';
-return '✕';
+  if (cls === 'open') return '✓';
+  if (cls === 'tight') return '△';
+  return '✕';
 }
 
 function openDrawer(dateStr, dayObj){
-const title = document.getElementById('dTitle');
-const sub = document.getElementById('dSub');
-const list = document.getElementById('detailList');
+  const title = document.getElementById('dTitle');
+  const sub = document.getElementById('dSub');
+  const list = document.getElementById('detailList');
 
-title.textContent = dateStr;
-sub.textContent = '早上 / 下午 / 晚上';
-list.innerHTML = '';
+  title.textContent = dateStr;
+  sub.textContent = '早上 / 下午 / 晚上';
+  list.innerHTML = '';
 
-for (const s of SLOT_ORDER){
-const it = (dayObj && dayObj[s]) ? dayObj[s] : null;
+  for (const s of SLOT_ORDER){
+    const it = (dayObj && dayObj[s]) ? dayObj[s] : null;
 
-const start = it ? it.start : '—';
-const end = it ? it.end : '—';
-const mins = it ? Number(it.availableMinutes || 0) : 0;
-const status = it ? String(it.status || '').trim() : '額滿';
+    const start = it ? it.start : '—';
+    const end = it ? it.end : '—';
+    const mins = it ? Number(it.availableMinutes || 0) : 0;
+    const status = it ? String(it.status || '').trim() : '額滿';
 
-const cls = classify(status, mins);
+    const cls = classify(status, mins);
 
-// ✅ 相容新舊欄位
-const blocked = it ? String(it.blocked ?? it.occupied ?? '') : '';
-const remaining = it ? String(it.remaining ?? it.note ?? '') : '';
-const blockedText = blocked ? blocked : '';
-const remainingText = remaining ? remaining : '';
+    // ✅ 相容新舊欄位
+    const blocked = it ? String(it.blocked ?? it.occupied ?? '') : '';
+    const remaining = it ? String(it.remaining ?? it.note ?? '') : '';
+    const blockedText = blocked ? blocked : '';
+    const remainingText = remaining ? remaining : '';
 
-const row = document.createElement('div');
-row.className = 'rowCard';
+    const row = document.createElement('div');
+    row.className = 'rowCard';
 
-const left = document.createElement('div');
-left.className = 'rowLeft';
+    const left = document.createElement('div');
+    left.className = 'rowLeft';
 
-const top = document.createElement('div');
-top.className = 'rowTop';
-top.textContent = `${slotLabel[s]}  ·  ${start}–${end}`;
+    const top = document.createElement('div');
+    top.className = 'rowTop';
+    top.textContent = `${slotLabel[s]}  ·  ${start}–${end}`;
 
-const meta = document.createElement('div');
-meta.className = 'rowMeta';
+    const meta = document.createElement('div');
+    meta.className = 'rowMeta';
 
-const metaLines = [];
-if (remainingText) metaLines.push(`剩餘：${remainingText}`);
-if (blockedText && blockedText !== '—') metaLines.push(`不可預約：${blockedText}`);
-meta.textContent = metaLines.join('｜');
+    const metaLines = [];
+    if (remainingText) metaLines.push(`剩餘：${remainingText}`);
+    if (blockedText && blockedText !== '—') metaLines.push(`不可預約：${blockedText}`);
+    meta.textContent = metaLines.join('｜');
 
+    left.appendChild(top);
+    left.appendChild(meta);
 
-left.appendChild(top);
-left.appendChild(meta);
+    const badge = document.createElement('div');
+    badge.className = `badge ${cls}`;
+    badge.textContent = (cls === 'open') ? '開放' : (cls === 'tight' ? '少量' : '額滿');
 
-const badge = document.createElement('div');
-badge.className = `badge ${cls}`;
-badge.textContent = (cls === 'open') ? '開放' : (cls === 'tight' ? '少量' : '額滿');
+    row.appendChild(left);
+    row.appendChild(badge);
+    list.appendChild(row);
+  }
 
-row.appendChild(left);
-row.appendChild(badge);
-list.appendChild(row);
-}
-
-mask.style.display = 'flex';
+  mask.style.display = 'flex';
 }
 
 // ===== 月曆格內三排符號：與 drawer 同一套 classify，保證一致 =====
 function renderDayCellSummary(dateStr, cell, grouped){
-const dayObj = grouped.get(dateStr);
-if (!dayObj) return;
+  const dayObj = grouped.get(dateStr);
+  if (!dayObj) return;
 
-const frame = cell.querySelector('.fc-daygrid-day-frame');
-if (!frame) return;
+  const frame = cell.querySelector('.fc-daygrid-day-frame');
+  if (!frame) return;
 
-// 避免重複渲染
-if (frame.querySelector('.appSlots')) return;
+  // 避免重複渲染
+  if (frame.querySelector('.appSlots')) return;
 
-const wrap = document.createElement('div');
-wrap.className = 'appSlots';
+  const wrap = document.createElement('div');
+  wrap.className = 'appSlots';
 
-for (const key of SLOT_ORDER){
-const it = dayObj[key] || null;
-const mins = it ? Number(it.availableMinutes || 0) : 0;
-const status = it ? String(it.status || '').trim() : '額滿';
+  for (const key of SLOT_ORDER){
+    const it = dayObj[key] || null;
+    const mins = it ? Number(it.availableMinutes || 0) : 0;
+    const status = it ? String(it.status || '').trim() : '額滿';
 
-const cls = classify(status, mins);    // open/tight/full
-const icon = markIcon(cls);            // ✓/△/✕
+    const cls = classify(status, mins);    // open/tight/full
+    const icon = markIcon(cls);            // ✓/△/✕
 
-const bar = document.createElement('div');
-bar.className = `appSlot ${cls}`;
-bar.textContent = icon;
+    const bar = document.createElement('div');
+    bar.className = `appSlot ${cls}`;
+    bar.textContent = icon;
 
-wrap.appendChild(bar);
-}
+    wrap.appendChild(bar);
+  }
 
-wrap.onclick = (e) => {
-e.stopPropagation();
-selectedDateStr = dateStr;
-applySelectedStyle();
-openDrawer(dateStr, dayObj);
-};
+  wrap.onclick = (e) => {
+    e.stopPropagation();
+    selectedDateStr = dateStr;
+    applySelectedStyle();
+    openDrawer(dateStr, dayObj);
+  };
 
-frame.appendChild(wrap);
+  frame.appendChild(wrap);
 }
 
 function renderAllSummaries(){
-if (!calendar) return;
+  if (!calendar) return;
 
-// 先清掉舊摘要（避免殘留）
-document.querySelectorAll('.appSlots').forEach(el => el.remove());
+  // 先清掉舊摘要（避免殘留）
+  document.querySelectorAll('.appSlots').forEach(el => el.remove());
 
-// 每個 day cell（FullCalendar dayGridMonth 每格都有 data-date）
-document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
-const dateStr = cell.getAttribute('data-date');
-renderDayCellSummary(dateStr, cell, groupedData);
-});
+  // 每個 day cell（FullCalendar dayGridMonth 每格都有 data-date）
+  document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
+    const dateStr = cell.getAttribute('data-date');
+    renderDayCellSummary(dateStr, cell, groupedData);
+  });
 }
 
 let selectedDateStr = null;
-
 function applySelectedStyle(){
-document.querySelectorAll('.fc-daygrid-day.is-selected')
-.forEach(el => el.classList.remove('is-selected'));
+  document.querySelectorAll('.fc-daygrid-day.is-selected')
+    .forEach(el => el.classList.remove('is-selected'));
 
-if (!selectedDateStr) return;
+  if (!selectedDateStr) return;
 
-const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
-if (cell) cell.classList.add('is-selected');
+  const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
+  if (cell) cell.classList.add('is-selected');
 }
 
+// ======================
+// ✅ 核心：切月自動載入
+// ======================
 let calendar;
 let groupedData = new Map();
+let loadedYear = null;
+let loadedMonth = null;
+let monthFetchTimer = null;
 
-async function loadAndRender(year, month) {
-const data = await fetchMonth(year, month);
-groupedData = groupByDate(data);
-
-const el = document.getElementById('calendar');
-if (!calendar) {
-calendar = new FullCalendar.Calendar(el, {
-initialView: 'dayGridMonth',
-height: 'auto',
-locale: 'zh-tw',
-
-headerToolbar: {
-left: 'prev,next today',
-center: 'title',
-right: 'dayGridMonth'
-},
-
-// ✅ 強制 day number 只顯示數字（去掉「日」）
-dayCellContent: function(arg){
-const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
-return { html: `<span class="fc-daygrid-day-number">${n}</span>` };
-},
-
-events: [],
-
-datesSet: function(){
-setTimeout(() => {
-renderAllSummaries();
-applySelectedStyle();
-}, 0);
-},
-
-dateClick: function(info){
-selectedDateStr = info.dateStr;
-applySelectedStyle();
-
-const dayObj = groupedData.get(info.dateStr);
-if (dayObj) openDrawer(info.dateStr, dayObj);
-}
-});
-
-calendar.render();
+function getViewYearMonth(){
+  const d = calendar.getDate(); // view 的基準日期
+  return { y: d.getFullYear(), m: d.getMonth() + 1 };
 }
 
-calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
-renderAllSummaries();
-applySelectedStyle();
+async function ensureMonthLoaded(year, month){
+  // 避免重複抓同一個月
+  if (loadedYear === year && loadedMonth === month) {
+    // 仍要重畫摘要（例如剛 render 或切回來）
+    renderAllSummaries();
+    applySelectedStyle();
+    return;
+  }
+
+  const data = await fetchMonth(year, month);
+  groupedData = groupByDate(data);
+  loadedYear = year;
+  loadedMonth = month;
+
+  // 如果選取日期不在這個月，就清掉避免殘留
+  if (selectedDateStr) {
+    const [sy, sm] = selectedDateStr.split('-').map(Number);
+    if (sy !== year || sm !== month) selectedDateStr = null;
+  }
+
+  renderAllSummaries();
+  applySelectedStyle();
+}
+
+function syncInputsToView(){
+  const { y, m } = getViewYearMonth();
+  yearInput.value = y;
+  monthInput.value = m;
 }
 
 // UI init
@@ -780,23 +760,81 @@ const monthInput = document.getElementById('month');
 yearInput.value = 2026;
 monthInput.value = 1;
 
-document.getElementById('btnReload').onclick = async () => {
-try {
-await loadAndRender(Number(yearInput.value), Number(monthInput.value));
-} catch (err) {
-alert('載入失敗：' + err.message);
-console.error(err);
+async function initCalendar(){
+  const el = document.getElementById('calendar');
+  const initY = Number(yearInput.value);
+  const initM = Number(monthInput.value);
+
+  calendar = new FullCalendar.Calendar(el, {
+    initialView: 'dayGridMonth',
+    initialDate: `${initY}-${String(initM).padStart(2,'0')}-01`,
+    height: 'auto',
+    locale: 'zh-tw',
+
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth'
+    },
+
+    // ✅ 強制 day number 只顯示數字（去掉「日」）
+    dayCellContent: function(arg){
+      const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
+      return { html: `<span class="fc-daygrid-day-number">${n}</span>` };
+    },
+
+    events: [],
+
+    // ✅ 每次切月/切回 today 都會觸發 → 自動載入那個月
+    datesSet: function(){
+      // 同步上方 year/month
+      syncInputsToView();
+
+      // debounce（避免某些瀏覽器連觸發）
+      clearTimeout(monthFetchTimer);
+      monthFetchTimer = setTimeout(async () => {
+        try{
+          const { y, m } = getViewYearMonth();
+          await ensureMonthLoaded(y, m);
+        }catch(err){
+          console.error(err);
+          alert('載入失敗：' + err.message);
+        }
+      }, 0);
+    },
+
+    dateClick: function(info){
+      selectedDateStr = info.dateStr;
+      applySelectedStyle();
+
+      const dayObj = groupedData.get(info.dateStr);
+      if (dayObj) openDrawer(info.dateStr, dayObj);
+    }
+  });
+
+  calendar.render();
+
+  // ✅ 初次載入當月
+  await ensureMonthLoaded(initY, initM);
 }
+
+document.getElementById('btnReload').onclick = async () => {
+  try {
+    const y = Number(yearInput.value);
+    const m = Number(monthInput.value);
+    calendar.gotoDate(`${y}-${String(m).padStart(2,'0')}-01`);
+    // gotoDate 會觸發 datesSet → 自動 ensureMonthLoaded
+  } catch (err) {
+    alert('載入失敗：' + err.message);
+    console.error(err);
+  }
 };
 
-(async () => {
-try {
-await loadAndRender(Number(yearInput.value), Number(monthInput.value));
-} catch (err) {
-alert('載入失敗：' + err.message + '\n\n請確認 /api/avail 是否可回傳 JSON');
-console.error(err);
-}
-})();
+// start
+initCalendar().catch(err => {
+  alert('載入失敗：' + err.message + '\n\n請確認 /api/avail 是否可回傳 JSON');
+  console.error(err);
+});
 </script>
 </body>
 </html>
