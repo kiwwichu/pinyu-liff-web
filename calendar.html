@@ -1,886 +1,802 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>可預約時間表</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>可預約時間表</title>
 
-  <!-- FullCalendar (CDN) -->
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<!-- FullCalendar (CDN) -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
-  <style>
-    /* ✅ 避免開 drawer 造成 scrollbar 消失→頁面寬度變動→FullCalendar 重畫 */
-    html{ overflow-y: scroll; }
+<style>
+/* 螢光筆 highlight（品牌藍淡底 + 圓角） */
+.hl{
+display: inline;
+padding: 0 .22em;
+border-radius: .45em;
+background: linear-gradient(transparent 55%, rgba(72,162,232,.22) 55%);
+box-decoration-break: clone;
+-webkit-box-decoration-break: clone;
+}
+:root{
+--bg:#f6f8fb;
+--card:#ffffff;
+--border:#e8edf6;
+--text:#24324a;
+--muted:#6b7a90;
 
-    /* 螢光筆 highlight（品牌藍淡底 + 圓角） */
-    .hl{
-      display: inline;
-      padding: 0 .22em;
-      border-radius: .45em;
-      background: linear-gradient(transparent 55%, rgba(72,162,232,.22) 55%);
-      box-decoration-break: clone;
-      -webkit-box-decoration-break: clone;
-    }
-    :root{
-      --bg:#f6f8fb;
-      --card:#ffffff;
-      --border:#e8edf6;
-      --text:#24324a;
-      --muted:#6b7a90;
+/* 品牌主色（藍） */
+--brand:#48a2e8;
+--brandBg:#eef8ff;
 
-      /* 品牌主色（藍） */
-      --brand:#48a2e8;
-      --brandBg:#eef8ff;
+/* 狀態色：開放=綠、少量=黃、額滿=紅 */
+--open:#20a56b;
+--openBg:#eafaf2;
 
-      /* 狀態色：開放=綠、少量=黃、額滿=紅 */
-      --open:#20a56b;
-      --openBg:#eafaf2;
+--yellow:#b78100;
+--yellowBg:#fff7e5;
 
-      --yellow:#b78100;
-      --yellowBg:#fff7e5;
+--red:#c43c3c;
+--redBg:#ffecec;
 
-      --red:#c43c3c;
-      --redBg:#ffecec;
+--shadow: 0 10px 30px rgba(15, 23, 42, .06);
+--radius: 16px;
+}
 
-      --shadow: 0 10px 30px rgba(15, 23, 42, .06);
-      --radius: 16px;
-    }
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+margin:0;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+background:var(--bg);
+color:var(--text);
+letter-spacing:.2px;
+-webkit-text-size-adjust: 100%;
+overscroll-behavior: none;
+}
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      letter-spacing:.2px;
-      -webkit-text-size-adjust: 100%;
-      overscroll-behavior: none;
-    }
+.wrap{
+max-width: 1120px;
+margin: 0 auto;
+padding: 16px;
+display:grid;
+grid-template-columns: 1fr;
+gap: 12px;
+}
 
-    .wrap{
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 16px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
+/* ===== top card ===== */
+.card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius: var(--radius);
+box-shadow: var(--shadow);
+padding: 14px;
+}
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap: 12px;
+flex-wrap: wrap;
+}
+.title{
+font-size: 15px;
+font-weight: 700;
+margin: 0;
+}
+.sub{
+margin-top:6px;
+font-size: 12px;
+color: var(--muted);
+line-height: 1.45;
+}
+.controls{
+display:flex;
+gap:8px;
+align-items:center;
+flex-wrap: wrap;
+}
+.input{
+border:1px solid var(--border);
+background:#fff;
+border-radius: 12px;
+padding: 10px 12px;
+font-size: 13px;
+color: var(--text);
+outline: none;
+-webkit-appearance:none;
+appearance:none;
+}
+.btn{
+border:1px solid var(--border);
+background:#fff;
+border-radius: 12px;
+padding: 10px 12px;
+font-size: 13px;
+color: var(--text);
+cursor:pointer;
+-webkit-tap-highlight-color: transparent;
+font-weight: 700;
+}
+.btn:hover{ background:#fafcff; }
 
-    /* ===== top card ===== */
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 14px;
-    }
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .title{
-      font-size: 15px;
-      font-weight: 700;
-      margin: 0;
-    }
-    .sub{
-      margin-top:6px;
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-    .controls{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap: wrap;
-    }
-    .input{
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 13px;
-      color: var(--text);
-      outline: none;
-      -webkit-appearance:none;
-      appearance:none;
-    }
-    .btn{
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 13px;
-      color: var(--text);
-      cursor:pointer;
-      -webkit-tap-highlight-color: transparent;
-      font-weight: 700;
-    }
-    .btn:hover{ background:#fafcff; }
+.legend{
+margin-top: 10px;
+display:flex;
+gap: 8px;
+flex-wrap: wrap;
+font-size: 12px;
+color: var(--muted);
+align-items:center;
+}
+.legendMark{
+width: 18px;
+height: 18px;
+border-radius: 999px;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+font-weight: 900;
+font-size: 12px;
+border: 1px solid transparent;
+margin-right: 2px;
+}
+.legendMark.open{
+background: var(--openBg);
+color: var(--open);
+border-color: rgba(32,165,107,.22);
+}
+.legendMark.tight{
+background: var(--yellowBg);
+color: var(--yellow);
+border-color: rgba(183,129,0,.18);
+}
+.legendMark.full{
+background: var(--redBg);
+color: var(--red);
+border-color: rgba(196,60,60,.18);
+}
 
-    .legend{
-      margin-top: 10px;
-      display:flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      font-size: 12px;
-      color: var(--muted);
-      align-items:center;
-    }
-    .legendMark{
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      font-weight: 900;
-      font-size: 12px;
-      border: 1px solid transparent;
-      margin-right: 2px;
-    }
-    .legendMark.open{
-      background: var(--openBg);
-      color: var(--open);
-      border-color: rgba(32,165,107,.22);
-    }
-    .legendMark.tight{
-      background: var(--yellowBg);
-      color: var(--yellow);
-      border-color: rgba(183,129,0,.18);
-    }
-    .legendMark.full{
-      background: var(--redBg);
-      color: var(--red);
-      border-color: rgba(196,60,60,.18);
-    }
+.dot{
+width:10px;height:10px;border-radius:99px; display:inline-block;
+border:1px solid var(--border);
+}
+.dot.blue{ background: var(--openBg); border-color: rgba(32,165,107,.35); }
+.dot.yellow{ background:var(--yellowBg); border-color:#ffe2a3; }
+.dot.red{ background:var(--redBg); border-color:#ffd0d0; }
 
-    /* ===== calendar container ===== */
-    #calendar{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 10px;
-      overflow:hidden;
-    }
+/* ===== calendar container ===== */
+#calendar{
+background:#fff;
+border:1px solid var(--border);
+border-radius: var(--radius);
+box-shadow: var(--shadow);
+padding: 10px;
+overflow:hidden;
+}
 
-    /* FullCalendar typography soften */
-    .fc .fc-button:focus,
-    .fc .fc-button-primary:focus{
-      box-shadow: 0 0 0 3px rgba(72,162,232,.18) !important;
-    }
+/* FullCalendar typography soften */
+.fc .fc-button:focus,
+.fc .fc-button-primary:focus{
+box-shadow: 0 0 0 3px rgba(72,162,232,.18) !important;
+}
 
-    /* 按鈕像 App chip */
-    .fc .fc-button{
-      border-radius: 12px !important;
-      border: 1px solid var(--border) !important;
-      background: #fff !important;
-      color: var(--text) !important;
-      padding: 8px 10px !important;
-      font-weight: 800 !important;
-    }
-    .fc .fc-button:hover{
-      border-color: rgba(72,162,232,.35) !important;
-      background: var(--brandBg) !important;
-    }
+/* 按鈕像 App chip */
+.fc .fc-button{
+border-radius: 12px !important;
+border: 1px solid var(--border) !important;
+background: #fff !important;
+color: var(--text) !important;
+padding: 8px 10px !important;
+font-weight: 800 !important;
+}
+.fc .fc-button:hover{
+border-color: rgba(72,162,232,.35) !important;
+background: var(--brandBg) !important;
+}
 
-    /* Today 改品牌色 */
-    .fc .fc-today-button{
-      background: var(--brand) !important;
-      border-color: rgba(72,162,232,.35) !important;
-      color: #fff !important;
-    }
-    .fc .fc-today-button:disabled{ opacity:.55 !important; }
+/* Today 改品牌色 */
+.fc .fc-today-button{
+background: var(--brand) !important;
+border-color: rgba(72,162,232,.35) !important;
+color: #fff !important;
+}
+.fc .fc-today-button:disabled{ opacity:.55 !important; }
 
-    .fc .fc-toolbar-title{
-      color: var(--text);
-      font-size: 16px !important;
-      font-weight: 900 !important;
-    }
+.fc .fc-toolbar-title{
+color: var(--text);
+font-size: 16px !important;
+font-weight: 900 !important;
+}
 
-    /* 不顯示事件塊 */
-    .fc .fc-daygrid-event{ display:none !important; }
+/* 不顯示事件塊 */
+.fc .fc-daygrid-event{ display:none !important; }
 
-    /* 點選日期：只亮那一格 */
-    .fc .fc-daygrid-day.is-selected{
-      background: var(--brandBg);
-    }
-    .fc .fc-daygrid-day.is-selected .fc-daygrid-day-frame{
-      outline: 2px solid rgba(72,162,232,.45);
-      outline-offset: -2px;
-      border-radius: 14px;
-    }
+/* 點選日期：只亮那一格 */
+.fc .fc-daygrid-day.is-selected{
+background: var(--brandBg);
+}
+.fc .fc-daygrid-day.is-selected .fc-daygrid-day-frame{
+outline: 2px solid rgba(72,162,232,.45);
+outline-offset: -2px;
+border-radius: 14px;
+}
 
-    /* 讓每格寬度更平均 */
-    .fc .fc-daygrid-body,
-    .fc .fc-scrollgrid,
-    .fc .fc-scrollgrid-section-body table{
-      table-layout: fixed !important;
-    }
+/* ===============================
+      ✅ App 月曆：格子更矮(視覺更寬) + 日期數字置中變小 + 三排符號條
+      =============================== */
 
-    /* 格子整體變矮 */
-    .fc .fc-daygrid-day-frame{
-      min-height: 64px;
-      padding: 4px 4px 2px !important;
-    }
+/* 讓每格寬度更平均（視覺更像 App） */
+.fc .fc-daygrid-body,
+.fc .fc-scrollgrid,
+.fc .fc-scrollgrid-section-body table{
+table-layout: fixed !important;
+}
 
-    /* 日期數字：置中/變小 */
-    .fc .fc-daygrid-day-top{
-      justify-content: center !important;
-    }
-    .fc .fc-daygrid-day-number{
-      float: none !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
+/* 格子整體變矮 → 視覺就會變寬、不擠 */
+.fc .fc-daygrid-day-frame{
+min-height: 64px;
+padding: 4px 4px 2px !important;
+}
 
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      margin: 2px auto 0 !important;
-      padding: 0 !important;
+/* ===== 日期數字：置中/變小（實際去掉「日」用 dayCellContent 處理） ===== */
+.fc .fc-daygrid-day-top{
+justify-content: center !important;
+}
+.fc .fc-daygrid-day-number{
+float: none !important;
+display: inline-flex !important;
+align-items: center !important;
+justify-content: center !important;
 
-      font-size: 12px !important;
-      font-weight: 900 !important;
-      color: var(--muted) !important;
+width: 22px;
+height: 22px;
+border-radius: 999px;
+margin: 2px auto 0 !important;
+padding: 0 !important;
 
-      letter-spacing: 0 !important;
-      font-variant-numeric: tabular-nums;
-    }
+font-size: 12px !important;
+font-weight: 900 !important;
+color: var(--muted) !important;
 
-    /* 今天日期：淡藍圓點 */
-    .fc .fc-day-today .fc-daygrid-day-number{
-      background: var(--brandBg) !important;
-      color: var(--text) !important;
-      border: 1px solid rgba(72,162,232,.35) !important;
-    }
+letter-spacing: 0 !important;
+font-variant-numeric: tabular-nums;
+}
 
-    /* 三排容器 */
-    .appSlots{
-      margin: 4px 4px 2px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+/* 今天日期：淡藍圓點 */
+.fc .fc-day-today .fc-daygrid-day-number{
+background: var(--brandBg) !important;
+color: var(--text) !important;
+border: 1px solid rgba(72,162,232,.35) !important;
+}
 
-    /* 單列符號 */
-    .appSlot{
-      height: 12px;
-      border-radius: 6px;
-      font-size: 11px;
-      line-height: 12px;
-      font-weight: 900;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      letter-spacing: .5px;
-      border: 1px solid transparent;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-      cursor: pointer;
-    }
+/* 三排容器 */
+.appSlots{
+margin: 4px 4px 2px;
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
 
-    .appSlot.open{
-      background: var(--openBg);
-      color: var(--open);
-      border-color: rgba(32,165,107,.22);
-    }
-    .appSlot.tight{
-      background: var(--yellowBg);
-      color: var(--yellow);
-      border-color: rgba(183,129,0,.18);
-    }
-    .appSlot.full{
-      background: var(--redBg);
-      color: var(--red);
-      border-color: rgba(196,60,60,.18);
-    }
+/* 單列符號：置中 */
+.appSlot{
+height: 12px;
+border-radius: 6px;
+font-size: 11px;
+line-height: 12px;
+font-weight: 900;
+display:flex;
+align-items:center;
+justify-content:center;
+letter-spacing: .5px;
+border: 1px solid transparent;
+user-select:none;
+-webkit-tap-highlight-color: transparent;
+}
 
-    /* 避免舊版元素混入 */
-    .daySummary, .mBars{ display:none !important; }
+/* 開放（綠） */
+.appSlot.open{
+background: var(--openBg);
+color: var(--open);
+border-color: rgba(32,165,107,.22);
+}
 
-    /* ===== drawer ===== */
-    .mask{
-      position:fixed; inset:0;
-      background:rgba(16,24,40,.28);
-      backdrop-filter: blur(2px);
-      display:none;
-      justify-content:flex-end;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      z-index: 9999;
-    }
-    .drawer{
-      width:min(420px, 92vw);
-      height:100%;
-      background:#fff;
-      border-left:1px solid var(--border);
-      box-shadow: -12px 0 28px rgba(0,0,0,.10);
-      padding:16px;
-      overflow:auto;
-      animation: slideIn .18s ease-out;
-      -webkit-overflow-scrolling: touch;
-    }
-    @keyframes slideIn { from { transform: translateX(10px); opacity:.7 } to { transform:none; opacity:1 } }
+/* 少量（黃） */
+.appSlot.tight{
+background: var(--yellowBg);
+color: var(--yellow);
+border-color: rgba(183,129,0,.18);
+}
 
-    .drawerHead{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .drawerTitle{
-      font-size: 14px;
-      font-weight: 900;
-      margin:0;
-    }
-    .drawerSub{
-      margin-top:6px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
-    }
-    .iconBtn{
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius: 12px;
-      padding: 8px 10px;
-      cursor:pointer;
-      font-size: 12px;
-      color: var(--text);
-      -webkit-tap-highlight-color: transparent;
-      font-weight: 800;
-    }
-    .iconBtn:hover{ background:#fafcff; }
+/* 額滿/不開放（紅） */
+.appSlot.full{
+background: var(--redBg);
+color: var(--red);
+border-color: rgba(196,60,60,.18);
+}
 
-    .list{
-      margin-top: 12px;
-      display:grid;
-      gap: 10px;
-    }
-    .rowCard{
-      border:1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px;
-      background:#fff;
-      display:flex;
-      justify-content:space-between;
-      gap: 12px;
-      align-items:flex-start;
-    }
-    .rowLeft{
-      display:grid;
-      gap: 6px;
-      font-size: 13px;
-      min-width: 0;
-    }
-    .rowTop{
-      display:flex;
-      gap: 8px;
-      align-items:center;
-      color: var(--text);
-      font-weight: 900;
-      flex-wrap: wrap;
-    }
-    .rowMeta{
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-    .badge{
-      font-size: 11px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border:1px solid var(--border);
-      white-space:nowrap;
-      align-self:flex-start;
-      font-weight: 900;
-    }
-    .badge.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
-    .badge.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
-    .badge.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
+/* 避免你之前版本的元素混進來 */
+.daySummary, .mBars{ display:none !important; }
 
-    /* ===== Mobile ===== */
-    @media (max-width: 520px){
-      .wrap{ padding: 12px; }
-      .card{ padding: 12px; }
-      .controls{ width: 100%; }
-      .input{ flex: 1; min-width: 0; }
-      .btn{ width: 100%; }
+/* ===== drawer ===== */
+.mask{
+position:fixed; inset:0;
+background:rgba(16,24,40,.28);
+backdrop-filter: blur(2px);
+display:none;
+justify-content:flex-end;
+padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+z-index: 9999;
+}
+.drawer{
+width:min(420px, 92vw);
+height:100%;
+background:#fff;
+border-left:1px solid var(--border);
+box-shadow: -12px 0 28px rgba(0,0,0,.10);
+padding:16px;
+overflow:auto;
+animation: slideIn .18s ease-out;
+-webkit-overflow-scrolling: touch;
+}
+@keyframes slideIn { from { transform: translateX(10px); opacity:.7 } to { transform:none; opacity:1 } }
 
-      .fc .fc-header-toolbar{
-        display: grid !important;
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-        align-items: center !important;
-      }
-      .fc .fc-toolbar-chunk:nth-child(2){
-        justify-self: center !important;
-      }
-      .fc .fc-toolbar-chunk:nth-child(1),
-      .fc .fc-toolbar-chunk:nth-child(3){
-        display: flex !important;
-        justify-content: space-between !important;
-        gap: 8px !important;
-        width: 100% !important;
-      }
+.drawerHead{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:10px;
+margin-bottom:10px;
+}
+.drawerTitle{
+font-size: 14px;
+font-weight: 900;
+margin:0;
+}
+.drawerSub{
+margin-top:6px;
+color: var(--muted);
+font-size: 12px;
+line-height: 1.45;
+}
+.iconBtn{
+border:1px solid var(--border);
+background:#fff;
+border-radius: 12px;
+padding: 8px 10px;
+cursor:pointer;
+font-size: 12px;
+color: var(--text);
+-webkit-tap-highlight-color: transparent;
+font-weight: 800;
+}
+.iconBtn:hover{ background:#fafcff; }
 
-      .fc .fc-col-header-cell-cushion{
-        font-size: 12px !important;
-        color: var(--muted) !important;
-        font-weight: 800 !important;
-      }
+.list{
+margin-top: 12px;
+display:grid;
+gap: 10px;
+}
+.rowCard{
+border:1px solid var(--border);
+border-radius: 14px;
+padding: 12px;
+background:#fff;
+display:flex;
+justify-content:space-between;
+gap: 12px;
+align-items:flex-start;
+}
+.rowLeft{
+display:grid;
+gap: 6px;
+font-size: 13px;
+min-width: 0;
+}
+.rowTop{
+display:flex;
+gap: 8px;
+align-items:center;
+color: var(--text);
+font-weight: 900;
+flex-wrap: wrap;
+}
+.rowMeta{
+color: var(--muted);
+font-size: 12px;
+line-height: 1.4;
+word-break: break-word;
+}
+.badge{
+font-size: 11px;
+padding: 6px 10px;
+border-radius: 999px;
+border:1px solid var(--border);
+white-space:nowrap;
+align-self:flex-start;
+font-weight: 900;
+}
+.badge.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
+.badge.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
+.badge.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
 
-      .mask{ justify-content:flex-end; align-items:flex-end; }
-      .drawer{
-        width: 100%;
-        height: min(78dvh, 78vh);
-        height: min(78dvh, -webkit-fill-available);
-        border-left: none;
-        border-top: 1px solid var(--border);
-        border-radius: 18px 18px 0 0;
-        animation: slideUp .18s ease-out;
-        padding-bottom: calc(16px + env(safe-area-inset-bottom));
-      }
-      @keyframes slideUp { from { transform: translateY(14px); opacity:.7 } to { transform:none; opacity:1 } }
+/* ===== ✅ Mobile / LINE in-app browser optimize ===== */
+@media (max-width: 520px){
+.wrap{ padding: 12px; }
+.card{ padding: 12px; }
+.controls{ width: 100%; }
+.input{ flex: 1; min-width: 0; }
+.btn{ width: 100%; }
 
-      .fc .fc-daygrid-day-frame{ min-height: 58px; }
-      .appSlot{ height: 11px; line-height: 11px; font-size: 10px; }
-    }
+/* 工具列改兩行：第一行 title，第二行 buttons（不擠） */
+.fc .fc-header-toolbar{
+display: grid !important;
+grid-template-columns: 1fr !important;
+gap: 10px !important;
+align-items: center !important;
+}
+.fc .fc-toolbar-chunk:nth-child(2){
+justify-self: center !important;
+}
+.fc .fc-toolbar-chunk:nth-child(1),
+.fc .fc-toolbar-chunk:nth-child(3){
+display: flex !important;
+justify-content: space-between !important;
+gap: 8px !important;
+width: 100% !important;
+}
 
-    /* ===== 春節期間標記（2/16–2/22） ===== */
-    .fc .fc-daygrid-day.is-cny{
-      background: rgba(196,60,60,.06);
-    }
-    .fc .fc-daygrid-day.is-cny .fc-daygrid-day-frame{
-      outline: 2px solid rgba(196,60,60,.35);
-      outline-offset: -2px;
-      border-radius: 14px;
-    }
+/* 週標題 */
+.fc .fc-col-header-cell-cushion{
+font-size: 12px !important;
+color: var(--muted) !important;
+font-weight: 800 !important;
+}
 
-    /* 春節角標（右上角） */
-    .cnyBadge{
-      position:absolute;
-      top: 2px;
-      right: 4px;
-      font-size: 14px;
-      line-height: 1;
-      transform: rotate(8deg);
-      filter: drop-shadow(0 1px 0 rgba(0,0,0,.06));
-      pointer-events:none;
-      z-index: 2;
-    }
+/* drawer 變底部 sheet */
+.mask{ justify-content:flex-end; align-items:flex-end; }
+.drawer{
+width: 100%;
+height: min(78dvh, 78vh);
+height: min(78dvh, -webkit-fill-available);
+border-left: none;
+border-top: 1px solid var(--border);
+border-radius: 18px 18px 0 0;
+animation: slideUp .18s ease-out;
+padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+@keyframes slideUp { from { transform: translateY(14px); opacity:.7 } to { transform:none; opacity:1 } }
 
-    /* 今天/選取同時又是春節：選取框優先 */
-    .fc .fc-daygrid-day.is-selected.is-cny .fc-daygrid-day-frame{
-      outline: 2px solid rgba(72,162,232,.45);
-    }
-  </style>
+.fc .fc-daygrid-day-frame{ min-height: 58px; }
+.appSlot{ height: 11px; line-height: 11px; font-size: 10px; }
+}
+</style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="topbar">
-        <div>
-          <div class="title">可預約時間表（分鐘制）</div>
-          <div class="sub">點日期可查看「早上 / 下午 / 晚上」詳細資訊。</div>
-        </div>
+<div class="wrap">
+<div class="card">
+<div class="topbar">
+<div>
+<div class="title">可預約時間表（分鐘制）</div>
+<div class="sub">點日期可查看「早上 / 下午 / 晚上」詳細資訊。</div>
+</div>
 
-        <div class="controls">
-          <input id="year" class="input" style="width:96px" inputmode="numeric" placeholder="Year" />
-          <input id="month" class="input" style="width:70px" inputmode="numeric" placeholder="Month" />
-          <button class="btn" id="btnReload" type="button">重新載入</button>
-        </div>
-      </div>
+<div class="controls">
+<input id="year" class="input" style="width:96px" inputmode="numeric" placeholder="Year" />
+<input id="month" class="input" style="width:70px" inputmode="numeric" placeholder="Month" />
+<button class="btn" id="btnReload" type="button">重新載入</button>
+</div>
+</div>
 
-      <div class="legend">
-        <span class="legendMark open">✓</span><span>開放</span>
-        <span class="legendMark tight">△</span><span>少量（分鐘偏緊）</span>
-        <span class="legendMark full">✕</span><span>額滿 / 不開放</span>
-      </div>
-    </div>
+<div class="legend">
+<span class="legendMark open">✓</span><span>開放</span>
+<span class="legendMark tight">△</span><span>少量（分鐘偏緊）</span>
+<span class="legendMark full">✕</span><span>額滿 / 不開放</span>
+</div>
 
-    <div id="calendar"></div>
-  </div>
+</div>
 
-  <!-- Drawer -->
-  <div class="mask" id="mask">
-    <div class="drawer" role="dialog" aria-modal="true">
-      <div class="drawerHead">
-        <div>
-          <div class="drawerTitle" id="dTitle">日期詳情</div>
-          <div class="drawerSub" id="dSub">—</div>
-        </div>
-        <button class="iconBtn" id="closeX" type="button">關閉</button>
-      </div>
+<div id="calendar"></div>
+</div>
 
-      <div class="list" id="detailList"></div>
+<!-- Drawer -->
+<div class="mask" id="mask">
+<div class="drawer" role="dialog" aria-modal="true">
+<div class="drawerHead">
+<div>
+<div class="drawerTitle" id="dTitle">日期詳情</div>
+<div class="drawerSub" id="dSub">—</div>
+</div>
+<button class="iconBtn" id="closeX" type="button">關閉</button>
+</div>
 
-      <div class="drawerSub" style="margin-top:12px;">
-        ＊為確保每位毛孩都能獲得穩定且妥善的照顧<br>
-        預約安排將以「早／中／晚」三個時段區段為主。<br>
-        <span class="hl">行程原則上會盡量避開上下班尖峰時段安排。</span><br><br>
+<div class="list" id="detailList"></div>
 
-        <span class="hl">若有指定到府時間的需求，<br>
-        請於服務日前半個月至一個月提前預約唷～</span><br>
-        <span class="hl">若需指定於尖峰時段（17:00–19:00）到府<br>
-        將酌收 NT$200／次 之時段補貼。</span><br><br>
+<div class="drawerSub" style="margin-top:12px;">
+＊為確保每位毛孩都能獲得穩定且妥善的照顧<br>
+預約安排將以「早／中／晚」三個時段區段為主。<br>
+<span class="hl">行程原則上會盡量避開上下班尖峰時段安排。</span><br><br>
 
-        ＊實際服務時間仍以 Pinyu 最終確認為準。<br><br>
-
+<span class="hl"> 若有指定到府時間的需求，<br>
+請於服務日前半個月至一個月提前預約唷～ </span><br>
+<span class="hl"> 若需指定於尖峰時段（17:00–19:00）到府<br>
+將酌收 NT$200／次 之時段補貼。 </span><br><br>
+          
+          ＊本網頁目前仍為測試階段，
+                 
+          ＊實際服務時間仍以 Pinyu 最終確認為準。<br><br>
+        
         ＊本網頁目前仍為測試階段，
-        若有任何疑問或發現錯誤，
-        歡迎隨時告訴 Pinyu，謝謝您的體諒與配合 🤍<br><br>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // ====== Vercel API ======
-    const API_URL = "/api/avail";
-
-    // ✅ 春節期間（含起訖）
-    const CNY_START = '2026-02-16';
-    const CNY_END   = '2026-02-22';
-
-    function isBetweenInclusive(dateStr, startStr, endStr){
-      return dateStr >= startStr && dateStr <= endStr;
-    }
-
-    // 避免 toISOString 造成時區偏一天：用本地年月日組字串
-    function toLocalDateStr(d){
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,'0');
-      const day = String(d.getDate()).padStart(2,'0');
-      return `${y}-${m}-${day}`;
-    }
-
-    // ✅ 只有 3 段（無深夜）
-    const slotLabel = {
-      MORNING: "早上",
-      AFTERNOON: "下午",
-      EVENING: "晚上"
-    };
-    const SLOT_ORDER = ["MORNING","AFTERNOON","EVENING"];
-
-    const LOW_MIN_THRESHOLD = 60; // 少量門檻：<=60 分鐘 → 黃
-
-    function classify(status, mins){
-      status = String(status || '').trim();
-      mins = Number(mins || 0);
-
-      if (status === '額滿') return 'full';
-      if (status === '少量') return 'tight';
-      if (status === '開放') return 'open';
-
-      // fallback：如果後端沒給狀態，才用分鐘推
-      if (mins <= 0) return 'full';
-      if (mins <= LOW_MIN_THRESHOLD) return 'tight';
-      return 'open';
-    }
-
-    async function fetchMonth(year, month) {
-      const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`API error ${res.status}`);
-      return await res.json();
-    }
-
-    // 資料整理：date -> {slot->item}
-    function groupByDate(data){
-      const map = new Map();
-      for (const it of (Array.isArray(data) ? data : [])) {
-        const date = it.date;
-        if (!map.has(date)) map.set(date, {});
-        map.get(date)[it.slot] = it;
-      }
-      return map;
-    }
-
-    function markIcon(cls){
-      if (cls === 'open') return '✓';
-      if (cls === 'tight') return '△';
-      return '✕';
-    }
-
-    // ===== drawer open/close + 防 FullCalendar 因 overlay 重畫把符號洗掉 =====
-    let isModalOpen = false;
-    const mask = document.getElementById('mask');
-    const closeX = document.getElementById('closeX');
-
-    function afterOverlayChangeRerender(){
-      requestAnimationFrame(() => {
-        renderAllSummaries();
-        applySelectedStyle();
-      });
-    }
-
-    function closeDrawer(){
-      isModalOpen = false;
-      mask.style.display = 'none';
-      afterOverlayChangeRerender();
-    }
-
-    closeX.onclick = closeDrawer;
-    mask.onclick = (e) => { if (e.target === mask) closeDrawer(); };
-
-    // ✅ 永遠可開 drawer（就算當天沒資料，也顯示預設額滿）
-    function openDrawer(dateStr, dayObj){
-      const title = document.getElementById('dTitle');
-      const sub = document.getElementById('dSub');
-      const list = document.getElementById('detailList');
-
-      title.textContent = dateStr;
+若有任何疑問或發現錯誤，
+歡迎隨時告訴 Pinyu，謝謝您的體諒與配合 🤍<br><br>
+          
+          ＊實際服務時間仍以 Pinyu 最終確認為準。
+                    ＊實際服務時間仍以 Pinyu 最終確認為準。
+    
+
+</div>
+</div>
+</div>
+
+<script>
+// ====== Vercel API ======
+const API_URL = "/api/avail";
+
+// ✅ 只有 3 段（無深夜）
+const slotLabel = {
+MORNING: "早上",
+AFTERNOON: "下午",
+EVENING: "晚上"
+};
+const SLOT_ORDER = ["MORNING","AFTERNOON","EVENING"];
+
+const LOW_MIN_THRESHOLD = 60; // 少量門檻：<=60 分鐘 → 黃
+
+// drawer close
+const mask = document.getElementById('mask');
+const closeX = document.getElementById('closeX');
+closeX.onclick = () => mask.style.display = 'none';
+mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
+
+function classify(status, mins){
+status = String(status || '').trim();
+mins = Number(mins || 0);
+
+if (status === '額滿') return 'full';
+if (status === '少量') return 'tight';
+if (status === '開放') return 'open';
+
+// fallback：如果後端沒給狀態，才用分鐘推
+if (mins <= 0) return 'full';
+if (mins <= LOW_MIN_THRESHOLD) return 'tight';
+return 'open';
+}
+
+async function fetchMonth(year, month) {
+const url = `${API_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+const res = await fetch(url, { cache: 'no-store' });
+if (!res.ok) throw new Error(`API error ${res.status}`);
+return await res.json();
+}
+
+// 資料整理：date -> {slot->item}
+function groupByDate(data){
+const map = new Map();
+for (const it of (Array.isArray(data) ? data : [])) {
+const date = it.date;
+if (!map.has(date)) map.set(date, {});
+map.get(date)[it.slot] = it;
+}
+return map;
+}
+
+function markIcon(cls){
+if (cls === 'open') return '✓';
+if (cls === 'tight') return '△';
+return '✕';
+}
+
+function openDrawer(dateStr, dayObj){
+const title = document.getElementById('dTitle');
+const sub = document.getElementById('dSub');
+const list = document.getElementById('detailList');
+
+title.textContent = dateStr;
+sub.textContent = '早上 / 下午 / 晚上';
+list.innerHTML = '';
+
+for (const s of SLOT_ORDER){
+const it = (dayObj && dayObj[s]) ? dayObj[s] : null;
+
+const start = it ? it.start : '—';
+const end = it ? it.end : '—';
+const mins = it ? Number(it.availableMinutes || 0) : 0;
+const status = it ? String(it.status || '').trim() : '額滿';
+
+const cls = classify(status, mins);
+
+// ✅ 相容新舊欄位
+const blocked = it ? String(it.blocked ?? it.occupied ?? '') : '';
+const remaining = it ? String(it.remaining ?? it.note ?? '') : '';
+const blockedText = blocked ? blocked : '';
+const remainingText = remaining ? remaining : '';
+
+const row = document.createElement('div');
+row.className = 'rowCard';
+
+const left = document.createElement('div');
+left.className = 'rowLeft';
+
+const top = document.createElement('div');
+top.className = 'rowTop';
+top.textContent = `${slotLabel[s]}  ·  ${start}–${end}`;
 
-      const isCny = isBetweenInclusive(dateStr, CNY_START, CNY_END);
-      sub.textContent = isCny
-        ? '早上 / 下午 / 晚上｜春節期間（特別價格）'
-        : '早上 / 下午 / 晚上';
+const meta = document.createElement('div');
+meta.className = 'rowMeta';
 
-      list.innerHTML = '';
+const metaLines = [];
+if (remainingText) metaLines.push(`剩餘：${remainingText}`);
+if (blockedText && blockedText !== '—') metaLines.push(`不可預約：${blockedText}`);
+meta.textContent = metaLines.join('｜');
 
-      for (const s of SLOT_ORDER){
-        const it = (dayObj && dayObj[s]) ? dayObj[s] : null;
 
-        const start = it ? it.start : '—';
-        const end = it ? it.end : '—';
-        const mins = it ? Number(it.availableMinutes || 0) : 0;
-        const status = it ? String(it.status || '').trim() : '額滿';
+left.appendChild(top);
+left.appendChild(meta);
 
-        const cls = classify(status, mins);
+const badge = document.createElement('div');
+badge.className = `badge ${cls}`;
+badge.textContent = (cls === 'open') ? '開放' : (cls === 'tight' ? '少量' : '額滿');
 
-        // ✅ 相容新舊欄位
-        const blocked = it ? String(it.blocked ?? it.occupied ?? '') : '';
-        const remaining = it ? String(it.remaining ?? it.note ?? '') : '';
-        const blockedText = blocked ? blocked : '';
-        const remainingText = remaining ? remaining : '';
+row.appendChild(left);
+row.appendChild(badge);
+list.appendChild(row);
+}
 
-        const row = document.createElement('div');
-        row.className = 'rowCard';
+mask.style.display = 'flex';
+}
 
-        const left = document.createElement('div');
-        left.className = 'rowLeft';
+// ===== 月曆格內三排符號：與 drawer 同一套 classify，保證一致 =====
+function renderDayCellSummary(dateStr, cell, grouped){
+const dayObj = grouped.get(dateStr);
+if (!dayObj) return;
 
-        const top = document.createElement('div');
-        top.className = 'rowTop';
-        top.textContent = `${slotLabel[s]}  ·  ${start}–${end}`;
-
-        const meta = document.createElement('div');
-        meta.className = 'rowMeta';
-
-        const metaLines = [];
-        if (remainingText) metaLines.push(`剩餘：${remainingText}`);
-        if (blockedText && blockedText !== '—') metaLines.push(`不可預約：${blockedText}`);
-        meta.textContent = metaLines.join('｜');
-
-        left.appendChild(top);
-        left.appendChild(meta);
-
-        const badge = document.createElement('div');
-        badge.className = `badge ${cls}`;
-        badge.textContent = (cls === 'open') ? '開放' : (cls === 'tight' ? '少量' : '額滿');
-
-        row.appendChild(left);
-        row.appendChild(badge);
-        list.appendChild(row);
-      }
-
-      isModalOpen = true;
-      mask.style.display = 'flex';
-      afterOverlayChangeRerender();
-    }
-
-    // ===== 月曆格內三排符號 =====
-    function renderDayCellSummary(dateStr, cell, grouped){
-      const dayObj = grouped.get(dateStr);
-      const frame = cell.querySelector('.fc-daygrid-day-frame');
-      if (!frame) return;
-
-      // 避免重複渲染
-      if (frame.querySelector('.appSlots')) return;
-
-      // 沒資料就不顯示三排，但仍可點日期格開 drawer
-      if (!dayObj) return;
-
-      const wrap = document.createElement('div');
-      wrap.className = 'appSlots';
-
-      for (const key of SLOT_ORDER){
-        const it = dayObj[key] || null;
-        const mins = it ? Number(it.availableMinutes || 0) : 0;
-        const status = it ? String(it.status || '').trim() : '額滿';
-
-        const cls = classify(status, mins);
-        const icon = markIcon(cls);
-
-        const bar = document.createElement('div');
-        bar.className = `appSlot ${cls}`;
-        bar.textContent = icon;
-
-        wrap.appendChild(bar);
-      }
-
-      wrap.onclick = (e) => {
-        e.stopPropagation();
-        selectedDateStr = dateStr;
-        applySelectedStyle();
-        openDrawer(dateStr, dayObj || {});
-      };
-
-      frame.appendChild(wrap);
-    }
-
-    function renderAllSummaries(){
-      if (!calendar) return;
-
-      document.querySelectorAll('.appSlots').forEach(el => el.remove());
-
-      document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
-        const dateStr = cell.getAttribute('data-date');
-        renderDayCellSummary(dateStr, cell, groupedData);
-      });
-    }
-
-    let selectedDateStr = null;
-
-    function applySelectedStyle(){
-      document.querySelectorAll('.fc-daygrid-day.is-selected')
-        .forEach(el => el.classList.remove('is-selected'));
-
-      if (!selectedDateStr) return;
-
-      const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
-      if (cell) cell.classList.add('is-selected');
-    }
-
-    let calendar;
-    let groupedData = new Map();
-
-    // UI init
-    const yearInput = document.getElementById('year');
-    const monthInput = document.getElementById('month');
-
-    yearInput.value = 2026;
-    monthInput.value = 1;
-
-    async function loadAndRender(year, month) {
-      const data = await fetchMonth(year, month);
-      groupedData = groupByDate(data);
-
-      const el = document.getElementById('calendar');
-      if (!calendar) {
-        calendar = new FullCalendar.Calendar(el, {
-          initialView: 'dayGridMonth',
-          height: 'auto',
-          locale: 'zh-tw',
-
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth'
-          },
-
-          dayCellContent: function(arg){
-            const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
-            return { html: `<span class="fc-daygrid-day-number">${n}</span>` };
-          },
-
-          // ✅ 春節標記 + 角標
-          dayCellDidMount: function(arg){
-            const dateStr = toLocalDateStr(arg.date);
-            const isCny = isBetweenInclusive(dateStr, CNY_START, CNY_END);
-
-            if (isCny){
-              arg.el.classList.add('is-cny');
-
-              const frame = arg.el.querySelector('.fc-daygrid-day-frame');
-              if (frame && !frame.querySelector('.cnyBadge')){
-                const badge = document.createElement('div');
-                badge.className = 'cnyBadge';
-                badge.textContent = '🧧';
-                frame.appendChild(badge);
-              }
-            } else {
-              arg.el.classList.remove('is-cny');
-              const frame = arg.el.querySelector('.fc-daygrid-day-frame');
-              const badge = frame ? frame.querySelector('.cnyBadge') : null;
-              if (badge) badge.remove();
-            }
-          },
-
-          events: [],
-
-          // ✅ drawer 開著時，避免因 re-render 觸發 datesSet → 輸入框跳掉/資料重抓
-          datesSet: async function(info){
-            if (isModalOpen) return;
-
-            const d = info.start;
-            const y = d.getFullYear();
-            const m = d.getMonth() + 1;
-
-            yearInput.value = y;
-            monthInput.value = m;
-
-            try {
-              const data = await fetchMonth(y, m);
-              groupedData = groupByDate(data);
-              renderAllSummaries();
-              applySelectedStyle();
-            } catch (e) {
-              console.error('載入月份失敗', e);
-            }
-          },
-
-          // ✅ 保險：尺寸變動也補畫 ✓/△/✕
-          windowResize: function(){
-            renderAllSummaries();
-            applySelectedStyle();
-          },
-
-          // ✅ 不管有沒有資料，都能跳出 drawer
-          dateClick: function(info){
-            selectedDateStr = info.dateStr;
-            applySelectedStyle();
-
-            const dayObj = groupedData.get(info.dateStr) || {};
-            openDrawer(info.dateStr, dayObj);
-          }
-        });
-
-        calendar.render();
-      }
-
-      calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
-      renderAllSummaries();
-      applySelectedStyle();
-    }
-
-    document.getElementById('btnReload').onclick = async () => {
-      try {
-        await loadAndRender(Number(yearInput.value), Number(monthInput.value));
-      } catch (err) {
-        alert('載入失敗：' + err.message);
-        console.error(err);
-      }
-    };
-
-    (async () => {
-      try {
-        await loadAndRender(Number(yearInput.value), Number(monthInput.value));
-      } catch (err) {
-        alert('載入失敗：' + err.message + '\n\n請確認 /api/avail 是否可回傳 JSON');
-        console.error(err);
-      }
-    })();
-  </script>
+const frame = cell.querySelector('.fc-daygrid-day-frame');
+if (!frame) return;
+
+// 避免重複渲染
+if (frame.querySelector('.appSlots')) return;
+
+const wrap = document.createElement('div');
+wrap.className = 'appSlots';
+
+for (const key of SLOT_ORDER){
+const it = dayObj[key] || null;
+const mins = it ? Number(it.availableMinutes || 0) : 0;
+const status = it ? String(it.status || '').trim() : '額滿';
+
+const cls = classify(status, mins);    // open/tight/full
+const icon = markIcon(cls);            // ✓/△/✕
+
+const bar = document.createElement('div');
+bar.className = `appSlot ${cls}`;
+bar.textContent = icon;
+
+wrap.appendChild(bar);
+}
+
+wrap.onclick = (e) => {
+e.stopPropagation();
+selectedDateStr = dateStr;
+applySelectedStyle();
+openDrawer(dateStr, dayObj);
+};
+
+frame.appendChild(wrap);
+}
+
+function renderAllSummaries(){
+if (!calendar) return;
+
+// 先清掉舊摘要（避免殘留）
+document.querySelectorAll('.appSlots').forEach(el => el.remove());
+
+// 每個 day cell（FullCalendar dayGridMonth 每格都有 data-date）
+document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
+const dateStr = cell.getAttribute('data-date');
+renderDayCellSummary(dateStr, cell, groupedData);
+});
+}
+
+let selectedDateStr = null;
+
+function applySelectedStyle(){
+document.querySelectorAll('.fc-daygrid-day.is-selected')
+.forEach(el => el.classList.remove('is-selected'));
+
+if (!selectedDateStr) return;
+
+const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
+if (cell) cell.classList.add('is-selected');
+}
+
+let calendar;
+let groupedData = new Map();
+
+async function loadAndRender(year, month) {
+const data = await fetchMonth(year, month);
+groupedData = groupByDate(data);
+
+const el = document.getElementById('calendar');
+if (!calendar) {
+calendar = new FullCalendar.Calendar(el, {
+initialView: 'dayGridMonth',
+height: 'auto',
+locale: 'zh-tw',
+
+headerToolbar: {
+left: 'prev,next today',
+center: 'title',
+right: 'dayGridMonth'
+},
+
+// ✅ 強制 day number 只顯示數字（去掉「日」）
+dayCellContent: function(arg){
+const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
+return { html: `<span class="fc-daygrid-day-number">${n}</span>` };
+},
+
+events: [],
+
+datesSet: function(){
+setTimeout(() => {
+renderAllSummaries();
+applySelectedStyle();
+}, 0);
+},
+
+dateClick: function(info){
+selectedDateStr = info.dateStr;
+applySelectedStyle();
+
+const dayObj = groupedData.get(info.dateStr);
+if (dayObj) openDrawer(info.dateStr, dayObj);
+}
+});
+
+calendar.render();
+}
+
+calendar.gotoDate(`${year}-${String(month).padStart(2,'0')}-01`);
+renderAllSummaries();
+applySelectedStyle();
+}
+
+// UI init
+const yearInput = document.getElementById('year');
+const monthInput = document.getElementById('month');
+
+yearInput.value = 2026;
+monthInput.value = 1;
+
+document.getElementById('btnReload').onclick = async () => {
+try {
+await loadAndRender(Number(yearInput.value), Number(monthInput.value));
+} catch (err) {
+alert('載入失敗：' + err.message);
+console.error(err);
+}
+};
+
+(async () => {
+try {
+await loadAndRender(Number(yearInput.value), Number(monthInput.value));
+} catch (err) {
+alert('載入失敗：' + err.message + '\n\n請確認 /api/avail 是否可回傳 JSON');
+console.error(err);
+}
+})();
+</script>
 </body>
 </html>
