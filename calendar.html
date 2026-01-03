@@ -471,6 +471,33 @@
       .fc .fc-daygrid-day-frame{ min-height: 58px; }
       .appSlot{ height: 11px; line-height: 11px; font-size: 10px; }
     }
+    /* ===== 春節期間標記（2/16–2/22） ===== */
+.fc .fc-daygrid-day.is-cny{
+  background: rgba(196,60,60,.06); /* 淡紅底 */
+}
+.fc .fc-daygrid-day.is-cny .fc-daygrid-day-frame{
+  outline: 2px solid rgba(196,60,60,.35);
+  outline-offset: -2px;
+  border-radius: 14px;
+}
+
+/* 春節角標（右上角小圖示） */
+.cnyBadge{
+  position:absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 14px;
+  line-height: 1;
+  transform: rotate(8deg);
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.06));
+  pointer-events:none;
+}
+
+/* 今天/選取同時又是春節：外框仍要清楚（不打架） */
+.fc .fc-daygrid-day.is-selected.is-cny .fc-daygrid-day-frame{
+  outline: 2px solid rgba(72,162,232,.45);
+}
+
   </style>
 </head>
 
@@ -599,7 +626,10 @@
       const list = document.getElementById('detailList');
 
       title.textContent = dateStr;
-      sub.textContent = '早上 / 下午 / 晚上';
+      const isCny = (dateStr >= CNY_START && dateStr <= CNY_END);
+sub.textContent = isCny
+  ? '早上 / 下午 / 晚上｜春節期間（特別價格）'
+  : '早上 / 下午 / 晚上';
       list.innerHTML = '';
 
       for (const s of SLOT_ORDER){
@@ -725,6 +755,15 @@
 
       const el = document.getElementById('calendar');
       if (!calendar) {
+                  // ✅ 春節期間（含起訖）
+const CNY_START = '2026-02-16';
+const CNY_END   = '2026-02-22';
+
+function isBetweenInclusive(dateStr, startStr, endStr){
+  // dateStr 皆為 YYYY-MM-DD，可直接字串比較
+  return dateStr >= startStr && dateStr <= endStr;
+}
+        // ===== calendar 初始化 =====
         calendar = new FullCalendar.Calendar(el, {
           initialView: 'dayGridMonth',
           height: 'auto',
