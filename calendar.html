@@ -784,8 +784,9 @@ async function ensureMonthLoaded(year, month){
     return;
   }
 
-  const data = await fetchMonth(year, month);
-  groupedData = groupByDate(data);
+const data = await fetchMonth(year, month);
+groupedData = groupByDate(data.avail || []);
+googleBusyDates = new Set((data.googleEvents || []).map(e => e.date));
   loadedYear = year;
   loadedMonth = month;
 
