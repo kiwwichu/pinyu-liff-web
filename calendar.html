@@ -810,14 +810,17 @@ function syncInputsToView(){
 const yearInput = document.getElementById('year');
 const monthInput = document.getElementById('month');
 
-yearInput.value = 2026;
-monthInput.value = 1;
+const now = new Date();
+yearInput.value = now.getFullYear();
+monthInput.value = now.getMonth() + 1;
+
 
 async function initCalendar(){
   const el = document.getElementById('calendar');
   const initY = Number(yearInput.value);
   const initM = Number(monthInput.value);
-
+initialDate: `${initY}-${String(initM).padStart(2,'0')}-01`,
+  
   calendar = new FullCalendar.Calendar(el, {
     initialView: 'dayGridMonth',
     initialDate: `${initY}-${String(initM).padStart(2,'0')}-01`,
