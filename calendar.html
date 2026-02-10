@@ -785,8 +785,28 @@ async function ensureMonthLoaded(year, month){
   }
 
 const data = await fetchMonth(year, month);
-groupedData = groupByDate(data.avail || []);
-googleBusyDates = new Set((data.googleEvents || []).map(e => e.date));
+
+// ✅ 相容兩種後端格式：
+// 1) 舊：直接回傳陣列 [...]
+// 2) 新：回傳 { avail:[...], googleEvents:[...] }
+const availArr = Array.isArray(data) ? data : (data.avail || []);
+const gEvents  = Array.isArray(data) ? []   : (data.googleEvents || []);
+
+groupedData = groupByDate(availArr);
+googleBusyDates = new Set(gEvents.map(e => e.date));
+
+loadedYear = year;
+loadedMonth = month;
+
+// 如果選取日期不在這個月，就清掉避免殘留
+if (selectedDateStr) {
+  const [sy, sm] = selectedDateStr.split('-').map(Number);
+  if (sy !== year || sm !== month) selectedDateStr = null;
+}
+
+renderAllSummaries();
+applySelectedStyle();
+
   loadedYear = year;
   loadedMonth = month;
 
