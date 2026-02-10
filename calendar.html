@@ -1,4 +1,564 @@
-<script>
+<!doctype html> 
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>可預約時間表</title>
+
+<!-- FullCalendar (CDN) -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+<style>
+/* 螢光筆 highlight（品牌藍淡底 + 圓角） */
+.hl{
+display: inline;
+padding: 0 .22em;
+border-radius: .45em;
+background: linear-gradient(transparent 55%, rgba(72,162,232,.22) 55%);
+box-decoration-break: clone;
+-webkit-box-decoration-break: clone;
+}
+:root{
+--bg:#f6f8fb;
+--card:#ffffff;
+--border:#e8edf6;
+--text:#24324a;
+--muted:#6b7a90;
+
+/* 品牌主色（藍） */
+--brand:#48a2e8;
+--brandBg:#eef8ff;
+
+/* 狀態色：開放=綠、少量=黃、額滿=紅 */
+--open:#20a56b;
+--openBg:#eafaf2;
+
+--yellow:#b78100;
+--yellowBg:#fff7e5;
+
+--red:#c43c3c;
+--redBg:#ffecec;
+
+--shadow: 0 10px 30px rgba(15, 23, 42, .06);
+--radius: 16px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+margin:0;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+background:var(--bg);
+color:var(--text);
+letter-spacing:.2px;
+-webkit-text-size-adjust: 100%;
+overscroll-behavior: none;
+}
+
+.wrap{
+max-width: 1120px;
+margin: 0 auto;
+padding: 16px;
+display:grid;
+grid-template-columns: 1fr;
+gap: 12px;
+}
+
+/* ===== top card ===== */
+.card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius: var(--radius);
+box-shadow: var(--shadow);
+padding: 14px;
+}
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap: 12px;
+flex-wrap: wrap;
+}
+.title{
+font-size: 15px;
+font-weight: 700;
+margin: 0;
+}
+.sub{
+margin-top:6px;
+font-size: 12px;
+color: var(--muted);
+line-height: 1.45;
+}
+.loadingHint{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-top:6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.spinner{
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid rgba(107,122,144,.25);
+  border-top-color: var(--brand);
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin{
+  to { transform: rotate(360deg); }
+}      
+.controls{
+display:flex;
+gap:8px;
+align-items:center;
+flex-wrap: wrap;
+}
+.input{
+border:1px solid var(--border);
+background:#fff;
+border-radius: 12px;
+padding: 10px 12px;
+font-size: 13px;
+color: var(--text);
+outline: none;
+-webkit-appearance:none;
+appearance:none;
+}
+.btn{
+border:1px solid var(--border);
+background:#fff;
+border-radius: 12px;
+padding: 10px 12px;
+font-size: 13px;
+color: var(--text);
+cursor:pointer;
+-webkit-tap-highlight-color: transparent;
+font-weight: 700;
+}
+.btn:hover{ background:#fafcff; }
+
+.legend{
+margin-top: 10px;
+display:flex;
+gap: 8px;
+flex-wrap: wrap;
+font-size: 12px;
+color: var(--muted);
+align-items:center;
+}
+.legendMark{
+width: 18px;
+height: 18px;
+border-radius: 999px;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+font-weight: 900;
+font-size: 12px;
+border: 1px solid transparent;
+margin-right: 2px;
+}
+.legendMark.open{
+background: var(--openBg);
+color: var(--open);
+border-color: rgba(32,165,107,.22);
+}
+.legendMark.tight{
+background: var(--yellowBg);
+color: var(--yellow);
+border-color: rgba(183,129,0,.18);
+}
+.legendMark.full{
+background: var(--redBg);
+color: var(--red);
+border-color: rgba(196,60,60,.18);
+}
+
+.dot{
+width:10px;height:10px;border-radius:99px; display:inline-block;
+border:1px solid var(--border);
+}
+.dot.blue{ background: var(--openBg); border-color: rgba(32,165,107,.35); }
+.dot.yellow{ background:var(--yellowBg); border-color:#ffe2a3; }
+.dot.red{ background:var(--redBg); border-color:#ffd0d0; }
+
+/* ===== calendar container ===== */
+#calendar{
+background:#fff;
+border:1px solid var(--border);
+border-radius: var(--radius);
+box-shadow: var(--shadow);
+padding: 10px;
+overflow:hidden;
+}
+
+/* FullCalendar typography soften */
+.fc .fc-button:focus,
+.fc .fc-button-primary:focus{
+box-shadow: 0 0 0 3px rgba(72,162,232,.18) !important;
+}
+
+/* 按鈕像 App chip */
+.fc .fc-button{
+border-radius: 12px !important;
+border: 1px solid var(--border) !important;
+background: #fff !important;
+color: var(--text) !important;
+padding: 8px 10px !important;
+font-weight: 800 !important;
+}
+.fc .fc-button:hover{
+border-color: rgba(72,162,232,.35) !important;
+background: var(--brandBg) !important;
+}
+
+/* Today 改品牌色 */
+.fc .fc-today-button{
+background: var(--brand) !important;
+border-color: rgba(72,162,232,.35) !important;
+color: #fff !important;
+}
+.fc .fc-today-button:disabled{ opacity:.55 !important; }
+
+.fc .fc-toolbar-title{
+color: var(--text);
+font-size: 16px !important;
+font-weight: 900 !important;
+}
+
+/* 不顯示事件塊 */
+.fc .fc-daygrid-event{ display:none !important; }
+
+/* 點選日期：只亮那一格 */
+.fc .fc-daygrid-day.is-selected{
+background: var(--brandBg);
+}
+.fc .fc-daygrid-day.is-selected .fc-daygrid-day-frame{
+outline: 2px solid rgba(72,162,232,.45);
+outline-offset: -2px;
+border-radius: 14px;
+}
+
+/* ===============================
+      ✅ App 月曆：格子更矮(視覺更寬) + 日期數字置中變小 + 三排符號條
+      =============================== */
+
+/* 讓每格寬度更平均（視覺更像 App） */
+.fc .fc-daygrid-body,
+.fc .fc-scrollgrid,
+.fc .fc-scrollgrid-section-body table{
+table-layout: fixed !important;
+}
+
+/* 格子整體變矮 → 視覺就會變寬、不擠 */
+.fc .fc-daygrid-day-frame{
+min-height: 64px;
+padding: 4px 4px 2px !important;
+}
+
+/* ===== 日期數字：置中/變小（實際去掉「日」用 dayCellContent 處理） ===== */
+.fc .fc-daygrid-day-top{
+justify-content: center !important;
+}
+.fc .fc-daygrid-day-number{
+float: none !important;
+display: inline-flex !important;
+align-items: center !important;
+justify-content: center !important;
+
+width: 22px;
+height: 22px;
+border-radius: 999px;
+margin: 2px auto 0 !important;
+padding: 0 !important;
+
+font-size: 12px !important;
+font-weight: 900 !important;
+color: var(--muted) !important;
+
+letter-spacing: 0 !important;
+font-variant-numeric: tabular-nums;
+}
+
+/* 今天日期：淡藍圓點 */
+.fc .fc-day-today .fc-daygrid-day-number{
+background: var(--brandBg) !important;
+color: var(--text) !important;
+border: 1px solid rgba(72,162,232,.35) !important;
+}
+
+/* 三排容器 */
+.appSlots{
+margin: 4px 4px 2px;
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+/* 單列符號：置中 */
+.appSlot{
+height: 12px;
+border-radius: 6px;
+font-size: 11px;
+line-height: 12px;
+font-weight: 900;
+display:flex;
+align-items:center;
+justify-content:center;
+letter-spacing: .5px;
+border: 1px solid transparent;
+user-select:none;
+-webkit-tap-highlight-color: transparent;
+}
+
+/* 開放（綠） */
+.appSlot.open{
+background: var(--openBg);
+color: var(--open);
+border-color: rgba(32,165,107,.22);
+}
+
+/* 少量（黃） */
+.appSlot.tight{
+background: var(--yellowBg);
+color: var(--yellow);
+border-color: rgba(183,129,0,.18);
+}
+
+/* 額滿/不開放（紅） */
+.appSlot.full{
+background: var(--redBg);
+color: var(--red);
+border-color: rgba(196,60,60,.18);
+}
+
+/* 避免你之前版本的元素混進來 */
+.daySummary, .mBars{ display:none !important; }
+
+/* ===== drawer ===== */
+.mask{
+position:fixed; inset:0;
+background:rgba(16,24,40,.28);
+backdrop-filter: blur(2px);
+display:none;
+justify-content:flex-end;
+padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+z-index: 9999;
+}
+.drawer{
+width:min(420px, 92vw);
+height:100%;
+background:#fff;
+border-left:1px solid var(--border);
+box-shadow: -12px 0 28px rgba(0,0,0,.10);
+padding:16px;
+overflow:auto;
+animation: slideIn .18s ease-out;
+-webkit-overflow-scrolling: touch;
+}
+@keyframes slideIn { from { transform: translateX(10px); opacity:.7 } to { transform:none; opacity:1 } }
+
+.drawerHead{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+gap:10px;
+margin-bottom:10px;
+}
+.drawerTitle{
+font-size: 14px;
+font-weight: 900;
+margin:0;
+}
+.drawerSub{
+margin-top:6px;
+color: var(--muted);
+font-size: 12px;
+line-height: 1.45;
+}
+.iconBtn{
+border:1px solid var(--border);
+background:#fff;
+border-radius: 12px;
+padding: 8px 10px;
+cursor:pointer;
+font-size: 12px;
+color: var(--text);
+-webkit-tap-highlight-color: transparent;
+font-weight: 800;
+}
+.iconBtn:hover{ background:#fafcff; }
+
+.list{
+margin-top: 12px;
+display:grid;
+gap: 10px;
+}
+.rowCard{
+border:1px solid var(--border);
+border-radius: 14px;
+padding: 12px;
+background:#fff;
+display:flex;
+justify-content:space-between;
+gap: 12px;
+align-items:flex-start;
+}
+.rowLeft{
+display:grid;
+gap: 6px;
+font-size: 13px;
+min-width: 0;
+}
+.rowTop{
+display:flex;
+gap: 8px;
+align-items:center;
+color: var(--text);
+font-weight: 900;
+flex-wrap: wrap;
+}
+.rowMeta{
+color: var(--muted);
+font-size: 12px;
+line-height: 1.4;
+word-break: break-word;
+}
+.badge{
+font-size: 11px;
+padding: 6px 10px;
+border-radius: 999px;
+border:1px solid var(--border);
+white-space:nowrap;
+align-self:flex-start;
+font-weight: 900;
+}
+.badge.open{ color:var(--open); background:var(--openBg); border-color:#bfeedd; }
+.badge.tight{ color:var(--yellow); background:var(--yellowBg); border-color:#ffe2a3; }
+.badge.full{ color:var(--red); background:var(--redBg); border-color:#ffd0d0; }
+
+/* ===== ✅ Mobile / LINE in-app browser optimize ===== */
+@media (max-width: 520px){
+.wrap{ padding: 12px; }
+.card{ padding: 12px; }
+.controls{ width: 100%; }
+.input{ flex: 1; min-width: 0; }
+.btn{ width: 100%; }
+
+/* 工具列改兩行：第一行 title，第二行 buttons（不擠） */
+.fc .fc-header-toolbar{
+display: grid !important;
+grid-template-columns: 1fr !important;
+gap: 10px !important;
+align-items: center !important;
+}
+.fc .fc-toolbar-chunk:nth-child(2){
+justify-self: center !important;
+}
+.fc .fc-toolbar-chunk:nth-child(1),
+.fc .fc-toolbar-chunk:nth-child(3){
+display: flex !important;
+justify-content: space-between !important;
+gap: 8px !important;
+width: 100% !important;
+}
+
+/* 週標題 */
+.fc .fc-col-header-cell-cushion{
+font-size: 12px !important;
+color: var(--muted) !important;
+font-weight: 800 !important;
+}
+
+/* drawer 變底部 sheet */
+.mask{ justify-content:flex-end; align-items:flex-end; }
+.drawer{
+width: 100%;
+height: min(78dvh, 78vh);
+height: min(78dvh, -webkit-fill-available);
+border-left: none;
+border-top: 1px solid var(--border);
+border-radius: 18px 18px 0 0;
+animation: slideUp .18s ease-out;
+padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+@keyframes slideUp { from { transform: translateY(14px); opacity:.7 } to { transform:none; opacity:1 } }
+
+.fc .fc-daygrid-day-frame{ min-height: 58px; }
+.appSlot{ height: 11px; line-height: 11px; font-size: 10px; }
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+<div class="card">
+<div class="topbar">
+<div>
+<div class="title">可預約時間表（分鐘制）</div>
+<div class="sub">
+  點日期可查看「早上 / 下午 / 晚上」詳細資訊。<br>
+  <span class="loadingHint">
+    <span class="spinner" aria-hidden="true"></span>
+資料載入中，第一次開啟或是切換月份，可能需要幾秒鐘載入，謝謝你的耐心 🤍
+  </span>
+</div>
+   
+</div>
+
+<div class="controls">
+<input id="year" class="input" style="width:96px" inputmode="numeric" placeholder="Year" />
+<input id="month" class="input" style="width:70px" inputmode="numeric" placeholder="Month" />
+<button class="btn" id="btnReload" type="button">重新載入</button>
+</div>
+</div>
+
+<div class="legend">
+<span class="legendMark open">✓</span><span>開放</span>
+<span class="legendMark tight">△</span><span>少量（分鐘偏緊）</span>
+<span class="legendMark full">✕</span><span>額滿 / 不開放</span>
+</div>
+
+</div>
+
+<div id="calendar"></div>
+</div>
+
+<!-- Drawer -->
+<div class="mask" id="mask">
+<div class="drawer" role="dialog" aria-modal="true">
+<div class="drawerHead">
+<div>
+<div class="drawerTitle" id="dTitle">日期詳情</div>
+<div class="drawerSub" id="dSub">—</div>
+</div>
+<button class="iconBtn" id="closeX" type="button">關閉</button>
+</div>
+
+<div class="list" id="detailList"></div>
+
+<div class="drawerSub" style="margin-top:12px;">
+＊為確保每位毛孩都能獲得穩定且妥善的照顧<br>
+預約安排將以「早／中／晚」三個時段區段為主。<br>
+<span class="hl">行程原則上會盡量避開上下班尖峰時段安排。</span><br><br>
+
+若有指定到府時間的需求，<br>
+請於服務日前半個月至一個月提前預約唷～ <br>
+<span class="hl"> 若需指定於尖峰時段（17:00–19:00）到府<br>
+將酌收 NT$200／次 之時段補貼。 </span><br><br>
+
+＊本網頁目前仍為測試階段，若有任何疑問或發現錯誤，歡迎隨時告訴 Pinyu，謝謝您的體諒與配合 🤍<br><br>
+＊實際服務時間仍以 Pinyu 最終確認為準。
+</div>
+</div>
+</div>
+
+  <script>
 // ====== Vercel API ======
 const API_URL = "/api/avail";
 let googleBusyDates = new Set(); // 🔴 Google 日曆有行程的日期
