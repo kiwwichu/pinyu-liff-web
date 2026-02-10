@@ -178,6 +178,20 @@ background: var(--redBg);
 color: var(--red);
 border-color: rgba(196,60,60,.18);
 }
+  
+/* 🔴 Google Calendar 忙碌日（紅字標註） */
+.fc-daygrid-day.gc-busy .fc-daygrid-day-number {
+  color: var(--red) !important;
+  font-weight: 900 !important;
+}
+
+/* 淡紅底，不影響可預約顯示 */
+.fc-daygrid-day.gc-busy {
+  background: linear-gradient(
+    transparent 60%,
+    rgba(196,60,60,.08) 60%
+  );
+}
 
 .dot{
 width:10px;height:10px;border-radius:99px; display:inline-block;
@@ -701,6 +715,10 @@ if (textSet){
 
 // ===== 月曆格內三排符號：與 drawer 同一套 classify，保證一致 =====
 function renderDayCellSummary(dateStr, cell, grouped){
+  // 🔴 如果這天有 Google Calendar 行程 → 標紅
+if (googleBusyDates.has(dateStr)) {
+  cell.classList.add('gc-busy');
+}
   const dayObj = grouped.get(dateStr);
   if (!dayObj) return;
 
