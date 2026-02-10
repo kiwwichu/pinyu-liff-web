@@ -561,7 +561,8 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
 <script>
 // ====== Vercel API ======
 const API_URL = "/api/avail";
-
+let googleBusyDates = new Set(); // 🔴 Google 日曆有行程的日期
+  
 // ✅ 只有 3 段（無深夜）
 const slotLabel = {
   MORNING: "早上",
@@ -786,19 +787,22 @@ async function ensureMonthLoaded(year, month){
 
 const data = await fetchMonth(year, month);
 
-// ✅ 相容兩種後端格式：
-// 1) 舊：直接回傳陣列 [...]
-// 2) 新：回傳 { avail:[...], googleEvents:[...] }
+// ✅ 同時相容舊 / 新後端格式
 const availArr = Array.isArray(data) ? data : (data.avail || []);
 const gEvents  = Array.isArray(data) ? []   : (data.googleEvents || []);
 
+// 🔴 存可預約資料
 groupedData = groupByDate(availArr);
-googleBusyDates = new Set(gEvents.map(e => e.date));
+
+// 🔴 存 Google 日曆「有行程的日期」
+googleBusyDates = new Set(
+  gEvents.map(e => e.date) // yyyy-MM-dd
+);
 
 loadedYear = year;
 loadedMonth = month;
 
-// 如果選取日期不在這個月，就清掉避免殘留
+// 選取日期不在本月就清掉
 if (selectedDateStr) {
   const [sy, sm] = selectedDateStr.split('-').map(Number);
   if (sy !== year || sm !== month) selectedDateStr = null;
