@@ -561,35 +561,21 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
   <script>
 // ====== Vercel API ======
 const API_URL = "/api/avail";
-let googleBusyDates = new Set(); // 🔴 Google 日曆有行程的日期
 
-// ✅ 只有 3 段（無深夜）
-const slotLabel = {
-  MORNING: "早上",
-  AFTERNOON: "下午",
-  EVENING: "晚上"
-};
-const SLOT_ORDER = ["MORNING","AFTERNOON","EVENING"];
-const LOW_MIN_THRESHOLD = 60; // 少量門檻：<=60 分鐘 → 黃
+// 🔴 國定假日日期集合（YYYY-MM-DD）
+let holidayDates = new Set();
 
-// drawer close
-const mask = document.getElementById('mask');
-const closeX = document.getElementById('closeX');
-closeX.onclick = () => mask.style.display = 'none';
-mask.onclick = (e) => { if (e.target === mask) mask.style.display = 'none'; };
+let calendar;
+let groupedData = new Map();
+let selectedDateStr = null;
 
-function classify(status, mins){
-  status = String(status || '').trim();
-  mins = Number(mins || 0);
+let loadedYear = null;
+let loadedMonth = null;
+let monthFetchTimer = null;
 
-  if (status === '額滿') return 'full';
-  if (status === '少量') return 'tight';
-  if (status === '開放') return 'open';
-
-  // fallback：如果後端沒給狀態，才用分鐘推
-  if (mins <= 0) return 'full';
-  if (mins <= LOW_MIN_THRESHOLD) return 'tight';
-  return 'open';
+function getViewYearMonth(){
+  const d = calendar.getDate();
+  return { y: d.getFullYear(), m: d.getMonth() + 1 };
 }
 
 async function fetchMonth(year, month) {
@@ -610,92 +596,22 @@ function groupByDate(data){
   return map;
 }
 
-function markIcon(cls){
-  if (cls === 'open') return '✓';
-  if (cls === 'tight') return '△';
-  return '✕';
+function applySelectedStyle(){
+  document.querySelectorAll('.fc-daygrid-day.is-selected')
+    .forEach(el => el.classList.remove('is-selected'));
+
+  if (!selectedDateStr) return;
+
+  const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
+  if (cell) cell.classList.add('is-selected');
 }
 
-// ===== 狀態說明文字（前端統一管理） =====
-const STATUS_DESCRIPTION = {
-  open: {
-    title: '剩餘時間充足，可安心預約',
-    desc: '目前時段安排彈性，仍有充足可預約空間。'
-  },
-  tight: {
-    title: '僅剩少量名額，建議儘早預約',
-    desc: '目前可用時段有限，若有服務需求，建議盡快與 Pinyu 確認。'
-  },
-  full: {
-    title: '目前已無可預約名額',
-    desc: '此時段已安排滿檔，若有其他日期或時段需求，歡迎再與 Pinyu 討論。'
-  }
-};
-
-function openDrawer(dateStr, dayObj){
-  const title = document.getElementById('dTitle');
-  const sub = document.getElementById('dSub');
-  const list = document.getElementById('detailList');
-
-  title.textContent = dateStr;
-  sub.textContent = '早上 / 下午 / 晚上';
-  list.innerHTML = '';
-
-  for (const s of SLOT_ORDER){
-    const it = (dayObj && dayObj[s]) ? dayObj[s] : null;
-
-    const start = it ? it.start : '—';
-    const end = it ? it.end : '—';
-    const mins = it ? Number(it.availableMinutes || 0) : 0;
-    const status = it ? String(it.status || '').trim() : '額滿';
-
-    const cls = classify(status, mins);
-
-    const row = document.createElement('div');
-    row.className = 'rowCard';
-
-    const left = document.createElement('div');
-    left.className = 'rowLeft';
-
-    const top = document.createElement('div');
-    top.className = 'rowTop';
-    top.textContent = `${slotLabel[s]}  ·  ${start}–${end}`;
-
-    const meta = document.createElement('div');
-    meta.className = 'rowMeta';
-
-    const textSet = STATUS_DESCRIPTION[cls];
-    if (textSet){
-      meta.innerHTML = `
-        <div style="font-weight:700;color:#24324a;margin-bottom:4px;">
-          ${textSet.title}
-        </div>
-        <div style="color:#6b7a90;font-size:12px;line-height:1.5;">
-          ${textSet.desc}
-        </div>
-      `;
-    }
-
-    left.appendChild(top);
-    left.appendChild(meta);
-
-    const badge = document.createElement('div');
-    badge.className = `badge ${cls}`;
-    badge.textContent = (cls === 'open') ? '開放' : (cls === 'tight' ? '少量' : '額滿');
-
-    row.appendChild(left);
-    row.appendChild(badge);
-    list.appendChild(row);
-  }
-
-  mask.style.display = 'flex';
-}
-
-// ===== 月曆格內三排符號：與 drawer 同一套 classify，保證一致 =====
 function renderDayCellSummary(dateStr, cell, grouped){
-  // 🔴 如果這天有 Google Calendar 行程 → 標紅
-  if (googleBusyDates.has(dateStr)) {
-    cell.classList.add('gc-busy');
+  // 🔴 國定假日：標紅（不影響可預約符號）
+  if (holidayDates.has(dateStr)) {
+    cell.classList.add('is-holiday');
+  } else {
+    cell.classList.remove('is-holiday');
   }
 
   const dayObj = grouped.get(dateStr);
@@ -704,11 +620,30 @@ function renderDayCellSummary(dateStr, cell, grouped){
   const frame = cell.querySelector('.fc-daygrid-day-frame');
   if (!frame) return;
 
-  // 避免重複渲染
   if (frame.querySelector('.appSlots')) return;
 
   const wrap = document.createElement('div');
   wrap.className = 'appSlots';
+
+  const SLOT_ORDER = ["MORNING","AFTERNOON","EVENING"];
+  const LOW_MIN_THRESHOLD = 60;
+
+  function classify(status, mins){
+    status = String(status || '').trim();
+    mins = Number(mins || 0);
+    if (status === '額滿') return 'full';
+    if (status === '少量') return 'tight';
+    if (status === '開放') return 'open';
+    if (mins <= 0) return 'full';
+    if (mins <= LOW_MIN_THRESHOLD) return 'tight';
+    return 'open';
+  }
+
+  function markIcon(cls){
+    if (cls === 'open') return '✓';
+    if (cls === 'tight') return '△';
+    return '✕';
+  }
 
   for (const key of SLOT_ORDER){
     const it = dayObj[key] || null;
@@ -721,25 +656,16 @@ function renderDayCellSummary(dateStr, cell, grouped){
     const bar = document.createElement('div');
     bar.className = `appSlot ${cls}`;
     bar.textContent = icon;
+
     wrap.appendChild(bar);
   }
-
-  wrap.onclick = (e) => {
-    e.stopPropagation();
-    selectedDateStr = dateStr;
-    applySelectedStyle();
-    openDrawer(dateStr, dayObj);
-  };
 
   frame.appendChild(wrap);
 }
 
 function renderAllSummaries(){
   if (!calendar) return;
-
-  // ✅ 清掉舊摘要 & 舊的 gc-busy class（不然切月會殘留）
   document.querySelectorAll('.appSlots').forEach(el => el.remove());
-  document.querySelectorAll('.fc-daygrid-day.gc-busy').forEach(el => el.classList.remove('gc-busy'));
 
   document.querySelectorAll('.fc-daygrid-day[data-date]').forEach(cell => {
     const dateStr = cell.getAttribute('data-date');
@@ -747,33 +673,7 @@ function renderAllSummaries(){
   });
 }
 
-let selectedDateStr = null;
-function applySelectedStyle(){
-  document.querySelectorAll('.fc-daygrid-day.is-selected')
-    .forEach(el => el.classList.remove('is-selected'));
-
-  if (!selectedDateStr) return;
-
-  const cell = document.querySelector(`.fc-daygrid-day[data-date="${selectedDateStr}"]`);
-  if (cell) cell.classList.add('is-selected');
-}
-
-// ======================
-// ✅ 核心：切月自動載入
-// ======================
-let calendar;
-let groupedData = new Map();
-let loadedYear = null;
-let loadedMonth = null;
-let monthFetchTimer = null;
-
-function getViewYearMonth(){
-  const d = calendar.getDate();
-  return { y: d.getFullYear(), m: d.getMonth() + 1 };
-}
-
 async function ensureMonthLoaded(year, month){
-  // 避免重複抓同一個月
   if (loadedYear === year && loadedMonth === month) {
     renderAllSummaries();
     applySelectedStyle();
@@ -782,14 +682,14 @@ async function ensureMonthLoaded(year, month){
 
   const data = await fetchMonth(year, month);
 
-  // ✅ 同時相容舊 / 新後端格式
+  // ✅ 相容舊/新：舊=直接陣列；新={avail, holidays}
   const availArr = Array.isArray(data) ? data : (data.avail || []);
-  const gEvents  = Array.isArray(data) ? []   : (data.googleEvents || []);
+  const holidaysArr = Array.isArray(data) ? [] : (data.holidays || []);
 
   groupedData = groupByDate(availArr);
 
-  // 🔴 Google 日曆「有行程的日期」
-  googleBusyDates = new Set((gEvents || []).map(e => e.date));
+  // 🔴 國定假日日期集合
+  holidayDates = new Set((holidaysArr || []).map(h => h.date));
 
   loadedYear = year;
   loadedMonth = month;
@@ -802,7 +702,7 @@ async function ensureMonthLoaded(year, month){
 
   renderAllSummaries();
   applySelectedStyle();
-} // ✅ 這個大括號你原本漏掉了，導致整段 JS 崩掉
+} // ✅ 這個 } 你原本少了，少了就整頁掛掉
 
 function syncInputsToView(){
   const { y, m } = getViewYearMonth();
@@ -828,20 +728,13 @@ async function initCalendar(){
     initialDate: `${initY}-${String(initM).padStart(2,'0')}-01`,
     height: 'auto',
     locale: 'zh-tw',
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
 
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridMonth'
-    },
-
-    // ✅ day number 只顯示數字（去掉「日」）
+    // ✅ 要保留 class，否則你的日期數字樣式會失效
     dayCellContent: function(arg){
       const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
-      return { html: `<span>${n}</span>` };
+      return { html: `<span class="fc-daygrid-day-number">${n}</span>` };
     },
-
-    events: [],
 
     datesSet: function(){
       syncInputsToView();
@@ -856,37 +749,22 @@ async function initCalendar(){
           alert('載入失敗：' + err.message);
         }
       }, 0);
-    },
-
-    dateClick: function(info){
-      selectedDateStr = info.dateStr;
-      applySelectedStyle();
-
-      const dayObj = groupedData.get(info.dateStr);
-      if (dayObj) openDrawer(info.dateStr, dayObj);
     }
   });
 
   calendar.render();
-
-  // ✅ 初次載入當月
   await ensureMonthLoaded(initY, initM);
 }
 
 document.getElementById('btnReload').onclick = async () => {
-  try {
-    const y = Number(yearInput.value);
-    const m = Number(monthInput.value);
-    calendar.gotoDate(`${y}-${String(m).padStart(2,'0')}-01`);
-  } catch (err) {
-    alert('載入失敗：' + err.message);
-    console.error(err);
-  }
+  const y = Number(yearInput.value);
+  const m = Number(monthInput.value);
+  calendar.gotoDate(`${y}-${String(m).padStart(2,'0')}-01`);
 };
 
-// start
 initCalendar().catch(err => {
   alert('載入失敗：' + err.message + '\n\n請確認 /api/avail 是否可回傳 JSON');
   console.error(err);
 });
+
 </script>
