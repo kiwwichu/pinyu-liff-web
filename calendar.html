@@ -832,16 +832,6 @@ applySelectedStyle();
   loadedYear = year;
   loadedMonth = month;
 
-  // 如果選取日期不在這個月，就清掉避免殘留
-  if (selectedDateStr) {
-    const [sy, sm] = selectedDateStr.split('-').map(Number);
-    if (sy !== year || sm !== month) selectedDateStr = null;
-  }
-
-  renderAllSummaries();
-  applySelectedStyle();
-}
-
 function syncInputsToView(){
   const { y, m } = getViewYearMonth();
   yearInput.value = y;
@@ -861,7 +851,6 @@ async function initCalendar(){
   const el = document.getElementById('calendar');
   const initY = Number(yearInput.value);
   const initM = Number(monthInput.value);
-initialDate: `${initY}-${String(initM).padStart(2,'0')}-01`,
   
   calendar = new FullCalendar.Calendar(el, {
     initialView: 'dayGridMonth',
@@ -877,9 +866,10 @@ initialDate: `${initY}-${String(initM).padStart(2,'0')}-01`,
 
     // ✅ 強制 day number 只顯示數字（去掉「日」）
     dayCellContent: function(arg){
-      const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
-      return { html: `<span class="fc-daygrid-day-number">${n}</span>` };
-    },
+  const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
+  return { html: `<span>${n}</span>` };
+},
+
 
     events: [],
 
