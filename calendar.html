@@ -394,6 +394,20 @@ font-weight: 800;
 }
 .iconBtn:hover{ background:#fafcff; }
 
+  /* 🔴 國定假日（紅字標註） */
+.fc-daygrid-day.is-holiday .fc-daygrid-day-number {
+  color: var(--red) !important;
+  font-weight: 900 !important;
+}
+
+/* 淡紅底（可選） */
+.fc-daygrid-day.is-holiday {
+  background: linear-gradient(
+    transparent 60%,
+    rgba(196,60,60,.08) 60%
+  );
+}
+
 .list{
 margin-top: 12px;
 display:grid;
