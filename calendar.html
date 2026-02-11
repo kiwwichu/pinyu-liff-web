@@ -737,34 +737,46 @@ async function initCalendar(){
   const initY = Number(yearInput.value);
   const initM = Number(monthInput.value);
 
-  calendar = new FullCalendar.Calendar(el, {
-    initialView: 'dayGridMonth',
-    initialDate: `${initY}-${String(initM).padStart(2,'0')}-01`,
-    height: 'auto',
-    locale: 'zh-tw',
-    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
+calendar = new FullCalendar.Calendar(el, {
+  initialView: 'dayGridMonth',
+  initialDate: `${initY}-${String(initM).padStart(2,'0')}-01`,
+  height: 'auto',
+  locale: 'zh-tw',
+  headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
 
-    // ✅ 要保留 class，否則你的日期數字樣式會失效
-    dayCellContent: function(arg){
-      const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
-      return { html: `<span class="fc-daygrid-day-number">${n}</span>` };
-    },
+  dayCellContent: function(arg){
+    const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
+    return { html: `<span class="fc-daygrid-day-number">${n}</span>` };
+  },
 
-    datesSet: function(){
-      syncInputsToView();
+  datesSet: function(){
+    syncInputsToView();
 
-      clearTimeout(monthFetchTimer);
-      monthFetchTimer = setTimeout(async () => {
-        try{
-          const { y, m } = getViewYearMonth();
-          await ensureMonthLoaded(y, m);
-        }catch(err){
-          console.error(err);
-          alert('載入失敗：' + err.message);
-        }
-      }, 0);
+    clearTimeout(monthFetchTimer);
+    monthFetchTimer = setTimeout(async () => {
+      try{
+        const { y, m } = getViewYearMonth();
+        await ensureMonthLoaded(y, m);
+      }catch(err){
+        console.error(err);
+        alert('載入失敗：' + err.message);
+      }
+    }, 0);
+  },
+
+  // 🔴 加回這段
+  dateClick: function(info){
+    selectedDateStr = info.dateStr;
+    applySelectedStyle();
+
+    const dayObj = groupedData.get(info.dateStr);
+    if (dayObj) {
+      openDrawer(info.dateStr, dayObj);
     }
-  });
+  }
+
+});
+
 
   calendar.render();
   await ensureMonthLoaded(initY, initM);
