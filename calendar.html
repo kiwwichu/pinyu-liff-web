@@ -765,14 +765,13 @@ calendar = new FullCalendar.Calendar(el, {
   },
 
   // 🔴 加回這段
-  dateClick: function(info){
-    selectedDateStr = info.dateStr;
-    applySelectedStyle();
+dateClick: function(info){
+  selectedDateStr = info.dateStr;
+  applySelectedStyle();
 
-    const dayObj = groupedData.get(info.dateStr);
-    if (dayObj) {
-      openDrawer(info.dateStr, dayObj);
-    }
+  const dayObj = groupedData.get(info.dateStr) || {};
+  openDrawer(info.dateStr, dayObj);
+}
   }
 
 });
@@ -791,6 +790,97 @@ document.getElementById('btnReload').onclick = async () => {
 initCalendar().catch(err => {
   alert('載入失敗：' + err.message + '\n\n請確認 /api/avail 是否可回傳 JSON');
   console.error(err);
+});
+// ===== Drawer helpers =====
+const maskEl = document.getElementById('mask');
+const closeBtn = document.getElementById('closeX');
+const dTitleEl = document.getElementById('dTitle');
+const dSubEl = document.getElementById('dSub');
+const detailListEl = document.getElementById('detailList');
+
+const SLOT_LABEL = {
+  MORNING: '早上',
+  AFTERNOON: '下午',
+  EVENING: '晚上'
+};
+
+const SLOT_ORDER = ['MORNING', 'AFTERNOON', 'EVENING'];
+
+function badgeClass(status){
+  status = String(status || '').trim();
+  if (status === '開放') return 'open';
+  if (status === '少量') return 'tight';
+  return 'full';
+}
+
+function openDrawer(dateStr, dayObj){
+  // 標題
+  dTitleEl.textContent = `日期詳情｜${dateStr}`;
+  dSubEl.textContent = '點擊月份/重新載入後，資料可能需幾秒同步更新。';
+
+  // 內容
+  renderDetailList(dateStr, dayObj);
+
+  // 打開
+  maskEl.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer(){
+  maskEl.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function renderDetailList(dateStr, dayObj){
+  detailListEl.innerHTML = '';
+
+  // 沒資料也要顯示提示（避免點了空白）
+  if (!dayObj || Object.keys(dayObj).length === 0){
+    detailListEl.innerHTML = `
+      <div class="rowCard">
+        <div class="rowLeft">
+          <div class="rowTop">目前此日期沒有可預約資訊</div>
+          <div class="rowMeta">請嘗試切換月份或按「重新載入」。</div>
+        </div>
+        <div class="badge full">—</div>
+      </div>
+    `;
+    return;
+  }
+
+  for (const slot of SLOT_ORDER){
+    const it = dayObj[slot];
+
+    // 如果這個時段沒有資料，也顯示一列（比較直覺）
+    const label = SLOT_LABEL[slot] || slot;
+    const status = it ? String(it.status || '').trim() : '—';
+    const badge = badgeClass(status);
+    const remaining = it ? (it.remaining || '—') : '—';
+    const blocked = it ? (it.blocked || '—') : '—';
+
+    const row = document.createElement('div');
+    row.className = 'rowCard';
+    row.innerHTML = `
+      <div class="rowLeft">
+        <div class="rowTop">
+          <span>${label}</span>
+          <span class="badge ${badge}">${status || '—'}</span>
+        </div>
+        <div class="rowMeta">可安排時段：${remaining}</div>
+        <div class="rowMeta">不可預約：${blocked}</div>
+      </div>
+    `;
+    detailListEl.appendChild(row);
+  }
+}
+
+// 關閉事件：按鈕 / 點遮罩空白處 / Esc
+closeBtn.addEventListener('click', closeDrawer);
+maskEl.addEventListener('click', (e) => {
+  if (e.target === maskEl) closeDrawer();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && maskEl.style.display === 'flex') closeDrawer();
 });
 
 </script>
