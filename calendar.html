@@ -192,7 +192,32 @@ box-shadow: var(--shadow);
 padding: 10px;
 overflow:hidden;
 }
+#calendar.is-empty-month{
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+/* 沒有班表時，隱藏整個月曆日期格 */
+#calendar.is-empty-month .fc-header-toolbar,
+#calendar.is-empty-month .fc-view-harness{
+  display: none !important;
+}
+
+.emptyMonthMessage{
+  width: 100%;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 28px 18px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.8;
+  font-weight: 700;
+}
 /* FullCalendar typography soften */
 .fc .fc-button:focus,
 .fc .fc-button-primary:focus{
@@ -684,7 +709,27 @@ function renderAllSummaries(){
     renderDayCellSummary(dateStr, cell, groupedData);
   });
 }
+function setEmptyMonthMessage(show){
+  const calendarEl = document.getElementById('calendar');
+  if (!calendarEl) return;
 
+  calendarEl.classList.toggle('is-empty-month', show);
+
+  const oldMsg = calendarEl.querySelector('.emptyMonthMessage');
+  if (oldMsg) oldMsg.remove();
+
+  if (show) {
+    const msg = document.createElement('div');
+    msg.className = 'emptyMonthMessage';
+    msg.innerHTML = `
+      <div>
+        目前當月可預約時間表還在調整中 🤍<br>
+        若需要預約請直接洽詢保姆唷
+      </div>
+    `;
+    calendarEl.appendChild(msg);
+  }
+}
 async function ensureMonthLoaded(year, month){
   if (loadedYear === year && loadedMonth === month) {
     renderAllSummaries();
@@ -702,6 +747,9 @@ groupedData = groupByDate(availArr);
 
 // ✅ 判斷這個月份是不是真的有班表資料
 latestLoadedHasSchedule = availArr.length > 0;
+
+// ✅ 沒有班表資料時，月曆區塊改成空白提示
+setEmptyMonthMessage(!latestLoadedHasSchedule);
 
 // ✅ 根據資料更新上方公告
 updateScheduleNoticeByData(year, month, latestLoadedHasSchedule);
@@ -853,7 +901,11 @@ datesSet: function(){
     notice.innerHTML = `可預約時間表載入中...`;
   }
 
+  // 切換月份時，先拿掉空白提示，等資料回來再判斷
+  setEmptyMonthMessage(false);
+
   clearTimeout(monthFetchTimer);
+  
   monthFetchTimer = setTimeout(async () => {
     try{
       const { y, m } = getViewYearMonth();
@@ -865,14 +917,15 @@ datesSet: function(){
   }, 0);
 },
 
-  // 🔴 加回這段
 dateClick: function(info){
+  if (!latestLoadedHasSchedule) return;
+
   selectedDateStr = info.dateStr;
   applySelectedStyle();
 
   const dayObj = groupedData.get(info.dateStr) || {};
   openDrawer(info.dateStr, dayObj);
-  }
+}
 
 });
 
