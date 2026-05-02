@@ -896,7 +896,7 @@ calendar = new FullCalendar.Calendar(el, {
   initialDate: `${initY}-${String(initM).padStart(2,'0')}-01`,
   height: 'auto',
   locale: 'zh-tw',
-  headerToolbar: { left: 'prev,next', center: 'title', right: 'today' },
+  headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
 
   dayCellContent: function(arg){
     const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
