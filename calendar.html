@@ -98,7 +98,19 @@ line-height: 1.55;
   font-size: 12px;
   line-height: 1.55;
 }
+.scheduleNotice.is-loading{
+  background: #fff7e5;
+  color: #9a6700;
+  border: 1px solid #ffe2a3;
+  font-weight: 800;
+}
 
+/* 載入中時，月曆按鈕暫時不能點 */
+#calendar.is-loading .fc-button{
+  opacity: .55;
+  pointer-events: none;
+  cursor: not-allowed;
+}
 .loadingHint{
   display:block;
   margin-top:6px;
@@ -553,10 +565,11 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
   點擊日期可查看「早上 / 下午 / 晚上」詳細資訊。<br>
   
   <span class="scheduleNotice" id="scheduleNotice">
-    可預約時間表載入中...
+    ⚠️ 可預約時間表載入中，請先不要連續點擊月份切換按鈕<br>
+資料同步可能需要幾秒鐘，謝謝你的耐心 🤍
   </span>
      <span class="loadingHint">
-     🔔下個月班表通常會在 25號 左右公布出爐，若有需要提早預約，可直接洽詢保姆唷~
+     下個月班表通常會在 25號 左右公布出爐，若有需要提早預約，可直接洽詢保姆唷~
   </span>
 
 </div>
@@ -783,6 +796,26 @@ loadedMonth = month;
 function syncInputsToView(){
   // 已移除年月輸入框，這裡不需要同步
 }
+
+function setCalendarLoading(isLoading){
+  const notice = document.getElementById('scheduleNotice');
+  const calendarEl = document.getElementById('calendar');
+
+  if (notice) {
+    notice.classList.toggle('is-loading', isLoading);
+
+    if (isLoading) {
+      notice.innerHTML = `
+        ⚠️ 可預約時間表載入中，請先不要連續點擊月份切換按鈕<br>
+        資料同步可能需要幾秒鐘，謝謝你的耐心 🤍
+      `;
+    }
+  }
+
+  if (calendarEl) {
+    calendarEl.classList.toggle('is-loading', isLoading);
+  }
+}
 function ymLabel(year, month){
   return `${year} 年 ${month} 月`;
 }
@@ -906,10 +939,8 @@ calendar = new FullCalendar.Calendar(el, {
 datesSet: function(){
   syncInputsToView();
 
-  const notice = document.getElementById('scheduleNotice');
-  if (notice) {
-    notice.innerHTML = `可預約時間表載入中...`;
-  }
+  // 載入中提醒 + 暫時鎖住月份切換按鈕
+  setCalendarLoading(true);
 
   // 切換月份時，先拿掉空白提示，等資料回來再判斷
   setEmptyMonthMessage(false);
@@ -923,11 +954,18 @@ datesSet: function(){
     }catch(err){
       console.error(err);
       alert('載入失敗：' + err.message);
+    }finally{
+      setCalendarLoading(false);
     }
   }, 0);
 },
 
 dateClick: function(info){
+  const calendarEl = document.getElementById('calendar');
+
+  // 載入中不要讓使用者點日期
+  if (calendarEl && calendarEl.classList.contains('is-loading')) return;
+
   if (!latestLoadedHasSchedule) return;
 
   selectedDateStr = info.dateStr;
