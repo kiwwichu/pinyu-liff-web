@@ -513,10 +513,7 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
 <div>
 <div class="title">可預約時間表</div>
 <div class="sub">
-  點日期可查看「早上 / 下午 / 晚上」詳細資訊。<br>
-  
-    <span class="loadingHint">
-    第一次開啟或切換月份時，資料可能需要幾秒鐘載入 <br>
+  點擊日期可查看「早上 / 下午 / 晚上」詳細資訊。<br>
   
   <span class="scheduleNotice" id="scheduleNotice">
     可預約時間表載入中...
@@ -527,13 +524,6 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
 
 </div>
    
-</div>
-
-<div class="controls">
-<input id="year" class="input" style="width:96px" inputmode="numeric" placeholder="Year" />
-<input id="month" class="input" style="width:70px" inputmode="numeric" placeholder="Month" />
-<button class="btn" id="btnReload" type="button">重新載入</button>
-</div>
 </div>
 
 <div class="legend">
@@ -731,9 +721,7 @@ loadedMonth = month;
 } // ✅ 這個 } 你原本少了，少了就整頁掛掉
 
 function syncInputsToView(){
-  const { y, m } = getViewYearMonth();
-  yearInput.value = y;
-  monthInput.value = m;
+  // 已移除年月輸入框，這裡不需要同步
 }
 function ymLabel(year, month){
   return `${year} 年 ${month} 月`;
@@ -836,17 +824,12 @@ function updateScheduleNotice(){
   }
 }
 // UI init
-const yearInput = document.getElementById('year');
-const monthInput = document.getElementById('month');
-
 const now = new Date();
-yearInput.value = now.getFullYear();
-monthInput.value = now.getMonth() + 1;
 
 async function initCalendar(){
   const el = document.getElementById('calendar');
-  const initY = Number(yearInput.value);
-  const initM = Number(monthInput.value);
+const initY = now.getFullYear();
+const initM = now.getMonth() + 1;
 
 calendar = new FullCalendar.Calendar(el, {
   initialView: 'dayGridMonth',
@@ -895,12 +878,6 @@ dateClick: function(info){
   calendar.render();
   await ensureMonthLoaded(initY, initM);
 }
-
-document.getElementById('btnReload').onclick = async () => {
-  const y = Number(yearInput.value);
-  const m = Number(monthInput.value);
-  calendar.gotoDate(`${y}-${String(m).padStart(2,'0')}-01`);
-};
 
 initCalendar().catch(err => {
   alert('載入失敗：' + err.message + '\n\n請確認 /api/avail 是否可回傳 JSON');
