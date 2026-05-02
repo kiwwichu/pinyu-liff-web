@@ -194,15 +194,25 @@ overflow:hidden;
 }
 #calendar.is-empty-month{
   min-height: 280px;
+}
+
+/* 沒有班表時，只隱藏日期格，不隱藏上方切換月份按鈕 */
+#calendar.is-empty-month .fc-view-harness{
+  display: none !important;
+}
+
+.emptyMonthMessage{
+  width: 100%;
+  min-height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* 沒有班表時，隱藏整個月曆日期格 */
-#calendar.is-empty-month .fc-header-toolbar,
-#calendar.is-empty-month .fc-view-harness{
-  display: none !important;
+  text-align: center;
+  padding: 28px 18px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.8;
+  font-weight: 700;
 }
 
 .emptyMonthMessage{
