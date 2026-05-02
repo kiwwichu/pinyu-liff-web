@@ -778,7 +778,7 @@ function updateScheduleNoticeByData(year, month, hasSchedule){
   // 當月或下個月，但資料還沒出來
   if (isCurrentOrNextMonth(year, month) || todayDate >= 25) {
     notice.innerHTML = `
-      目前${month} 班表還在調整中 🤍<br>
+      目前${month}月 班表還在調整中 🤍<br>
       若有預約需求，歡迎直接洽詢保姆。
     `;
     return;
