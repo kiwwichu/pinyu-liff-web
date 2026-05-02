@@ -515,13 +515,16 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
 <div class="sub">
   點日期可查看「早上 / 下午 / 晚上」詳細資訊。<br>
 
+    <span class="loadingHint">
+    第一次開啟或切換月份時，資料可能需要幾秒鐘載入，謝謝你的耐心🤍
+    下個月班表通常會在 25號 時公布出爐，若有需要提早預約，可直接洽詢保姆唷~
+  </span>
+
   <span class="scheduleNotice" id="scheduleNotice">
     可預約時間表載入中...
   </span>
 
-  <span class="loadingHint">
-    第一次開啟或切換月份時，資料可能需要幾秒鐘載入，謝謝你的耐心 🤍
-  </span>
+
 </div>
    
 </div>
@@ -736,18 +739,23 @@ function ymLabel(year, month){
   return `${year} 年 ${month} 月`;
 }
 
-function isCurrentOrNextMonth(year, month){
+function isCurrentMonth(year, month){
   const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth() + 1;
+  return year === today.getFullYear() && month === today.getMonth() + 1;
+}
 
-  const nextMonthDate = new Date(currentYear, currentMonth, 1);
-  const nextYear = nextMonthDate.getFullYear();
-  const nextMonth = nextMonthDate.getMonth() + 1;
+function isNextMonth(year, month){
+  const today = new Date();
+
+  const nextMonthDate = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    1
+  );
 
   return (
-    (year === currentYear && month === currentMonth) ||
-    (year === nextYear && month === nextMonth)
+    year === nextMonthDate.getFullYear() &&
+    month === nextMonthDate.getMonth() + 1
   );
 }
 
@@ -760,14 +768,15 @@ function updateScheduleNoticeByData(year, month, hasSchedule){
 
   const label = ymLabel(year, month);
 
+  // 有班表資料：記錄已開放月份
   if (hasSchedule) {
     releasedMonths.add(label);
   }
 
   const releasedText = Array.from(releasedMonths).join('、');
 
-  // 有班表資料
-  if (releasedText) {
+  // 目前正在看的月份有資料
+  if (hasSchedule) {
     notice.innerHTML = `
       目前已開放：${releasedText} 可預約時間表 🤍<br>
       若要預約非當月或下個月的日期，歡迎直接洽詢保姆。
@@ -775,18 +784,27 @@ function updateScheduleNoticeByData(year, month, hasSchedule){
     return;
   }
 
-  // 當月或下個月，但資料還沒出來
-  if (isCurrentOrNextMonth(year, month) || todayDate >= 25) {
+  // 當月沒資料：顯示調整中
+  if (isCurrentMonth(year, month)) {
     notice.innerHTML = `
-      目前${month}月 班表還在調整中 🤍<br>
+      目前 ${label} 班表還在調整中 🤍<br>
       若有預約需求，歡迎直接洽詢保姆。
     `;
     return;
   }
 
-  // 其他更遠月份
+  // 下個月沒資料，且已經 25 號後：顯示調整中
+  if (isNextMonth(year, month) && todayDate >= 25) {
+    notice.innerHTML = `
+      目前 ${label} 班表還在調整中 🤍<br>
+      若有預約需求，歡迎直接洽詢保姆。
+    `;
+    return;
+  }
+
+  // 下個月還沒到 25 號，或其他更遠月份沒資料
   notice.innerHTML = `
-    目前尚未開放此月份的線上可預約時間表 🤍<br>
+    目前尚未開放 ${label} 的線上可預約時間表 🤍<br>
     若要預約非當月或下個月的日期，歡迎直接洽詢保姆。
   `;
 }
@@ -844,6 +862,11 @@ calendar = new FullCalendar.Calendar(el, {
 
 datesSet: function(){
   syncInputsToView();
+
+  const notice = document.getElementById('scheduleNotice');
+  if (notice) {
+    notice.innerHTML = `可預約時間表載入中...`;
+  }
 
   clearTimeout(monthFetchTimer);
   monthFetchTimer = setTimeout(async () => {
