@@ -587,6 +587,8 @@ let selectedDateStr = null;
 let loadedYear = null;
 let loadedMonth = null;
 let monthFetchTimer = null;
+let releasedMonths = new Set();
+let latestLoadedHasSchedule = false;
 
 function getViewYearMonth(){
   const d = calendar.getDate();
@@ -701,13 +703,19 @@ async function ensureMonthLoaded(year, month){
   const availArr = Array.isArray(data) ? data : (data.avail || []);
   const holidaysArr = Array.isArray(data) ? [] : (data.holidays || []);
 
-  groupedData = groupByDate(availArr);
+groupedData = groupByDate(availArr);
 
-  // 🔴 國定假日日期集合
-  holidayDates = new Set((holidaysArr || []).map(h => h.date));
+// ✅ 判斷這個月份是不是真的有班表資料
+latestLoadedHasSchedule = availArr.length > 0;
 
-  loadedYear = year;
-  loadedMonth = month;
+// ✅ 根據資料更新上方公告
+updateScheduleNoticeByData(year, month, latestLoadedHasSchedule);
+
+// 🔴 國定假日日期集合
+holidayDates = new Set((holidaysArr || []).map(h => h.date));
+
+loadedYear = year;
+loadedMonth = month;
 
   // 選取日期不在本月就清掉
   if (selectedDateStr) {
@@ -723,6 +731,64 @@ function syncInputsToView(){
   const { y, m } = getViewYearMonth();
   yearInput.value = y;
   monthInput.value = m;
+}
+function ymLabel(year, month){
+  return `${year} 年 ${month} 月`;
+}
+
+function isCurrentOrNextMonth(year, month){
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+
+  const nextMonthDate = new Date(currentYear, currentMonth, 1);
+  const nextYear = nextMonthDate.getFullYear();
+  const nextMonth = nextMonthDate.getMonth() + 1;
+
+  return (
+    (year === currentYear && month === currentMonth) ||
+    (year === nextYear && month === nextMonth)
+  );
+}
+
+function updateScheduleNoticeByData(year, month, hasSchedule){
+  const notice = document.getElementById('scheduleNotice');
+  if (!notice) return;
+
+  const today = new Date();
+  const todayDate = today.getDate();
+
+  const label = ymLabel(year, month);
+
+  if (hasSchedule) {
+    releasedMonths.add(label);
+  }
+
+  const releasedText = Array.from(releasedMonths).join('、');
+
+  // 有班表資料
+  if (releasedText) {
+    notice.innerHTML = `
+      目前已開放：${releasedText} 可預約時間表 🤍<br>
+      若要預約非當月或下個月的日期，歡迎直接洽詢保姆。
+    `;
+    return;
+  }
+
+  // 當月或下個月，但資料還沒出來
+  if (isCurrentOrNextMonth(year, month) || todayDate >= 25) {
+    notice.innerHTML = `
+      目前班表還在調整中 🤍<br>
+      若有預約需求，歡迎直接洽詢保姆。
+    `;
+    return;
+  }
+
+  // 其他更遠月份
+  notice.innerHTML = `
+    目前尚未開放此月份的線上可預約時間表 🤍<br>
+    若要預約非當月或下個月的日期，歡迎直接洽詢保姆。
+  `;
 }
 function updateScheduleNotice(){
   const notice = document.getElementById('scheduleNotice');
@@ -778,7 +844,6 @@ calendar = new FullCalendar.Calendar(el, {
 
 datesSet: function(){
   syncInputsToView();
-  updateScheduleNotice();
 
   clearTimeout(monthFetchTimer);
   monthFetchTimer = setTimeout(async () => {
