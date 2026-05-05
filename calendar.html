@@ -633,6 +633,20 @@ let monthFetchTimer = null;
 let releasedMonths = new Set();
 let latestLoadedHasSchedule = false;
 
+// ✅ 手動設定整月已滿的月份
+// 格式：YYYY-MM
+const FULL_MONTHS = ['2026-05'];
+
+let latestLoadedIsFullMonth = false;
+
+function ymKey(year, month){
+  return `${year}-${String(month).padStart(2,'0')}`;
+}
+
+function isFullMonth(year, month){
+  return FULL_MONTHS.includes(ymKey(year, month));
+}
+    
 function getViewYearMonth(){
   const d = calendar.getDate();
   return { y: d.getFullYear(), m: d.getMonth() + 1 };
@@ -732,7 +746,7 @@ function renderAllSummaries(){
     renderDayCellSummary(dateStr, cell, groupedData);
   });
 }
-function setEmptyMonthMessage(show){
+function setEmptyMonthMessage(show, messageHtml){
   const calendarEl = document.getElementById('calendar');
   if (!calendarEl) return;
 
@@ -746,8 +760,10 @@ function setEmptyMonthMessage(show){
     msg.className = 'emptyMonthMessage';
     msg.innerHTML = `
       <div>
-        目前當月可預約時間表還在調整中<br>
-        若需要預約請直接洽詢保姆唷~
+        ${messageHtml || `
+          目前當月可預約時間表還在調整中 🤍<br>
+          若需要預約請直接洽詢保姆唷
+        `}
       </div>
     `;
     calendarEl.appendChild(msg);
@@ -771,12 +787,23 @@ groupedData = groupByDate(availArr);
 // ✅ 判斷這個月份是不是真的有班表資料
 latestLoadedHasSchedule = availArr.length > 0;
 
-// ✅ 沒有班表資料時，月曆區塊改成空白提示
-setEmptyMonthMessage(!latestLoadedHasSchedule);
+// ✅ 判斷這個月份是否手動標記為預約已滿
+latestLoadedIsFullMonth = isFullMonth(year, month);
+
+// ✅ 整月已滿：不顯示日期格，改顯示已滿訊息
+if (latestLoadedIsFullMonth) {
+  setEmptyMonthMessage(true, `
+    目前 ${month} 月預約目前已滿 🤍<br>
+    感謝各位飼主的信任與支持<br>
+    若有候補或其他月份需求，歡迎直接洽詢保姆
+  `);
+} else {
+  // ✅ 沒有班表資料時，月曆區塊改成空白提示
+  setEmptyMonthMessage(!latestLoadedHasSchedule);
+}
 
 // ✅ 根據資料更新上方公告
-updateScheduleNoticeByData(year, month, latestLoadedHasSchedule);
-
+updateScheduleNoticeByData(year, month, latestLoadedHasSchedule, latestLoadedIsFullMonth);
 // 🔴 國定假日日期集合
 holidayDates = new Set((holidaysArr || []).map(h => h.date));
 
@@ -840,7 +867,7 @@ function isNextMonth(year, month){
   );
 }
 
-function updateScheduleNoticeByData(year, month, hasSchedule){
+function updateScheduleNoticeByData(year, month, hasSchedule, isFull){
   const notice = document.getElementById('scheduleNotice');
   if (!notice) return;
 
@@ -848,6 +875,13 @@ function updateScheduleNoticeByData(year, month, hasSchedule){
   const todayDate = today.getDate();
 
   const label = ymLabel(year, month);
+  if (isFull) {
+  notice.innerHTML = `
+    目前 ${label} 預約已滿 🤍<br>
+    若有候補或其他月份需求，歡迎直接洽詢保姆。
+  `;
+  return;
+}
 
   // 有班表資料：記錄已開放月份
   if (hasSchedule) {
@@ -966,7 +1000,8 @@ dateClick: function(info){
   // 載入中不要讓使用者點日期
   if (calendarEl && calendarEl.classList.contains('is-loading')) return;
 
-  if (!latestLoadedHasSchedule) return;
+  // 整月已滿或沒有班表時，不開啟日期詳情
+  if (latestLoadedIsFullMonth || !latestLoadedHasSchedule) return;
 
   selectedDateStr = info.dateStr;
   applySelectedStyle();
