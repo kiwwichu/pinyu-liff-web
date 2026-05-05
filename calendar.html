@@ -227,19 +227,11 @@ overflow:hidden;
   font-weight: 700;
 }
 
-.emptyMonthMessage{
-  width: 100%;
-  min-height: 240px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 28px 18px;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 1.8;
-  font-weight: 700;
+.fullText{
+  color: var(--red);
+  font-weight: 900;
 }
+  
 /* FullCalendar typography soften */
 .fc .fc-button:focus,
 .fc .fc-button-primary:focus{
@@ -794,7 +786,7 @@ latestLoadedIsFullMonth = isFullMonth(year, month);
 if (latestLoadedIsFullMonth) {
   setEmptyMonthMessage(true, `
     感謝各位飼主的信任與支持<br>
-    目前 ${month} 月預約目前已滿 🤍<br>
+    目前 ${month} 月<span class="fullText">預約目前已滿</span> 🤍<br>
     若有候補或其他月份需求，歡迎直接洽詢保姆
   `);
 } else {
@@ -875,9 +867,9 @@ function updateScheduleNoticeByData(year, month, hasSchedule, isFull){
   const todayDate = today.getDate();
 
   const label = ymLabel(year, month);
-  if (isFull) {
+if (isFull) {
   notice.innerHTML = `
-    目前 ${label} 預約已滿 🤍<br>
+    目前 ${label} <span class="fullText">預約已滿</span> 🤍<br>
     若有候補或其他月份需求，歡迎直接洽詢保姆。
   `;
   return;
