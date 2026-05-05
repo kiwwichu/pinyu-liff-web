@@ -786,7 +786,7 @@ latestLoadedIsFullMonth = isFullMonth(year, month);
 if (latestLoadedIsFullMonth) {
   setEmptyMonthMessage(true, `
     感謝各位飼主的信任與支持<br>
-    目前 ${month} 月<span class="fullText">預約目前已滿</span> 🤍<br>
+    <span class="fullText">目前 ${month} 月預約目前已滿</span> 🤍<br>
     若有候補或其他月份需求，歡迎直接洽詢保姆
   `);
 } else {
@@ -869,7 +869,7 @@ function updateScheduleNoticeByData(year, month, hasSchedule, isFull){
   const label = ymLabel(year, month);
 if (isFull) {
   notice.innerHTML = `
-    目前 ${label} <span class="fullText">預約已滿</span> 🤍<br>
+    <span class="fullText">目前 ${label} 預約已滿</span> 🤍<br>
     若有候補或其他月份需求，歡迎直接洽詢保姆。
   `;
   return;
