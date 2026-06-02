@@ -4,22 +4,84 @@
   <meta charset="UTF-8">
   <title>Pinyu LIFF</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+      padding: 24px;
+      background: #fffaf0;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .card {
+      max-width: 420px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    input, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      margin-top: 12px;
+      font-size: 16px;
+      border-radius: 12px;
+    }
+
+    button {
+      border: none;
+      background: #f6c85f;
+      font-weight: 700;
+    }
+
+    .result {
+      margin-top: 16px;
+      white-space: pre-line;
+    }
+  </style>
 </head>
 
 <body>
-  <p>載入中...</p>
+  <div id="bindPage" class="page">
+    <div class="card">
+      <h1>會員綁定</h1>
+      <p>請輸入您的家庭編號，完成 LINE 會員綁定。</p>
+
+      <input id="familyId" type="text" placeholder="例如：320-001">
+      <button onclick="bindFamily()">確認綁定</button>
+
+      <div id="bindResult" class="result"></div>
+    </div>
+  </div>
+
+  <div id="historyPage" class="page">
+    <div class="card">
+      <h1>歷史訂單</h1>
+      <p>正在載入歷史訂單...</p>
+      <div id="historyResult" class="result"></div>
+    </div>
+  </div>
 
   <script>
+    const LIFF_ID = '2008600362-O4V8Aq10';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbx7y-tCUP1bmQbPJu1EWYlMYfj89fbjGbhzWtWvZ7t-FZm_yQIn_p9jYHVEkUT1kmD3Ww/exec';
+
+    let lineUserId = '';
+    let currentPage = 'history';
+
     function getPageParam() {
       const params = new URLSearchParams(window.location.search);
 
-      // 一般瀏覽器直接開：
-      // index.html?page=bind
       let page = params.get('page');
       if (page) return page;
 
-      // LINE LIFF 可能會把參數包進 liff.state：
-      // index.html?liff.state=%3Fpage%3Dbind
       const liffState = params.get('liff.state');
       if (liffState) {
         const decodedState = decodeURIComponent(liffState);
@@ -34,18 +96,124 @@
       return 'history';
     }
 
-    const page = getPageParam();
-
-    console.log('current url:', window.location.href);
-    console.log('page:', page);
-
-    if (page === 'bind') {
-      window.location.replace('./BOUND.html');
-    } else if (page === 'history') {
-      window.location.replace('./history.html');
-    } else {
-      window.location.replace('./history.html');
+    function showPage(page) {
+      document.getElementById('bindPage').style.display = page === 'bind' ? 'block' : 'none';
+      document.getElementById('historyPage').style.display = page === 'history' ? 'block' : 'none';
     }
+
+    async function initLiff() {
+      try {
+        currentPage = getPageParam();
+        showPage(currentPage);
+
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          liff.login({
+            redirectUri: window.location.href
+          });
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        lineUserId = profile.userId;
+
+        if (currentPage === 'history') {
+          loadHistory();
+        }
+
+      } catch (err) {
+        alert('LIFF 載入失敗：' + err.message);
+      }
+    }
+
+    async function bindFamily() {
+      const familyId = document.getElementById('familyId').value.trim();
+      const resultEl = document.getElementById('bindResult');
+
+      if (!familyId) {
+        resultEl.innerText = '請輸入家庭編號。';
+        return;
+      }
+
+      if (!lineUserId) {
+        resultEl.innerText = '尚未取得 LINE 使用者資訊，請重新從 LINE 開啟。';
+        return;
+      }
+
+      resultEl.innerText = '綁定中...';
+
+      try {
+        const url =
+          API_URL +
+          '?action=bindFamily' +
+          '&lineUserId=' + encodeURIComponent(lineUserId) +
+          '&familyId=' + encodeURIComponent(familyId);
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success) {
+          resultEl.innerText =
+            '綁定成功 🤍\n' +
+            '家庭編號：' + data.familyId +
+            (data.ownerName ? '\n飼主：' + data.ownerName : '');
+        } else {
+          resultEl.innerText = data.message || '綁定失敗，請稍後再試。';
+        }
+
+      } catch (err) {
+        resultEl.innerText = '系統連線失敗，請稍後再試。';
+      }
+    }
+
+    async function loadHistory() {
+      const resultEl = document.getElementById('historyResult');
+
+      if (!lineUserId) {
+        resultEl.innerText = '尚未取得 LINE 使用者資訊。';
+        return;
+      }
+
+      try {
+        const url =
+          API_URL +
+          '?action=history' +
+          '&lineUserId=' + encodeURIComponent(lineUserId);
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.success) {
+          if (data.message === 'NOT_BOUND') {
+            resultEl.innerText = '尚未完成會員綁定，請先點選圖文選單中的「綁定會員」。';
+          } else {
+            resultEl.innerText = data.message || '查詢失敗。';
+          }
+          return;
+        }
+
+        if (!data.orders || data.orders.length === 0) {
+          resultEl.innerText = '目前沒有查到歷史訂單。';
+          return;
+        }
+
+        resultEl.innerText = data.orders
+          .map(o =>
+            '訂單編號：' + o.orderId + '\n' +
+            '服務日期：' + (o.serviceDate || '-') + '\n' +
+            '服務內容：' + (o.serviceText || '-') + '\n' +
+            '金額：' + (o.total || 0) + ' 元\n' +
+            '狀態：' + (o.status || '-')
+          )
+          .join('\n\n——————————\n\n');
+
+      } catch (err) {
+        resultEl.innerText = '歷史訂單載入失敗，請稍後再試。';
+      }
+    }
+
+    initLiff();
   </script>
 </body>
 </html>
