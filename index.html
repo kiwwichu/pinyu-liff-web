@@ -10,8 +10,34 @@
   <p>載入中...</p>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const page = params.get('page');
+    function getPageParam() {
+      const params = new URLSearchParams(window.location.search);
+
+      // 一般瀏覽器直接開：
+      // index.html?page=bind
+      let page = params.get('page');
+      if (page) return page;
+
+      // LINE LIFF 可能會把參數包進 liff.state：
+      // index.html?liff.state=%3Fpage%3Dbind
+      const liffState = params.get('liff.state');
+      if (liffState) {
+        const decodedState = decodeURIComponent(liffState);
+        const stateParams = new URLSearchParams(
+          decodedState.startsWith('?') ? decodedState : '?' + decodedState
+        );
+
+        page = stateParams.get('page');
+        if (page) return page;
+      }
+
+      return 'history';
+    }
+
+    const page = getPageParam();
+
+    console.log('current url:', window.location.href);
+    console.log('page:', page);
 
     if (page === 'bind') {
       window.location.replace('./BOUND.html');
