@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>會員綁定</title>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+      background: #fffaf0;
+      color: #333;
+    }
+
+    .card {
+      max-width: 420px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 0 0 12px;
+      color: #222;
+    }
+
+    p {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #666;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px 16px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      border: none;
+      border-radius: 999px;
+      background: #f6c85f;
+      color: #222;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 18px;
+      font-size: 15px;
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+
+    .success {
+      color: #2e7d32;
+      font-weight: 600;
+    }
+
+    .error {
+      color: #c62828;
+      font-weight: 600;
+    }
+
+    .hint {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #fff7df;
+      font-size: 14px;
+      color: #6b5b2e;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>會員綁定</h1>
+
+    <p>
+      請輸入您預約時取得的家庭編號。<br>
+      綁定後，系統就能辨識您的 LINE 帳號，後續也能收到服務相關通知。
+    </p>
+
+    <label for="familyId">家庭編號</label>
+    <input id="familyId" type="text" placeholder="例如：320-001">
+
+    <button id="bindBtn" onclick="bindFamily()">確認綁定</button>
+
+    <div class="hint">
+      若不確定家庭編號，可以回到 LINE 詢問 Pinyu 協助確認。
+    </div>
+
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    const LIFF_ID = '2008600362-O4V8Aq10';
+
+    // 這裡換成你的 Apps Script Web App URL
+    const API_URL = '你的 Apps Script Web App URL';
+
+    let lineUserId = '';
+
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        lineUserId = profile.userId;
+
+      } catch (err) {
+        showResult('LINE 載入失敗，請重新開啟頁面再試一次。', false);
+      }
+    }
+
+    async function bindFamily() {
+      const familyId = document.getElementById('familyId').value.trim();
+      const btn = document.getElementById('bindBtn');
+
+      if (!familyId) {
+        showResult('請輸入家庭編號。', false);
+        return;
+      }
+
+      if (!lineUserId) {
+        showResult('尚未取得 LINE 使用者資訊，請重新開啟頁面。', false);
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = '綁定中...';
+
+      try {
+        const url =
+          API_URL +
+          '?action=bindFamily' +
+          '&lineUserId=' + encodeURIComponent(lineUserId) +
+          '&familyId=' + encodeURIComponent(familyId);
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success) {
+          showResult(
+            '綁定成功 🤍\n' +
+            '家庭編號：' + data.familyId + '\n' +
+            (data.ownerName ? '飼主：' + data.ownerName : ''),
+            true
+          );
+        } else {
+          showResult(data.message || '綁定失敗，請稍後再試。', false);
+        }
+
+      } catch (err) {
+        showResult('系統連線失敗，請稍後再試。', false);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '確認綁定';
+      }
+    }
+
+    function showResult(message, success) {
+      const el = document.getElementById('result');
+      el.innerText = message;
+      el.className = 'result ' + (success ? 'success' : 'error');
+    }
+
+    initLiff();
+  </script>
+</body>
+</html>
