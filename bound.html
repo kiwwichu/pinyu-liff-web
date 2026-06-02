@@ -124,82 +124,94 @@
 
   <script>
     const LIFF_ID = '2008600362-rYuIbHBW';
+ // 這裡換成你的 Apps Script Web App URL
+ const API_URL = 'https://script.google.com/macros/s/AKfycby7CVs-Er84UXpvCuMBSKmbmsOO2MAeXw5aFZaK-TRtbCedj8Yc5SwYfEFZXYeRk2L8sw/exec';
 
-    // 這裡換成你的 Apps Script Web App URL
-    const API_URL = 'https://script.google.com/macros/s/AKfycbx7y-tCUP1bmQbPJu1EWYlMYfj89fbjGbhzWtWvZ7t-FZm_yQIn_p9jYHVEkUT1kmD3Ww/exec';
+  let lineUserId = '';
+  let liffReady = false;
 
-    let lineUserId = '';
+  async function initLiff() {
+    const resultEl = document.getElementById('result');
 
-    async function initLiff() {
-      try {
-        await liff.init({ liffId: LIFF_ID });
+    try {
+      resultEl.innerText = '正在載入 LINE 使用者資訊...';
 
-        if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
-        }
+      await liff.init({ liffId: LIFF_ID });
 
-        const profile = await liff.getProfile();
-        lineUserId = profile.userId;
-
-      } catch (err) {
-        showResult('LINE 載入失敗，請重新開啟頁面再試一次。', false);
-      }
-    }
-
-    async function bindFamily() {
-      const familyId = document.getElementById('familyId').value.trim();
-      const btn = document.getElementById('bindBtn');
-
-      if (!familyId) {
-        showResult('請輸入家庭編號。', false);
+      if (!liff.isLoggedIn()) {
+        liff.login({
+          redirectUri: window.location.href
+        });
         return;
       }
+
+      const profile = await liff.getProfile();
+
+      lineUserId = profile.userId;
+      liffReady = true;
 
       if (!lineUserId) {
-        showResult('尚未取得 LINE 使用者資訊，請重新開啟頁面。', false);
+        resultEl.innerText =
+          '未取得 LINE 使用者資訊。\n請重新從 LINE 圖文選單開啟此頁面。';
         return;
       }
 
-      btn.disabled = true;
-      btn.innerText = '綁定中...';
+      resultEl.innerText = 'LINE 使用者資訊載入完成，請輸入家庭編號。';
 
-      try {
-        const url =
-          API_URL +
-          '?action=bindFamily' +
-          '&lineUserId=' + encodeURIComponent(lineUserId) +
-          '&familyId=' + encodeURIComponent(familyId);
+    } catch (err) {
+      resultEl.innerText =
+        'LINE 載入失敗，請重新從 LINE 圖文選單開啟。\n\n錯誤：' + err.message;
+    }
+  }
 
-        const res = await fetch(url);
-        const data = await res.json();
+  async function bindFamily() {
+    const familyId = document.getElementById('familyId').value.trim();
+    const resultEl = document.getElementById('result');
+    const btn = document.getElementById('bindBtn');
 
-        if (data.success) {
-          showResult(
-            '綁定成功 🤍\n' +
-            '家庭編號：' + data.familyId + '\n' +
-            (data.ownerName ? '飼主：' + data.ownerName : ''),
-            true
-          );
-        } else {
-          showResult(data.message || '綁定失敗，請稍後再試。', false);
-        }
+    if (!familyId) {
+      resultEl.innerText = '請輸入家庭編號。';
+      return;
+    }
 
-      } catch (err) {
-        showResult('系統連線失敗，請稍後再試。', false);
-      } finally {
-        btn.disabled = false;
-        btn.innerText = '確認綁定';
+    if (!liffReady || !lineUserId) {
+      resultEl.innerText =
+        '尚未取得 LINE 使用者資訊，請稍等幾秒後再按一次，或重新從 LINE 圖文選單開啟。';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = '綁定中...';
+    resultEl.innerText = '正在綁定會員資料...';
+
+    try {
+      const url =
+        API_URL +
+        '?action=bindFamily' +
+        '&lineUserId=' + encodeURIComponent(lineUserId) +
+        '&familyId=' + encodeURIComponent(familyId);
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.success) {
+        resultEl.innerText =
+          '綁定成功 🤍\n' +
+          '家庭編號：' + data.familyId +
+          (data.ownerName ? '\n飼主：' + data.ownerName : '');
+      } else {
+        resultEl.innerText = data.message || '綁定失敗，請確認家庭編號是否正確。';
       }
-    }
 
-    function showResult(message, success) {
-      const el = document.getElementById('result');
-      el.innerText = message;
-      el.className = 'result ' + (success ? 'success' : 'error');
+    } catch (err) {
+      resultEl.innerText = '系統連線失敗，請稍後再試。';
+    } finally {
+      btn.disabled = false;
+      btn.innerText = '確認綁定';
     }
+  }
 
-    initLiff();
-  </script>
+  initLiff();
+</script>
 </body>
 </html>
