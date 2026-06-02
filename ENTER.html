@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Pinyu LIFF</title>
+</head>
+<body>
+  <p>載入中...</p>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const page = params.get('page');
+
+    if (page === 'bind') {
+      window.location.href = './BOUND.html';
+    } else if (page === 'history') {
+      window.location.href = './history.html';
+    } else {
+      window.location.href = './history.html';
+    }
+  </script>
+</body>
+</html>
