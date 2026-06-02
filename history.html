@@ -315,6 +315,7 @@
 
 <script>
   const LIFF_ID = '2008600362-O4V8Aq10';
+  const API_URL = 'https://script.google.com/macros/s/AKfycby7CVs-Er84UXpvCuMBSKmbmsOO2MAeXw5aFZaK-TRtbCedj8Yc5SwYfEFZXYeRk2L8sw/exec';
 
   let gLineUserId = '';
   let gOrdersAll  = [];
@@ -485,12 +486,14 @@ async function fetchOrdersFromServer() {
   showLoading();
 
   try {
-    const res = await fetch('/api/order-history', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        lineUserId: gLineUserId,
-      }),
+    const url =
+      API_URL +
+      '?action=history' +
+      '&lineUserId=' + encodeURIComponent(gLineUserId) +
+      '&t=' + Date.now();
+
+    const res = await fetch(url, {
+      method: 'GET'
     });
 
     if (!res.ok) {
@@ -504,12 +507,15 @@ async function fetchOrdersFromServer() {
     console.log('API 回傳：', data);
 
     if (!data.success) {
-      console.log('history API error data', data);
-      listEl.innerText = `查詢失敗：
-    ${data.error || ''} ${data.message || ''}`.trim();
+      if (data.message === 'NOT_BOUND') {
+        listEl.innerText = '尚未完成會員綁定，請先點選圖文選單中的「綁定會員」。';
+      } else if (data.message === 'MISSING_LINE_USER_ID') {
+        listEl.innerText = '尚未取得 LINE 使用者資訊，請重新從 LINE 圖文選單開啟。';
+      } else {
+        listEl.innerText = `查詢失敗：${data.error || ''} ${data.message || ''}`.trim();
+      }
       return;
     }
-
 
     gOrdersAll = data.orders || [];
 
