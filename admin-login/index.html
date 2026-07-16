@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>快樂小狗｜管理員登入</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+body{margin:0;background:#f3f7fa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;color:#24313f}
+.wrap{max-width:520px;margin:auto;padding:36px 18px}.head{background:#48a2e8;color:white;padding:20px;border-radius:18px 18px 0 0}
+.card{background:white;padding:28px 20px;text-align:center;border-radius:0 0 18px 18px;box-shadow:0 8px 28px #0001}
+#googleButton{display:flex;justify-content:center;margin:22px 0}.err{color:#a12d2d;white-space:pre-wrap}.muted{color:#6b7785;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><h1 style="margin:0">快樂小狗 Pinyu</h1><div>內部管理後台</div></div>
+  <div class="card">
+    <h2>管理員登入</h2>
+    <p class="muted">使用「系統使用者」中登記的 Google 帳號登入。<br>登入不會取得試算表共用權限。</p>
+    <div id="googleButton"></div>
+    <div id="loading" class="muted" style="display:none">正在驗證並開啟後台…</div>
+    <div id="error" class="err"></div>
+  </div>
+</div>
+
+<form id="loginForm" method="post" style="display:none">
+  <input id="credential" name="credential" type="hidden">
+  <input name="action" value="googleAdminLogin" type="hidden">
+</form>
+
+<script src="./config.js"></script>
+<script>
+const cfg=window.PINYU_ADMIN_LOGIN||{}, form=document.getElementById('loginForm');
+document.addEventListener('DOMContentLoaded',()=>{
+  if(!cfg.GOOGLE_CLIENT_ID||!cfg.APPS_SCRIPT_WEB_APP_URL){
+    document.getElementById('error').textContent='請先在 config.js 填入 Client ID 與 Apps Script /exec 網址。'; return;
+  }
+  form.action=cfg.APPS_SCRIPT_WEB_APP_URL;
+  waitGoogle();
+});
+function waitGoogle(){
+  if(!window.google||!google.accounts||!google.accounts.id){setTimeout(waitGoogle,100);return;}
+  google.accounts.id.initialize({
+    client_id:cfg.GOOGLE_CLIENT_ID,
+    callback:r=>{
+      if(!r||!r.credential){document.getElementById('error').textContent='沒有取得 Google 登入憑證。';return;}
+      document.getElementById('loading').style.display='block';
+      document.getElementById('credential').value=r.credential;
+      form.submit();
+    }
+  });
+  google.accounts.id.renderButton(document.getElementById('googleButton'),{
+    theme:'outline',size:'large',shape:'pill',text:'signin_with',width:300,locale:'zh_TW'
+  });
+}
+</script>
+</body></html>
