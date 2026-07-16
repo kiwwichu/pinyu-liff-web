@@ -1,0 +1,4 @@
+window.ADMIN_CONFIG = {
+  LIFF_ID: '',
+  API_URL: ''
+};
