@@ -959,12 +959,36 @@ async function initCalendar(){
 const initY = now.getFullYear();
 const initM = now.getMonth() + 1;
 
+const minMonthDate = new Date(
+  now.getFullYear(),
+  now.getMonth(),
+  1
+);
+
+const minMonthStr =
+  minMonthDate.getFullYear() + '-' +
+  String(minMonthDate.getMonth() + 1).padStart(2, '0') +
+  '-01';
+
 calendar = new FullCalendar.Calendar(el, {
   initialView: 'dayGridMonth',
-  initialDate: `${initY}-${String(initM).padStart(2,'0')}-01`,
+
+  // 開啟時永遠顯示目前月份
+  initialDate: `${initY}-${String(initM).padStart(2, '0')}-01`,
+
+  // 最早只能顯示目前月份，不能滑到過去月份
+  validRange: {
+    start: minMonthStr
+  },
+
   height: 'auto',
   locale: 'zh-tw',
-  headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+
+  headerToolbar: {
+    left: 'prev,next today',
+    center: 'title',
+    right: ''
+  },
 
   dayCellContent: function(arg){
     const n = String(arg.dayNumberText).match(/\d+/)?.[0] || '';
