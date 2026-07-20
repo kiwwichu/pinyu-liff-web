@@ -139,7 +139,6 @@ header p{
 
     showError(error);
   }
-}api({action:'reviewData',accessToken:token,orderId:new URLSearchParams(location.search).get('orderId')||''});render(data)}catch(e){showError(e)}}
     function bind(){document.querySelectorAll('.star').forEach(b=>b.onclick=()=>setRating(Number(b.dataset.value)));$('order').onchange=renderOrder;$('comment').oninput=()=>$('count').textContent=$('comment').value.length+' / 1000';$('allowPublic').onchange=()=>$('publicName').classList.toggle('hidden',!$('allowPublic').checked);$('submit').onclick=submit}
    async function api(values) {
   const params =
