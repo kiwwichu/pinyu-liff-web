@@ -6,60 +6,11 @@
   <title>快樂小狗｜服務評價</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
- header{
-  padding:
-    calc(32px + env(safe-area-inset-top))
-    22px
-    30px;
-
-  text-align:center;
-  color:#ffffff;
-
-  background:
-    linear-gradient(
-      135deg,
-      #48a2e8,
-      #72c8ec
-    );
-
-  font-family:
-    "Noto Sans TC",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-}
-
-header h1{
-  margin:0 0 14px;
-  font-size:22px;
-  font-weight:700;
-  line-height:1.55;
-  letter-spacing:1.2px;
-  text-align:center;
-}
-
-header p{
-  margin:0;
-  font-size:14px;
-  font-weight:500;
-  line-height:1.8;
-  letter-spacing:1px;
-  text-align:center;
-  opacity:.95;
-}
-
-.brand-stars{
-  display:inline-block;
-  margin-left:5px;
-  color:#ffd166;
-  font-size:13px;
-  letter-spacing:2px;
-}
     :root{--blue:#48a2e8;--yellow:#ffc83d;--green:#19a463;--text:#24313f;--muted:#71808e;--line:#e1e8ee;--bg:#f3f7fa}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif}
     button,input,select,textarea{font:inherit}.page{max-width:520px;min-height:100vh;margin:auto;background:var(--bg)}
- 
+    header{padding:calc(20px + env(safe-area-inset-top)) 18px 22px;text-align:center;color:#fff;background:linear-gradient(135deg,#48a2e8,#72c8ec)}
+    header .paw{font-size:38px}header h1{margin:4px 0;font-size:23px}header p{margin:0;font-size:14px}
     main{padding:14px 12px calc(30px + env(safe-area-inset-bottom))}.panel{margin-bottom:12px;padding:17px;background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:0 3px 12px rgba(45,70,90,.05)}
     .hidden{display:none!important}.loading,.success{text-align:center;color:var(--muted)}.error{color:#c43d3d;line-height:1.6}.title{display:block;margin-bottom:9px;font-weight:800}
     select,textarea,input[type=text]{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);outline:none}
@@ -72,10 +23,7 @@ header p{
 </head>
 <body>
   <div class="page">
-<header>
-  <h1>您的回饋，是我們前進的動力！</h1>
-  <p>快樂小狗 pinyu｜服務評價 <span class="brand-stars">★★★★★</span></p>
-</header>
+    <header><div class="paw">🐾</div><h1>這次服務還滿意嗎？</h1><p>你的回饋，會幫助我們照顧得更好</p></header>
     <main>
       <section id="loading" class="panel loading">正在確認 LINE 會員資料…</section>
       <section id="error" class="panel error hidden"></section>
@@ -91,146 +39,21 @@ header p{
         <section class="panel"><label class="title" for="comment">想對我們說的話</label><textarea id="comment" maxlength="1000" placeholder="可自由填寫服務感受或建議，沒有也可以留白"></textarea><div id="count" class="count">0 / 1000</div></section>
         <section class="panel"><div class="checks">
           <label class="check"><input id="bookAgain" type="checkbox"><span>我願意再次預約服務</span></label><label class="check"><input id="recommend" type="checkbox"><span>我願意推薦給其他飼主</span></label><label class="check"><input id="allowPublic" type="checkbox"><span>同意將這則評價匿名顯示於公開頁面</span></label>
-        </div><input id="publicName" class="hidden" type="text" maxlength="30" placeholder="公開名稱，例如：襪襪媽媽或pinyu"></section>
+        </div><input id="publicName" class="hidden" type="text" maxlength="30" placeholder="公開名稱，例如：品仔媽媽"></section>
         <button id="submit" class="submit" type="button">送出服務評價</button>
       </div>
       <section id="success" class="panel success hidden"><div class="icon">💛</div><h2>謝謝你的回饋！</h2><p>評價已經安全送出，我們會繼續用心照顧每一位毛孩。</p></section>
     </main>
   </div>
   <script>
-    const LIFF_ID = '2008600362-BcS17F0V';
-    const API_BASE = 'https://script.google.com/macros/s/AKfycby_Op5ci1wBAObqEoD5rFjMkV6lDYq9MYufxb4UXtxmCx8VGIrR_uXvbnB2E6WL-R2xCg/exec';
+    const LIFF_ID = '請貼上新建立的評價LIFF_ID';
+    const API_BASE = 'https://script.google.com/macros/s/AKfycbxgN3j1JkMXT25-pnfMojWb941wDsFeeiX1NJg9rC7uA-ml-RdXRqCGFh7zeyyKgj__sg/exec';
     let token='',rating=0,orders=[];
     const $=id=>document.getElementById(id);const messages=['','很不滿意','有待加強','還不錯','很滿意','非常滿意！'];
     document.addEventListener('DOMContentLoaded',init);
-    async function init() {
-  try {
-    await liff.init({
-      liffId: LIFF_ID
-    });
-
-    if (!liff.isLoggedIn()) {
-      // 不傳入 location.href，避免 iPhone 網址格式錯誤
-      liff.login();
-      return;
-    }
-
-    token =
-      liff.getAccessToken() || '';
-
-    if (!token) {
-      throw new Error(
-        '無法取得 LINE 登入憑證，請從 LINE 重新開啟頁面。'
-      );
-    }
-
-    bind();
-
-    const urlParams =
-      new URLSearchParams(
-        window.location.search || ''
-      );
-
-    const orderId =
-      urlParams.get('orderId') || '';
-
-    const data =
-      await api({
-        action: 'reviewData',
-        accessToken: token,
-        orderId: orderId
-      });
-
-    render(data);
-    
-  } catch (error) {
-    console.error(
-      '服務評價頁初始化失敗：',
-      error
-    );
-
-    showError(error);
-  }
-}
-
-function bind() {document.querySelectorAll('.star').forEach(b=>b.onclick=()=>setRating(Number(b.dataset.value)));$('order').onchange=renderOrder;$('comment').oninput=()=>$('count').textContent=$('comment').value.length+' / 1000';$('allowPublic').onchange=()=>$('publicName').classList.toggle('hidden',!$('allowPublic').checked);$('submit').onclick=submit}
-   async function api(values) {
-  const params =
-    new URLSearchParams();
-
-  Object.keys(values).forEach(function (key) {
-    const value = values[key];
-
-    params.set(
-      key,
-      typeof value === 'object'
-        ? JSON.stringify(value)
-        : String(value || '')
-    );
-  });
-
-  let response;
-
-  /*
-   * 讀取可評價訂單使用 GET，
-   * 與原本 history.html 相同。
-   */
-  if (values.action === 'reviewData') {
-    response = await fetch(
-      API_BASE + '?' + params.toString(),
-      {
-        method: 'GET',
-        cache: 'no-store'
-      }
-    );
-  } else {
-    /*
-     * 儲存評價仍使用 POST。
-     */
-    response = await fetch(
-      API_BASE,
-      {
-        method: 'POST',
-        body: params
-      }
-    );
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      'API 連線失敗：HTTP ' +
-      response.status
-    );
-  }
-
-  const responseText =
-    await response.text();
-
-  let data;
-
-  try {
-    data =
-      JSON.parse(responseText);
-  } catch (error) {
-    console.error(
-      'API 原始回應：',
-      responseText
-    );
-
-    throw new Error(
-      '後端回傳格式不正確，請確認 Apps Script 已重新部署。'
-    );
-  }
-
-  if (!data.success) {
-    throw new Error(
-      data.message ||
-      '系統處理失敗。'
-    );
-  }
-
-  return data;
-}
+    async function init(){try{await liff.init({liffId:LIFF_ID});if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return}token=liff.getAccessToken()||'';if(!token)throw new Error('無法取得 LINE 登入憑證。');bind();const data=await api({action:'reviewData',accessToken:token,orderId:new URLSearchParams(location.search).get('orderId')||''});render(data)}catch(e){showError(e)}}
+    function bind(){document.querySelectorAll('.star').forEach(b=>b.onclick=()=>setRating(Number(b.dataset.value)));$('order').onchange=renderOrder;$('comment').oninput=()=>$('count').textContent=$('comment').value.length+' / 1000';$('allowPublic').onchange=()=>$('publicName').classList.toggle('hidden',!$('allowPublic').checked);$('submit').onclick=submit}
+    async function api(values){const body=new URLSearchParams();Object.keys(values).forEach(k=>body.set(k,typeof values[k]==='object'?JSON.stringify(values[k]):values[k]));const response=await fetch(API_BASE,{method:'POST',body});const data=await response.json();if(!data.success)throw new Error(data.message||'系統處理失敗。');return data}
     function render(data){orders=data.orders||[];$('profile').textContent=(data.profile.displayName||'飼主')+'，您好';$('family').textContent='家庭編號：'+data.profile.familyId;$('order').innerHTML='';orders.forEach(o=>{const option=document.createElement('option');option.value=o.orderId;option.textContent=(o.serviceDate||'—')+'｜'+(o.petName||'毛孩')+'｜'+o.orderId+(o.hasReview?'（已評價）':'');$('order').appendChild(option)});if(!orders.length){$('order').innerHTML='<option>目前沒有可以評價的完成訂單</option>';$('order').disabled=true;$('submit').disabled=true}renderOrder();$('loading').classList.add('hidden');$('form').classList.remove('hidden')}
     function renderOrder(){const o=orders.find(x=>x.orderId===$('order').value);if(!o){$('orderInfo').classList.add('hidden');return}$('orderInfo').innerHTML='<div><b>需求單：</b>'+esc(o.orderId)+'</div><div><b>服務日期：</b>'+esc(o.serviceDate||'—')+'</div><div><b>毛孩：</b>'+esc(o.petName||'—')+'</div>'+(o.hasReview?'<div class="already">曾填寫過評價，再次送出會更新原本內容。</div>':'');$('orderInfo').classList.remove('hidden')}
     function setRating(v){rating=v;document.querySelectorAll('.star').forEach(s=>s.classList.toggle('active',Number(s.dataset.value)<=v));$('ratingText').textContent=messages[v]}
