@@ -141,7 +141,83 @@ header p{
   }
 }api({action:'reviewData',accessToken:token,orderId:new URLSearchParams(location.search).get('orderId')||''});render(data)}catch(e){showError(e)}}
     function bind(){document.querySelectorAll('.star').forEach(b=>b.onclick=()=>setRating(Number(b.dataset.value)));$('order').onchange=renderOrder;$('comment').oninput=()=>$('count').textContent=$('comment').value.length+' / 1000';$('allowPublic').onchange=()=>$('publicName').classList.toggle('hidden',!$('allowPublic').checked);$('submit').onclick=submit}
-    async function api(values){const body=new URLSearchParams();Object.keys(values).forEach(k=>body.set(k,typeof values[k]==='object'?JSON.stringify(values[k]):values[k]));const response=await fetch(API_BASE,{method:'POST',body});const data=await response.json();if(!data.success)throw new Error(data.message||'系統處理失敗。');return data}
+   async function api(values) {
+  const params =
+    new URLSearchParams();
+
+  Object.keys(values).forEach(function (key) {
+    const value = values[key];
+
+    params.set(
+      key,
+      typeof value === 'object'
+        ? JSON.stringify(value)
+        : String(value || '')
+    );
+  });
+
+  let response;
+
+  /*
+   * 讀取可評價訂單使用 GET，
+   * 與原本 history.html 相同。
+   */
+  if (values.action === 'reviewData') {
+    response = await fetch(
+      API_BASE + '?' + params.toString(),
+      {
+        method: 'GET',
+        cache: 'no-store'
+      }
+    );
+  } else {
+    /*
+     * 儲存評價仍使用 POST。
+     */
+    response = await fetch(
+      API_BASE,
+      {
+        method: 'POST',
+        body: params
+      }
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      'API 連線失敗：HTTP ' +
+      response.status
+    );
+  }
+
+  const responseText =
+    await response.text();
+
+  let data;
+
+  try {
+    data =
+      JSON.parse(responseText);
+  } catch (error) {
+    console.error(
+      'API 原始回應：',
+      responseText
+    );
+
+    throw new Error(
+      '後端回傳格式不正確，請確認 Apps Script 已重新部署。'
+    );
+  }
+
+  if (!data.success) {
+    throw new Error(
+      data.message ||
+      '系統處理失敗。'
+    );
+  }
+
+  return data;
+}
     function render(data){orders=data.orders||[];$('profile').textContent=(data.profile.displayName||'飼主')+'，您好';$('family').textContent='家庭編號：'+data.profile.familyId;$('order').innerHTML='';orders.forEach(o=>{const option=document.createElement('option');option.value=o.orderId;option.textContent=(o.serviceDate||'—')+'｜'+(o.petName||'毛孩')+'｜'+o.orderId+(o.hasReview?'（已評價）':'');$('order').appendChild(option)});if(!orders.length){$('order').innerHTML='<option>目前沒有可以評價的完成訂單</option>';$('order').disabled=true;$('submit').disabled=true}renderOrder();$('loading').classList.add('hidden');$('form').classList.remove('hidden')}
     function renderOrder(){const o=orders.find(x=>x.orderId===$('order').value);if(!o){$('orderInfo').classList.add('hidden');return}$('orderInfo').innerHTML='<div><b>需求單：</b>'+esc(o.orderId)+'</div><div><b>服務日期：</b>'+esc(o.serviceDate||'—')+'</div><div><b>毛孩：</b>'+esc(o.petName||'—')+'</div>'+(o.hasReview?'<div class="already">曾填寫過評價，再次送出會更新原本內容。</div>':'');$('orderInfo').classList.remove('hidden')}
     function setRating(v){rating=v;document.querySelectorAll('.star').forEach(s=>s.classList.toggle('active',Number(s.dataset.value)<=v));$('ratingText').textContent=messages[v]}
