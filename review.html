@@ -129,7 +129,7 @@ header p{
       });
 
     render(data);
-
+    
   } catch (error) {
     console.error(
       '服務評價頁初始化失敗：',
@@ -138,7 +138,9 @@ header p{
 
     showError(error);
   }
-    function bind(){document.querySelectorAll('.star').forEach(b=>b.onclick=()=>setRating(Number(b.dataset.value)));$('order').onchange=renderOrder;$('comment').oninput=()=>$('count').textContent=$('comment').value.length+' / 1000';$('allowPublic').onchange=()=>$('publicName').classList.toggle('hidden',!$('allowPublic').checked);$('submit').onclick=submit}
+}
+
+function bind() {document.querySelectorAll('.star').forEach(b=>b.onclick=()=>setRating(Number(b.dataset.value)));$('order').onchange=renderOrder;$('comment').oninput=()=>$('count').textContent=$('comment').value.length+' / 1000';$('allowPublic').onchange=()=>$('publicName').classList.toggle('hidden',!$('allowPublic').checked);$('submit').onclick=submit}
    async function api(values) {
   const params =
     new URLSearchParams();
