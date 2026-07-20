@@ -6,29 +6,42 @@
   <title>快樂小狗｜服務評價</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    header{
-  font-family:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+   header{
+  padding:
+    calc(32px + env(safe-area-inset-top))
+    22px
+    30px;
+  font-family:
+    "Noto Sans TC",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 header h1{
-  margin:0 0 9px;
-  font-size:21px;
+  margin:0 0 14px;
+  font-size:22px;
   font-weight:700;
-  letter-spacing:.5px;
+  line-height:1.55;
+  letter-spacing:1.2px;
 }
 
 header p{
   margin:0;
-  font-size:13px;
+  font-size:14px;
   font-weight:500;
-  letter-spacing:.4px;
+  line-height:1.8;
+  letter-spacing:1px;
   opacity:.95;
 }
 
 .brand-stars{
+  display:inline-block;
+  margin-left:5px;
   color:#ffd166;
-  font-size:12px;
-  letter-spacing:1px;
+  font-size:13px;
+  letter-spacing:2px;
 }
     :root{--blue:#48a2e8;--yellow:#ffc83d;--green:#19a463;--text:#24313f;--muted:#71808e;--line:#e1e8ee;--bg:#f3f7fa}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif}
