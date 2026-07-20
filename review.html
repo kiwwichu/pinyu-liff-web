@@ -91,7 +91,55 @@ header p{
     let token='',rating=0,orders=[];
     const $=id=>document.getElementById(id);const messages=['','很不滿意','有待加強','還不錯','很滿意','非常滿意！'];
     document.addEventListener('DOMContentLoaded',init);
-    async function init(){try{await liff.init({liffId:LIFF_ID});if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return}token=liff.getAccessToken()||'';if(!token)throw new Error('無法取得 LINE 登入憑證。');bind();const data=await api({action:'reviewData',accessToken:token,orderId:new URLSearchParams(location.search).get('orderId')||''});render(data)}catch(e){showError(e)}}
+    async function init() {
+  try {
+    await liff.init({
+      liffId: LIFF_ID
+    });
+
+    if (!liff.isLoggedIn()) {
+      // 不傳入 location.href，避免 iPhone 網址格式錯誤
+      liff.login();
+      return;
+    }
+
+    token =
+      liff.getAccessToken() || '';
+
+    if (!token) {
+      throw new Error(
+        '無法取得 LINE 登入憑證，請從 LINE 重新開啟頁面。'
+      );
+    }
+
+    bind();
+
+    const urlParams =
+      new URLSearchParams(
+        window.location.search || ''
+      );
+
+    const orderId =
+      urlParams.get('orderId') || '';
+
+    const data =
+      await api({
+        action: 'reviewData',
+        accessToken: token,
+        orderId: orderId
+      });
+
+    render(data);
+
+  } catch (error) {
+    console.error(
+      '服務評價頁初始化失敗：',
+      error
+    );
+
+    showError(error);
+  }
+}api({action:'reviewData',accessToken:token,orderId:new URLSearchParams(location.search).get('orderId')||''});render(data)}catch(e){showError(e)}}
     function bind(){document.querySelectorAll('.star').forEach(b=>b.onclick=()=>setRating(Number(b.dataset.value)));$('order').onchange=renderOrder;$('comment').oninput=()=>$('count').textContent=$('comment').value.length+' / 1000';$('allowPublic').onchange=()=>$('publicName').classList.toggle('hidden',!$('allowPublic').checked);$('submit').onclick=submit}
     async function api(values){const body=new URLSearchParams();Object.keys(values).forEach(k=>body.set(k,typeof values[k]==='object'?JSON.stringify(values[k]):values[k]));const response=await fetch(API_BASE,{method:'POST',body});const data=await response.json();if(!data.success)throw new Error(data.message||'系統處理失敗。');return data}
     function render(data){orders=data.orders||[];$('profile').textContent=(data.profile.displayName||'飼主')+'，您好';$('family').textContent='家庭編號：'+data.profile.familyId;$('order').innerHTML='';orders.forEach(o=>{const option=document.createElement('option');option.value=o.orderId;option.textContent=(o.serviceDate||'—')+'｜'+(o.petName||'毛孩')+'｜'+o.orderId+(o.hasReview?'（已評價）':'');$('order').appendChild(option)});if(!orders.length){$('order').innerHTML='<option>目前沒有可以評價的完成訂單</option>';$('order').disabled=true;$('submit').disabled=true}renderOrder();$('loading').classList.add('hidden');$('form').classList.remove('hidden')}
