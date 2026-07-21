@@ -103,6 +103,24 @@
         text-align: center;
         color: var(--muted);
       }
+      .loading-spinner {
+        width: 38px;
+        height: 38px;
+        margin: 2px auto 13px;
+        border: 4px solid #dcecf8;
+        border-top-color: var(--blue);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      .loading-text {
+        font-weight: 800;
+        color: #526271;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
       .error {
         color: #c43d3d;
         line-height: 1.6;
@@ -218,6 +236,15 @@
         height: 19px;
         accent-color: var(--blue);
       }
+      .recommend-note {
+        padding: 13px 14px;
+        border-radius: 12px;
+        background: #f4faff;
+        color: #526271;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.7;
+      }
       #publicName {
         margin-top: 10px;
       }
@@ -251,7 +278,8 @@
       </header>
       <main>
         <section id="loading" class="panel loading">
-          正在確認 LINE 會員資料…
+          <div class="loading-spinner" aria-hidden="true"></div>
+          <div class="loading-text">努力加載中，請稍後…</div>
         </section>
         <section id="error" class="panel error hidden"></section>
         <div id="form" class="hidden">
@@ -348,10 +376,6 @@
                   >我願意再次預約服務</span
                 ></label
               ><label class="check"
-                ><input id="recommend" type="checkbox" /><span
-                  >我願意推薦給其他飼主</span
-                ></label
-              ><label class="check"
                 ><input id="allowPublic" type="checkbox" /><span
                   >同意將這則評價匿名顯示於公開頁面</span
                 ></label
@@ -364,6 +388,9 @@
               maxlength="30"
               placeholder="公開名稱，例如：襪襪媽媽或pinyu"
             />
+            <div class="recommend-note">
+              如果您覺得這次服務不錯，也歡迎把「快樂小狗 Pinyu」推薦給身邊有需要的朋友 ♡
+            </div>
           </section>
           <button id="submit" class="submit" type="button">送出服務評價</button>
         </div>
@@ -564,7 +591,7 @@
           communication: $("communication").checked,
           comment: $("comment").value,
           bookAgain: $("bookAgain").checked,
-          recommend: $("recommend").checked,
+          recommend: false,
           allowPublic: $("allowPublic").checked,
           publicName: $("publicName").value,
         };
