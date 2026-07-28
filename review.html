@@ -381,7 +381,7 @@
               id="publicName"
               type="text"
               maxlength="30"
-              placeholder="若未輸入，將以毛孩名＋飼主顯示"
+              placeholder="請輸入匿名名稱，若無輸入則預設為毛孩飼主"
             />
             <div class="recommend-note">
               如果您覺得這次服務不錯，也歡迎把「快樂小狗 Pinyu」推薦給身邊有需要的朋友 ♡
@@ -399,11 +399,10 @@
     <script>
       const LIFF_ID = "2008600362-BcS17F0V";
       const API_BASE =
-        "https://script.google.com/macros/s/AKfycbxdvTrjQdgqv-jZvbmEOjYr438LoF0nCYUBN6Kzb7hJcGKT1G_91XGxm5FbY9c2xpd-Fg/exec";
+     "https://script.google.com/macros/s/AKfycbyRd5pq1itmyHoca6QX8zoUk8LbMssw20ZXmHYgeIvu7OGkTFNr7S4iFOH2ZOZuEQq54w/exec";
       let token = "",
         rating = 0,
-        orders = [],
-        autoPublicName = "";
+        orders = [];
       const $ = (id) => document.getElementById(id);
       const messages = [
         "",
@@ -552,15 +551,10 @@
           $("orderInfo").classList.add("hidden");
           return;
         }
-        const nextAutoPublicName = (o.petName || "毛孩") + "飼主";
-        if (
-          !$("publicName").value.trim() ||
-          $("publicName").value.trim() === autoPublicName
-        ) {
-          $("publicName").value = nextAutoPublicName;
-        }
-        autoPublicName = nextAutoPublicName;
-        $("publicName").placeholder = nextAutoPublicName;
+        $("publicName").placeholder =
+          "請輸入匿名名稱，若無輸入則預設為" +
+          (o.petName || "毛孩") +
+          "飼主";
         $("orderInfo").innerHTML =
           "<div><b>服務日期：</b>" +
           esc(o.serviceDate || "—") +
