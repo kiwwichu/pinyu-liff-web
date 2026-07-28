@@ -372,21 +372,16 @@
           <section class="panel">
             <div class="checks">
               <label class="check"
-                ><input id="bookAgain" type="checkbox" /><span
-                  >我願意再次預約服務</span
-                ></label
-              ><label class="check"
-                ><input id="allowPublic" type="checkbox" /><span
+                ><input id="allowPublic" type="checkbox" checked /><span
                   >同意將這則評價匿名顯示於公開頁面</span
                 ></label
               >
             </div>
             <input
               id="publicName"
-              class="hidden"
               type="text"
               maxlength="30"
-              placeholder="公開名稱，例如：襪襪媽媽或pinyu"
+              placeholder="若未輸入，將以毛孩名＋飼主顯示"
             />
             <div class="recommend-note">
               如果您覺得這次服務不錯，也歡迎把「快樂小狗 Pinyu」推薦給身邊有需要的朋友 ♡
@@ -556,6 +551,8 @@
           $("orderInfo").classList.add("hidden");
           return;
         }
+        $("publicName").placeholder =
+          "若未輸入，將以「" + (o.petName || "毛孩") + "飼主」顯示";
         $("orderInfo").innerHTML =
           "<div><b>服務日期：</b>" +
           esc(o.serviceDate || "—") +
@@ -579,6 +576,12 @@
       async function submit() {
         if (!$("order").value) return alert("目前沒有可評價的訂單。");
         if (!rating) return alert("請選擇 1～5 顆星。");
+        const selectedOrder = orders.find(
+          (x) => x.orderId === $("order").value,
+        );
+        const publicName =
+          $("publicName").value.trim() ||
+          ((selectedOrder && selectedOrder.petName) || "毛孩") + "飼主";
         $("submit").disabled = true;
         $("submit").textContent = "送出中…";
         const formData = {
@@ -590,10 +593,9 @@
           punctual: $("punctual").checked,
           communication: $("communication").checked,
           comment: $("comment").value,
-          bookAgain: $("bookAgain").checked,
           recommend: false,
           allowPublic: $("allowPublic").checked,
-          publicName: $("publicName").value,
+          publicName,
         };
         try {
           await api({ action: "saveReview", accessToken: token, formData });
