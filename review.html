@@ -399,10 +399,11 @@
     <script>
       const LIFF_ID = "2008600362-BcS17F0V";
       const API_BASE =
-        "https://script.google.com/macros/s/AKfycbxd2p4jq_HOBd1YIHVJF59kDVD48FyN0_lafhZPSEwyMkpvwt2TIn9yhzZMBQnuSlWhWw/exec";
+        "https://script.google.com/macros/s/AKfycbyDQ6AqUTeH8up6NC_xl-vOmEFq9fFN3rvf5pMvTR-GCLX8imKT-A6Cxy7CY28EImloPA/exec";
       let token = "",
         rating = 0,
-        orders = [];
+        orders = [],
+        autoPublicName = "";
       const $ = (id) => document.getElementById(id);
       const messages = [
         "",
@@ -551,8 +552,15 @@
           $("orderInfo").classList.add("hidden");
           return;
         }
-        $("publicName").placeholder =
-          "若未輸入，將以「" + (o.petName || "毛孩") + "飼主」顯示";
+        const nextAutoPublicName = (o.petName || "毛孩") + "飼主";
+        if (
+          !$("publicName").value.trim() ||
+          $("publicName").value.trim() === autoPublicName
+        ) {
+          $("publicName").value = nextAutoPublicName;
+        }
+        autoPublicName = nextAutoPublicName;
+        $("publicName").placeholder = nextAutoPublicName;
         $("orderInfo").innerHTML =
           "<div><b>服務日期：</b>" +
           esc(o.serviceDate || "—") +
