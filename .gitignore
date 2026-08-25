@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+!.env.example
+*.log
+
+# Local QA screenshots and browser audit output.
+/artifacts/
+
+# Supabase CLI local state.
+/supabase/.temp/
+
+# Production exports contain customer data and must never enter Git.
+*.xlsx
+*.xls
+*.csv
+.migration-output/
