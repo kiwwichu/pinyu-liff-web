@@ -7,7 +7,7 @@
     allOrders: [],
     pendingNotifications: [],
     page: "dashboard",
-    orderFilter: "current"
+    orderFilter: "all"
   };
 
   const app = document.getElementById("app");
@@ -106,11 +106,12 @@
     const refresh = () => {
       const keyword = normalize(search.value);
       const list = state.allOrders.filter(order => {
-        const isOther = ["完成", "未付訂金"].includes(order.status);
+        if (normalize(order.status).includes("完成")) return false;
+        const isUnpaidDeposit = normalize(order.status).includes("未付訂金");
         const filterOk =
           state.orderFilter === "all" ||
-          (state.orderFilter === "other" && isOther) ||
-          (state.orderFilter === "current" && !isOther);
+          (state.orderFilter === "other" && isUnpaidDeposit) ||
+          (state.orderFilter === "current" && !isUnpaidDeposit);
 
         return filterOk && (!keyword || normalize(order.searchText).includes(keyword));
       });
