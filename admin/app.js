@@ -85,10 +85,15 @@
     app.innerHTML = "";
     app.appendChild(document.getElementById("dashboardTemplate").content.cloneNode(true));
 
-    document.getElementById("recentCount").textContent = state.recentOrders.length;
+    // 首頁和訂單頁採用相同規則：只排除已完成，其餘狀態全部保留。
+    const visibleOrders = state.allOrders.filter(order =>
+      !normalize(order.status).includes("完成")
+    );
+
+    document.getElementById("recentCount").textContent = visibleOrders.length;
     document.getElementById("pendingCount").textContent = state.pendingNotifications.length;
 
-    renderOrderCards(document.getElementById("recentOrders"), state.recentOrders.slice(0,5), false);
+    renderOrderCards(document.getElementById("recentOrders"), visibleOrders.slice(0,5), false);
     renderOrderCards(document.getElementById("pendingNotifications"), state.pendingNotifications.slice(0,3), true);
 
     app.querySelectorAll("[data-open]").forEach(btn => {
