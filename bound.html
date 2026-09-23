@@ -195,10 +195,27 @@
       const data = await res.json();
 
       if (data.success) {
+        let chatNotice = '';
+        try {
+          if (liff.isInClient()) {
+            await liff.sendMessages([{
+              type: 'text',
+              text: '綁定會員'
+            }]);
+            chatNotice = '\n已將「綁定會員」傳送到官方 LINE。';
+          } else {
+            chatNotice = '\n請回到官方 LINE 傳送「綁定會員」，讓對話顯示在客服後台。';
+          }
+        } catch (messageError) {
+          console.warn('綁定成功，但 LINE 訊息未送出：', messageError);
+          chatNotice = '\n綁定已完成；請回到官方 LINE 傳送「綁定會員」。';
+        }
+
         resultEl.innerText =
           '綁定成功 🤍\n' +
           '家庭編號：' + data.familyId +
-          (data.ownerName ? '\n飼主：' + data.ownerName : '');
+          (data.ownerName ? '\n飼主：' + data.ownerName : '') +
+          chatNotice;
       } else {
         resultEl.innerText = data.message || '綁定失敗，請確認家庭編號是否正確。';
       }
