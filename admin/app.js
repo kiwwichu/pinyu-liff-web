@@ -87,7 +87,7 @@
 
     // 首頁和訂單頁採用相同規則：只排除已完成，其餘狀態全部保留。
     const visibleOrders = state.allOrders.filter(order =>
-      !normalize(order.status).includes("完成")
+      !isCompletedOrderStatus(order.status)
     );
 
     document.getElementById("recentCount").textContent = visibleOrders.length;
@@ -111,7 +111,7 @@
     const refresh = () => {
       const keyword = normalize(search.value);
       const list = state.allOrders.filter(order => {
-        if (normalize(order.status).includes("完成")) return false;
+        if (isCompletedOrderStatus(order.status)) return false;
         const isUnpaidDeposit = normalize(order.status).includes("未付訂金");
         const filterOk =
           state.orderFilter === "all" ||
@@ -204,6 +204,10 @@
 
   function normalize(v) {
     return String(v || "").toLowerCase().replace(/\s+/g, "");
+  }
+
+  function isCompletedOrderStatus(status) {
+    return ["完成", "已完成", "completed"].includes(normalize(status));
   }
 
   function escapeHtml(v) {
