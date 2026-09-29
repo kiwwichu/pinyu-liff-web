@@ -207,7 +207,7 @@
   }
 
   function isCompletedOrderStatus(status) {
-    return ["完成", "已完成", "completed"].includes(normalize(status));
+    return normalize(status) === "完成";
   }
 
   function escapeHtml(v) {
