@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#48a2e8" />
   <title>快樂小狗｜管理後台</title>
   <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./style.css?v=20260929-1" />
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
@@ -51,7 +51,7 @@
       <div class="section-head">
         <div>
           <h2>未完成訂單</h2>
-          <p>只排除完成，其餘狀態全部顯示</p>
+          <p>只排除完成，最近服務日期優先</p>
         </div>
         <button class="text-btn" data-open="orders">查看全部</button>
       </div>
@@ -75,7 +75,7 @@
       <div class="section-head">
         <div>
           <h2>訂單搜尋</h2>
-          <p>可輸入家庭編號、姓名、毛孩、狀態、日期等文字</p>
+          <p>可搜尋家庭、姓名、毛孩、狀態或日期；最近服務日期優先</p>
         </div>
       </div>
       <label class="search-box">
@@ -111,6 +111,6 @@
   </template>
 
   <script src="./config.js"></script>
-  <script src="./app.js?v=20260929-2"></script>
+  <script src="./app.js?v=20260929-3"></script>
 </body>
 </html>

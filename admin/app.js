@@ -86,8 +86,8 @@
     app.appendChild(document.getElementById("dashboardTemplate").content.cloneNode(true));
 
     // 首頁和訂單頁採用相同規則：只排除已完成，其餘狀態全部保留。
-    const visibleOrders = state.allOrders.filter(order =>
-      !isCompletedOrderStatus(order.status)
+    const visibleOrders = sortOrdersNewestFirst(
+      state.allOrders.filter(order => !isCompletedOrderStatus(order.status))
     );
 
     document.getElementById("recentCount").textContent = visibleOrders.length;
@@ -121,7 +121,7 @@
         return filterOk && (!keyword || normalize(order.searchText).includes(keyword));
       });
 
-      renderOrderCards(target, list, false);
+      renderOrderCards(target, sortOrdersNewestFirst(list), false);
     };
 
     search.addEventListener("input", refresh);
@@ -208,6 +208,26 @@
 
   function isCompletedOrderStatus(status) {
     return normalize(status) === "完成";
+  }
+
+  function sortOrdersNewestFirst(orders) {
+    return [...orders].sort((left, right) =>
+      orderServiceTimestamp(right) - orderServiceTimestamp(left)
+    );
+  }
+
+  function orderServiceTimestamp(order) {
+    const text = String(order && order.serviceDate || "");
+    const timestamps = [];
+    const pattern = /(20\d{2})\s*[年\/\-.]\s*(\d{1,2})\s*[月\/\-.]\s*(\d{1,2})\s*日?/g;
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+      if (!Number.isNaN(date.getTime())) timestamps.push(date.getTime());
+    }
+    if (timestamps.length) return Math.max(...timestamps);
+    const fallback = Date.parse(text);
+    return Number.isFinite(fallback) ? fallback : 0;
   }
 
   function escapeHtml(v) {
