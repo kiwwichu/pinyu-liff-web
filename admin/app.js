@@ -111,12 +111,13 @@
     const refresh = () => {
       const keyword = normalize(search.value);
       const list = state.allOrders.filter(order => {
-        if (isCompletedOrderStatus(order.status)) return false;
+        const isCompleted = isCompletedOrderStatus(order.status);
         const isUnpaidDeposit = normalize(order.status).includes("未付訂金");
         const filterOk =
           state.orderFilter === "all" ||
-          (state.orderFilter === "other" && isUnpaidDeposit) ||
-          (state.orderFilter === "current" && !isUnpaidDeposit);
+          (state.orderFilter === "unfinished" && !isCompleted) ||
+          (state.orderFilter === "other" && !isCompleted && isUnpaidDeposit) ||
+          (state.orderFilter === "current" && !isCompleted && !isUnpaidDeposit);
 
         return filterOk && (!keyword || normalize(order.searchText).includes(keyword));
       });
@@ -211,9 +212,13 @@
   }
 
   function sortOrdersNewestFirst(orders) {
-    return [...orders].sort((left, right) =>
-      orderServiceTimestamp(right) - orderServiceTimestamp(left)
-    );
+    return [...orders].sort((left, right) => {
+      const completedDifference =
+        Number(isCompletedOrderStatus(left.status)) -
+        Number(isCompletedOrderStatus(right.status));
+      if (completedDifference) return completedDifference;
+      return orderServiceTimestamp(right) - orderServiceTimestamp(left);
+    });
   }
 
   function orderServiceTimestamp(order) {

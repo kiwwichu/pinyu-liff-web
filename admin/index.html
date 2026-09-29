@@ -75,7 +75,7 @@
       <div class="section-head">
         <div>
           <h2>訂單搜尋</h2>
-          <p>可搜尋家庭、姓名、毛孩、狀態或日期；最近服務日期優先</p>
+          <p>未完成優先；同類訂單依最近服務日期排序</p>
         </div>
       </div>
       <label class="search-box">
@@ -83,7 +83,8 @@
         <input id="orderSearch" type="search" placeholder="搜尋任何訂單文字" autocomplete="off" />
       </label>
       <div class="filter-row">
-        <button class="chip active" data-order-filter="all">全部未完成</button>
+        <button class="chip active" data-order-filter="all">全部訂單</button>
+        <button class="chip" data-order-filter="unfinished">全部未完成</button>
         <button class="chip" data-order-filter="current">進行中</button>
         <button class="chip" data-order-filter="other">未付訂金</button>
       </div>
@@ -111,6 +112,6 @@
   </template>
 
   <script src="./config.js"></script>
-  <script src="./app.js?v=20260929-3"></script>
+  <script src="./app.js?v=20260929-4"></script>
 </body>
 </html>
