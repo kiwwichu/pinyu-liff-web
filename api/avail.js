@@ -5,13 +5,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing year/month" });
     }
 
-    const GAS_URL = process.env.GAS_CALENDAR_URL;
-    if (!GAS_URL) {
-      return res.status(500).json({ error: "Missing GAS_URL env" });
-    }
+    // 新版可預約資料由 Google 登入管理後台統一產生；保留環境變數方便未來換部署。
+    const GAS_URL = process.env.GAS_AVAILABILITY_URL_V2 ||
+      "https://script.google.com/macros/s/AKfycbweEgihk4m_BqZin1V8BHTt19Dy8QOf490XJ-lFY03M3JBMNYh_hna2vqV9W7MlqxIsmQ/exec";
 
     // 1️⃣ 從 GAS 拿原始資料
-    const url = `${GAS_URL}?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+    const url = `${GAS_URL}?action=availability&year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
     const r = await fetch(url);
     const text = await r.text();
 
@@ -29,9 +28,16 @@ export default async function handler(req, res) {
       });
     }
 
+    if (raw && raw.error) {
+      return res.status(502).json(raw);
+    }
+
+    const source = Array.isArray(raw) ? raw : (Array.isArray(raw.avail) ? raw.avail : []);
+    const holidays = Array.isArray(raw?.holidays) ? raw.holidays : [];
+
     // 2️⃣ 整理成 date -> slot -> item
     const map = new Map();
-    for (const it of Array.isArray(raw) ? raw : []) {
+    for (const it of source) {
       if (!map.has(it.date)) map.set(it.date, {});
       map.get(it.date)[it.slot] = it;
     }
@@ -66,7 +72,7 @@ export default async function handler(req, res) {
     }
 
     res.setHeader("Cache-Control", "no-store");
-    return res.status(200).json(result);
+    return res.status(200).json({ avail: result, holidays });
 
   } catch (e) {
     return res.status(500).json({ error: String(e) });
