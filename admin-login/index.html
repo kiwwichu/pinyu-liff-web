@@ -9,6 +9,7 @@ body{margin:0;background:#f3f7fa;font-family:-apple-system,BlinkMacSystemFont,"S
 .wrap{max-width:520px;margin:auto;padding:36px 18px}.head{background:#48a2e8;color:white;padding:20px;border-radius:18px 18px 0 0}
 .card{background:white;padding:28px 20px;text-align:center;border-radius:0 0 18px 18px;box-shadow:0 8px 28px #0001}
 #googleButton{display:flex;justify-content:center;margin:22px 0}.err{color:#a12d2d;white-space:pre-wrap}.muted{color:#6b7785;line-height:1.6}
+.login-transition{position:fixed;inset:0;z-index:100;display:none;place-items:center;padding:24px;background:linear-gradient(145deg,#56b1ed,#318fd1);color:#fff;text-align:center}.signing-in .login-transition{display:grid}.signing-in .wrap{visibility:hidden}.loading-card{width:min(86vw,340px);padding:30px 24px;border:1px solid #ffffff55;border-radius:24px;background:#ffffff20;box-shadow:0 18px 55px #15598644;backdrop-filter:blur(14px)}.paw-loader{position:relative;width:88px;height:58px;margin:0 auto 20px}.paw{position:absolute;font-size:29px;opacity:.35;animation:pawWalk 1.2s infinite ease-in-out}.paw:nth-child(1){left:0;bottom:0}.paw:nth-child(2){left:30px;top:0;animation-delay:.2s}.paw:nth-child(3){right:0;bottom:0;animation-delay:.4s}@keyframes pawWalk{0%,100%{transform:translateY(7px) scale(.9);opacity:.3}45%{transform:translateY(-5px) scale(1.1);opacity:1}}.loading-title{font-size:22px;font-weight:900}.loading-note{margin-top:8px;line-height:1.6;opacity:.9}
 </style>
 </head>
 <body>
@@ -22,6 +23,7 @@ body{margin:0;background:#f3f7fa;font-family:-apple-system,BlinkMacSystemFont,"S
     <div id="error" class="err"></div>
   </div>
 </div>
+<div class="login-transition" role="status" aria-live="polite"><div class="loading-card"><div class="paw-loader"><span class="paw">🐾</span><span class="paw">🐾</span><span class="paw">🐾</span></div><div class="loading-title">正在開啟管理後臺</div><div class="loading-note">帳號驗證中，請稍候，不需要重新登入。</div></div></div>
 
 <form id="loginForm" method="post" style="display:none">
   <input id="credential" name="credential" type="hidden">
@@ -44,9 +46,11 @@ function waitGoogle(){
     client_id:cfg.GOOGLE_CLIENT_ID,
     callback:r=>{
       if(!r||!r.credential){document.getElementById('error').textContent='沒有取得 Google 登入憑證。';return;}
+      document.body.classList.add('signing-in');
+      document.getElementById('error').textContent='';
       document.getElementById('loading').style.display='block';
       document.getElementById('credential').value=r.credential;
-      form.submit();
+      setTimeout(()=>form.submit(),180);
     }
   });
   google.accounts.id.renderButton(document.getElementById('googleButton'),{
