@@ -129,15 +129,30 @@ line-height: 1.55;
 }    
 .availabilityPolicy{
   margin-top:10px;
-  padding:12px 14px;
+  padding:14px;
   border:1px solid #cfe8f8;
   border-radius:14px;
-  background:#eef8ff;
+  background:linear-gradient(145deg,#f5fbff,#eef8ff);
   color:#315b73;
   font-size:12px;
-  line-height:1.65;
+  line-height:1.55;
 }
-.availabilityPolicy strong{color:#1f78ad;font-size:13px}
+.policyTitle{display:flex;align-items:center;gap:7px;color:#1f78ad;font-size:14px;font-weight:900}
+.policyTitle::before{content:'i';display:grid;place-items:center;width:21px;height:21px;border-radius:50%;background:#dcefff;color:#1f78ad;font-size:12px;font-weight:900}
+.policyHighlights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:11px}
+.policyHighlight{padding:10px;border-radius:12px;background:#fff;border:1px solid rgba(72,162,232,.14)}
+.policyHighlight strong{display:block;margin-bottom:2px;color:#1f78ad;font-size:12px}
+.policyHighlight span{display:block;color:#405b6b;font-size:12px;font-weight:750}
+.policyFootnote{margin-top:9px;color:#6b7a90;font-size:11px}
+.monthPicker{margin-bottom:12px;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;box-shadow:var(--shadow)}
+.monthPickerHead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:11px}
+.monthPickerTitle{font-size:15px;font-weight:900;color:var(--text)}
+.monthPickerHint{color:var(--muted);font-size:11px}
+.monthOptions{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.monthOption{min-width:0;padding:11px 7px;border:1px solid #dfe8f2;border-radius:12px;background:#f9fbfd;color:#526177;font-size:12px;font-weight:850;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.monthOption:hover{border-color:#9acdf2;background:#f1f9ff}
+.monthOption.is-active{border-color:var(--brand);background:var(--brand);color:#fff;box-shadow:0 6px 16px rgba(72,162,232,.22)}
+.monthOption:disabled{opacity:.55;cursor:wait}
 .controls{
 display:flex;
 gap:8px;
@@ -521,6 +536,11 @@ font-weight: 900;
 .controls{ width: 100%; }
 .input{ flex: 1; min-width: 0; }
 .btn{ width: 100%; }
+.policyHighlights{grid-template-columns:1fr;gap:6px}
+.policyHighlight{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px}
+.policyHighlight strong{margin:0}
+.policyHighlight span{text-align:right}
+.monthPickerHead{display:block}.monthPickerHint{margin-top:3px}.monthOptions{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.monthOption{padding:10px 5px}
 
 /* 工具列改兩行：第一行 title，第二行 buttons（不擠） */
 .fc .fc-header-toolbar{
@@ -581,8 +601,13 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
 資料同步可能需要幾秒鐘，謝謝你的耐心 🤍
   </span>
      <div class="availabilityPolicy">
-       <strong>預約時段說明</strong><br>
-       目前平日以晚間預約為主<br>週末及國定假日原則上全天開放。<br>實際可預約名額仍以下方月曆為準，如已有預約或私人行程，該時段會顯示額滿或不可預約。<br>
+       <div class="policyTitle">預約時段重點</div>
+       <div class="policyHighlights">
+         <div class="policyHighlight"><strong>平日</strong><span>晚上為主</span></div>
+         <div class="policyHighlight"><strong>週末／國定假日</strong><span>原則全天開放</span></div>
+         <div class="policyHighlight"><strong>實際名額</strong><span>請以下方月曆為準</span></div>
+       </div>
+       <div class="policyFootnote">已有預約或私人行程的時段，會標示為額滿或不開放；實際服務時間仍由保姆最後確認。</div>
      </div>
 
 </div>
@@ -596,6 +621,14 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
 </div>
 
 </div>
+
+<section class="monthPicker" aria-labelledby="monthPickerTitle">
+  <div class="monthPickerHead">
+    <div id="monthPickerTitle" class="monthPickerTitle">想查看哪個月份？</div>
+    <div class="monthPickerHint">點選月份即可切換月曆</div>
+  </div>
+  <div id="monthOptions" class="monthOptions"></div>
+</section>
 
 <div id="calendar"></div>
 </div>
@@ -834,7 +867,42 @@ loadedMonth = month;
 } // ✅ 這個 } 你原本少了，少了就整頁掛掉
 
 function syncInputsToView(){
-  // 已移除年月輸入框，這裡不需要同步
+  syncMonthPicker();
+}
+
+function buildMonthPicker(){
+  const container = document.getElementById('monthOptions');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let offset = 0; offset < 6; offset++) {
+    const date = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'monthOption';
+    button.dataset.month = ymKey(year, month);
+    button.textContent = year === now.getFullYear() ? `${month} 月` : `${year}／${month} 月`;
+    button.setAttribute('aria-label', `查看 ${year} 年 ${month} 月`);
+    button.addEventListener('click', function(){
+      const calendarEl = document.getElementById('calendar');
+      if (!calendar || (calendarEl && calendarEl.classList.contains('is-loading'))) return;
+      calendar.gotoDate(`${button.dataset.month}-01`);
+    });
+    container.appendChild(button);
+  }
+  syncMonthPicker();
+}
+
+function syncMonthPicker(){
+  if (!calendar) return;
+  const { y, m } = getViewYearMonth();
+  const activeMonth = ymKey(y, m);
+  document.querySelectorAll('.monthOption').forEach(function(button){
+    const active = button.dataset.month === activeMonth;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
 }
 
 function setCalendarLoading(isLoading){
@@ -1049,7 +1117,7 @@ dateClick: function(info){
 
 });
 
-
+  buildMonthPicker();
   calendar.render();
   await ensureMonthLoaded(initY, initM);
 }
