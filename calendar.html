@@ -97,23 +97,6 @@ font-size: 14px;
 color: var(--muted);
 line-height: 1.55;
 }
-.scheduleNotice{
-  display:block;
-  margin-top:8px;
-  padding:10px 12px;
-  border-radius:14px;
-  background: var(--brandBg);
-  color: var(--text);
-  font-size: 12px;
-  line-height: 1.55;
-}
-.scheduleNotice.is-loading{
-  background: #fff7e5;
-  color: #9a6700;
-  border: 1px solid #ffe2a3;
-  font-weight: 800;
-}
-
 /* 載入中時，月曆按鈕暫時不能點 */
 #calendar.is-loading .fc-button{
   opacity: .55;
@@ -129,30 +112,23 @@ line-height: 1.55;
 }    
 .availabilityPolicy{
   margin-top:10px;
-  padding:14px;
-  border:1px solid #cfe8f8;
-  border-radius:14px;
-  background:linear-gradient(145deg,#f5fbff,#eef8ff);
-  color:#315b73;
+  padding-top:10px;
+  border-top:1px solid var(--border);
+  color:#526177;
   font-size:12px;
-  line-height:1.55;
+  line-height:1.6;
 }
-.policyTitle{display:flex;align-items:center;gap:7px;color:#1f78ad;font-size:14px;font-weight:900}
-.policyTitle::before{content:'i';display:grid;place-items:center;width:21px;height:21px;border-radius:50%;background:#dcefff;color:#1f78ad;font-size:12px;font-weight:900}
-.policyHighlights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:11px}
-.policyHighlight{padding:10px;border-radius:12px;background:#fff;border:1px solid rgba(72,162,232,.14)}
-.policyHighlight strong{display:block;margin-bottom:2px;color:#1f78ad;font-size:12px}
-.policyHighlight span{display:block;color:#405b6b;font-size:12px;font-weight:750}
-.policyFootnote{margin-top:9px;color:#6b7a90;font-size:11px}
+.policyTitle{display:block;margin-bottom:3px;color:var(--text);font-size:13px;font-weight:850}
+.policyText{color:#526177}
+.policyFootnote{color:#7b8798;font-size:11px}
 .monthPicker{margin-bottom:12px;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;box-shadow:var(--shadow)}
-.monthPickerHead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:11px}
-.monthPickerTitle{font-size:15px;font-weight:900;color:var(--text)}
-.monthPickerHint{color:var(--muted);font-size:11px}
-.monthOptions{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
-.monthOption{min-width:0;padding:11px 7px;border:1px solid #dfe8f2;border-radius:12px;background:#f9fbfd;color:#526177;font-size:12px;font-weight:850;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.monthOption:hover{border-color:#9acdf2;background:#f1f9ff}
-.monthOption.is-active{border-color:var(--brand);background:var(--brand);color:#fff;box-shadow:0 6px 16px rgba(72,162,232,.22)}
-.monthOption:disabled{opacity:.55;cursor:wait}
+.monthSelectRow{display:flex;align-items:center;gap:12px}
+.monthSelectLabel{flex:0 0 auto;color:var(--text);font-size:14px;font-weight:900}
+.monthSelectWrap{position:relative;flex:1;min-width:0}
+.monthSelect{display:block;width:100%;height:46px;padding:0 42px 0 14px;border:1px solid #cfe0ee;border-radius:13px;background:#f7fbfe;color:#315b73;font-size:14px;font-weight:850;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer}
+.monthSelect:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(72,162,232,.13)}
+.monthSelect:disabled{opacity:.58;cursor:wait}
+.monthSelectArrow{position:absolute;top:50%;right:15px;transform:translateY(-50%);color:var(--brand);font-size:16px;font-weight:900;pointer-events:none}
 .controls{
 display:flex;
 gap:8px;
@@ -184,9 +160,6 @@ font-weight: 700;
 .btn:hover{ background:#fafcff; }
 
 .legend{
-margin-top: 14px;
-padding-top: 12px;
-border-top: 1px solid var(--border);
 display:flex;
 gap: 8px;
 flex-wrap: wrap;
@@ -194,6 +167,9 @@ font-size: 12px;
 color: var(--muted);
 align-items:center;
 }
+.calendarPanel{overflow:hidden;border:1px solid var(--border);border-radius:var(--radius);background:#fff;box-shadow:var(--shadow)}
+.calendarPanel .calendarLegend{margin:0;padding:12px 14px;border-bottom:1px solid var(--border);background:#fbfcfe}
+.calendarPanel #calendar{border:0;border-radius:0;box-shadow:none}
 .legendMark{
 width: 18px;
 height: 18px;
@@ -536,11 +512,7 @@ font-weight: 900;
 .controls{ width: 100%; }
 .input{ flex: 1; min-width: 0; }
 .btn{ width: 100%; }
-.policyHighlights{grid-template-columns:1fr;gap:6px}
-.policyHighlight{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px}
-.policyHighlight strong{margin:0}
-.policyHighlight span{text-align:right}
-.monthPickerHead{display:block}.monthPickerHint{margin-top:3px}.monthOptions{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.monthOption{padding:10px 5px}
+.monthSelectRow{gap:9px}.monthSelectLabel{font-size:13px}.monthSelect{height:44px;padding-left:11px;font-size:13px}
 
 /* 工具列改兩行：第一行 title，第二行 buttons（不擠） */
 .fc .fc-header-toolbar{
@@ -594,43 +566,37 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
 <div>
 <div class="title">可預約時間表</div>
 <div class="sub">
-  點擊日期可查看「早上 / 下午 / 晚上」詳細資訊。<br>
-  
-  <span class="scheduleNotice" id="scheduleNotice">
-    ⚠️ 可預約時間表載入中，請先不要連續點擊月份切換按鈕<br>
-資料同步可能需要幾秒鐘，謝謝你的耐心 🤍
-  </span>
+  點擊日期可查看「早上 / 下午 / 晚上」詳細資訊。
      <div class="availabilityPolicy">
-       <div class="policyTitle">預約時段重點</div>
-       <div class="policyHighlights">
-         <div class="policyHighlight"><strong>平日</strong><span>晚上為主</span></div>
-         <div class="policyHighlight"><strong>週末／國定假日</strong><span>原則全天開放</span></div>
-         <div class="policyHighlight"><strong>實際名額</strong><span>請以下方月曆為準</span></div>
-       </div>
-       <div class="policyFootnote">已有預約或私人行程的時段，會標示為額滿或不開放；實際服務時間仍由保姆最後確認。</div>
+       <strong class="policyTitle">預約說明</strong>
+       <div class="policyText">平日以晚間為主；週末與國定假日原則上全天開放。</div>
+       <div class="policyFootnote">實際可預約名額與服務時間，請以月曆及保姆最後確認為準。</div>
      </div>
 
 </div>
    
 </div>
 
-<div class="legend">
-<span class="legendMark open">✓</span><span>開放</span>
-<span class="legendMark tight">△</span><span>少量（分鐘偏緊）</span>
-<span class="legendMark full">✕</span><span>額滿 / 不開放</span>
 </div>
 
-</div>
-
-<section class="monthPicker" aria-labelledby="monthPickerTitle">
-  <div class="monthPickerHead">
-    <div id="monthPickerTitle" class="monthPickerTitle">想查看哪個月份？</div>
-    <div class="monthPickerHint">點選月份即可切換月曆</div>
+<section class="monthPicker">
+  <div class="monthSelectRow">
+    <label class="monthSelectLabel" for="monthSelect">選擇年／月</label>
+    <div class="monthSelectWrap">
+      <select id="monthSelect" class="monthSelect" aria-label="選擇想查看的年份與月份"></select>
+      <span class="monthSelectArrow" aria-hidden="true">⌄</span>
+    </div>
   </div>
-  <div id="monthOptions" class="monthOptions"></div>
 </section>
 
-<div id="calendar"></div>
+<section class="calendarPanel">
+  <div class="legend calendarLegend" aria-label="月曆狀態說明">
+    <span class="legendMark open">✓</span><span>開放</span>
+    <span class="legendMark tight">△</span><span>少量</span>
+    <span class="legendMark full">✕</span><span>額滿／不開放</span>
+  </div>
+  <div id="calendar"></div>
+</section>
 </div>
 
 <!-- Drawer -->
@@ -676,7 +642,6 @@ let selectedDateStr = null;
 let loadedYear = null;
 let loadedMonth = null;
 let monthFetchTimer = null;
-let releasedMonths = new Set();
 let latestLoadedHasSchedule = false;
 
 // ✅ 手動設定整月已滿的月份
@@ -848,8 +813,6 @@ if (latestLoadedIsFullMonth) {
   setEmptyMonthMessage(!latestLoadedHasSchedule);
 }
 
-// ✅ 根據資料更新上方公告
-updateScheduleNoticeByData(year, month, latestLoadedHasSchedule, latestLoadedIsFullMonth);
 // 🔴 國定假日日期集合
 holidayDates = new Set((holidaysArr || []).map(h => h.date));
 
@@ -871,26 +834,22 @@ function syncInputsToView(){
 }
 
 function buildMonthPicker(){
-  const container = document.getElementById('monthOptions');
-  if (!container) return;
-  container.innerHTML = '';
-  for (let offset = 0; offset < 6; offset++) {
+  const select = document.getElementById('monthSelect');
+  if (!select) return;
+  select.innerHTML = '';
+  for (let offset = 0; offset < 24; offset++) {
     const date = new Date(now.getFullYear(), now.getMonth() + offset, 1);
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'monthOption';
-    button.dataset.month = ymKey(year, month);
-    button.textContent = year === now.getFullYear() ? `${month} 月` : `${year}／${month} 月`;
-    button.setAttribute('aria-label', `查看 ${year} 年 ${month} 月`);
-    button.addEventListener('click', function(){
-      const calendarEl = document.getElementById('calendar');
-      if (!calendar || (calendarEl && calendarEl.classList.contains('is-loading'))) return;
-      calendar.gotoDate(`${button.dataset.month}-01`);
-    });
-    container.appendChild(button);
+    const option = document.createElement('option');
+    option.value = ymKey(year, month);
+    option.textContent = `${year} 年 ${month} 月`;
+    select.appendChild(option);
   }
+  select.addEventListener('change', function(){
+    if (!calendar || !select.value) return;
+    calendar.gotoDate(`${select.value}-01`);
+  });
   syncMonthPicker();
 }
 
@@ -898,138 +857,25 @@ function syncMonthPicker(){
   if (!calendar) return;
   const { y, m } = getViewYearMonth();
   const activeMonth = ymKey(y, m);
-  document.querySelectorAll('.monthOption').forEach(function(button){
-    const active = button.dataset.month === activeMonth;
-    button.classList.toggle('is-active', active);
-    button.setAttribute('aria-pressed', active ? 'true' : 'false');
-  });
+  const select = document.getElementById('monthSelect');
+  if (!select) return;
+  if (!Array.from(select.options).some(function(option){return option.value === activeMonth})) {
+    const option = document.createElement('option');
+    option.value = activeMonth;
+    option.textContent = `${y} 年 ${m} 月`;
+    select.appendChild(option);
+  }
+  select.value = activeMonth;
 }
 
 function setCalendarLoading(isLoading){
-  const notice = document.getElementById('scheduleNotice');
   const calendarEl = document.getElementById('calendar');
-
-  if (notice) {
-    notice.classList.toggle('is-loading', isLoading);
-
-    if (isLoading) {
-      notice.innerHTML = `
-        ⚠️ 可預約時間表載入中，請先不要連續點擊月份切換按鈕<br>
-        資料同步可能需要幾秒鐘，謝謝你的耐心 🤍
-      `;
-    }
-  }
+  const monthSelect = document.getElementById('monthSelect');
 
   if (calendarEl) {
     calendarEl.classList.toggle('is-loading', isLoading);
   }
-}
-function ymLabel(year, month){
-  return `${year} 年 ${month} 月`;
-}
-
-function isCurrentMonth(year, month){
-  const today = new Date();
-  return year === today.getFullYear() && month === today.getMonth() + 1;
-}
-
-function isNextMonth(year, month){
-  const today = new Date();
-
-  const nextMonthDate = new Date(
-    today.getFullYear(),
-    today.getMonth() + 1,
-    1
-  );
-
-  return (
-    year === nextMonthDate.getFullYear() &&
-    month === nextMonthDate.getMonth() + 1
-  );
-}
-
-function updateScheduleNoticeByData(year, month, hasSchedule, isFull){
-  const notice = document.getElementById('scheduleNotice');
-  if (!notice) return;
-
-  const today = new Date();
-  const todayDate = today.getDate();
-
-  const label = ymLabel(year, month);
-if (isFull) {
-  notice.innerHTML = `
-    <span class="fullText">目前 ${label} 預約已滿</span> 🤍<br>
-    若有候補或其他月份需求，歡迎直接洽詢保姆。
-  `;
-  return;
-}
-
-  // 有可預約資料：記錄已開放月份
-  if (hasSchedule) {
-    releasedMonths.add(label);
-  }
-
-  const releasedText = Array.from(releasedMonths).join('、');
-
-  // 目前正在看的月份有可預約資料
-  if (hasSchedule) {
-    notice.innerHTML = `
-      目前已開放：${releasedText} <br>
-      若要預約非當月或下個月的日期，歡迎直接洽詢保姆。
-    `;
-    return;
-  }
-
-  // 當月沒資料：顯示調整中
-  if (isCurrentMonth(year, month)) {
-    notice.innerHTML = `
-      目前 ${label} 可預約時間還在調整中 🤍<br>
-      若有預約需求，歡迎直接洽詢保姆。
-    `;
-    return;
-  }
-
-  // 下個月沒資料，且已經 25 號後：顯示調整中
-  if (isNextMonth(year, month) && todayDate >= 25) {
-    notice.innerHTML = `
-      目前 ${label} 可預約時間還在調整中 🤍<br>
-      若有預約需求，歡迎直接洽詢保姆。
-    `;
-    return;
-  }
-
-  // 下個月還沒到 25 號，或其他更遠月份沒資料
-  notice.innerHTML = `
-    目前尚未開放 ${label} 的線上可預約時間表 🤍<br>
-    若要預約非當月或下個月的日期，歡迎直接洽詢保姆。
-  `;
-}
-function updateScheduleNotice(){
-  const notice = document.getElementById('scheduleNotice');
-  if (!notice || !calendar) return;
-
-  const { y, m } = getViewYearMonth();
-
-  const today = new Date();
-  const todayDate = today.getDate();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth() + 1;
-
-  const nextMonthDate = new Date(currentYear, currentMonth, 1);
-  const nextYear = nextMonthDate.getFullYear();
-  const nextMonth = nextMonthDate.getMonth() + 1;
-
-  if (y === nextYear && m === nextMonth && todayDate < 25) {
-    notice.innerHTML = `
-      ${y} 年 ${m} 月可預約時間尚未完整公布 🤍<br>
-      實際開放時段會依既有預約與私人行程陸續更新。
-    `;
-  } else {
-    notice.innerHTML = `
-      ${y} 年 ${m} 月可預約時間表已出爐 🤍<br>
-      歡迎點選日期查看剩餘可預約時段。
-    `;
-  }
+  if (monthSelect) monthSelect.disabled = isLoading;
 }
 // UI init
 const now = new Date();
