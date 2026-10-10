@@ -127,6 +127,17 @@ line-height: 1.55;
   font-size: 12px;
   line-height: 1.55;
 }    
+.availabilityPolicy{
+  margin-top:10px;
+  padding:12px 14px;
+  border:1px solid #cfe8f8;
+  border-radius:14px;
+  background:#eef8ff;
+  color:#315b73;
+  font-size:12px;
+  line-height:1.65;
+}
+.availabilityPolicy strong{color:#1f78ad;font-size:13px}
 .controls{
 display:flex;
 gap:8px;
@@ -569,9 +580,11 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
     ⚠️ 可預約時間表載入中，請先不要連續點擊月份切換按鈕<br>
 資料同步可能需要幾秒鐘，謝謝你的耐心 🤍
   </span>
-     <span class="loadingHint">
-     下個月班表通常會在 25號 左右公布出爐，若有需要提早預約，可直接洽詢保姆唷~
-  </span>
+     <div class="availabilityPolicy">
+       <strong>預約時段說明</strong><br>
+       目前平日以晚間預約為主；週末及國定假日原則上全天開放。實際可預約名額仍以下方月曆為準，如已有預約或私人行程，該時段會顯示額滿或不可預約。<br>
+       本表為「可預約時間」，不是固定排班表。
+     </div>
 
 </div>
    
@@ -884,14 +897,14 @@ if (isFull) {
   return;
 }
 
-  // 有班表資料：記錄已開放月份
+  // 有可預約資料：記錄已開放月份
   if (hasSchedule) {
     releasedMonths.add(label);
   }
 
   const releasedText = Array.from(releasedMonths).join('、');
 
-  // 目前正在看的月份有資料
+  // 目前正在看的月份有可預約資料
   if (hasSchedule) {
     notice.innerHTML = `
       目前已開放：${releasedText} <br>
@@ -903,7 +916,7 @@ if (isFull) {
   // 當月沒資料：顯示調整中
   if (isCurrentMonth(year, month)) {
     notice.innerHTML = `
-      目前 ${label} 班表還在調整中 🤍<br>
+      目前 ${label} 可預約時間還在調整中 🤍<br>
       若有預約需求，歡迎直接洽詢保姆。
     `;
     return;
@@ -912,7 +925,7 @@ if (isFull) {
   // 下個月沒資料，且已經 25 號後：顯示調整中
   if (isNextMonth(year, month) && todayDate >= 25) {
     notice.innerHTML = `
-      目前 ${label} 班表還在調整中 🤍<br>
+      目前 ${label} 可預約時間還在調整中 🤍<br>
       若有預約需求，歡迎直接洽詢保姆。
     `;
     return;
@@ -941,8 +954,8 @@ function updateScheduleNotice(){
 
   if (y === nextYear && m === nextMonth && todayDate < 25) {
     notice.innerHTML = `
-      ${y} 年 ${m} 月班表尚未完整公布 🤍<br>
-      因保姆正職排班關係，下個月可預約時間通常會在每月 25 號左右更新。
+      ${y} 年 ${m} 月可預約時間尚未完整公布 🤍<br>
+      實際開放時段會依既有預約與私人行程陸續更新。
     `;
   } else {
     notice.innerHTML = `
