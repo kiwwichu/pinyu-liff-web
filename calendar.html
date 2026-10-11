@@ -112,8 +112,10 @@ line-height: 1.55;
 }    
 .availabilityPolicy{
   margin-top:10px;
-  padding-top:10px;
-  border-top:1px solid var(--border);
+  padding:12px 14px;
+  border:1px solid #cfe7f8;
+  border-radius:13px;
+  background:#eef8ff;
   color:#526177;
   font-size:12px;
   line-height:1.6;
@@ -168,6 +170,17 @@ color: var(--muted);
 align-items:center;
 }
 .calendarPanel{overflow:hidden;border:1px solid var(--border);border-radius:var(--radius);background:#fff;box-shadow:var(--shadow)}
+.calendarLoading{display:grid;place-items:center;min-height:310px;padding:30px;text-align:center}
+.calendarLoading strong{display:block;color:var(--text);font-size:15px}
+.calendarLoading p{margin:6px 0 0;color:var(--muted);font-size:12px}
+.calendarLoadingDots{display:flex;align-items:center;justify-content:center;gap:9px;height:34px;margin-top:14px}
+.calendarLoadingDots i{width:12px;height:12px;border-radius:50%;background:var(--brand);animation:calendarDotBounce .75s infinite ease-in-out}
+.calendarLoadingDots i:nth-child(2){background:#f7c84d;animation-delay:.12s}
+.calendarLoadingDots i:nth-child(3){background:#ff806e;animation-delay:.24s}
+.calendarPanel:not(.is-loading) .calendarLoading{display:none}
+.calendarPanel.is-loading .calendarContent{display:none}
+@keyframes calendarDotBounce{0%,60%,100%{transform:translateY(5px)}30%{transform:translateY(-7px)}}
+@media(prefers-reduced-motion:reduce){.calendarLoadingDots i{animation:none}}
 .calendarPanel .calendarLegend{margin:0;padding:12px 14px;border-bottom:1px solid var(--border);background:#fbfcfe}
 .calendarPanel #calendar{border:0;border-radius:0;box-shadow:none}
 .legendMark{
@@ -589,13 +602,18 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
   </div>
 </section>
 
-<section class="calendarPanel">
-  <div class="legend calendarLegend" aria-label="月曆狀態說明">
-    <span class="legendMark open">✓</span><span>開放</span>
-    <span class="legendMark tight">△</span><span>少量</span>
-    <span class="legendMark full">✕</span><span>額滿／不開放</span>
+<section class="calendarPanel is-loading" aria-busy="true">
+  <div id="calendarLoading" class="calendarLoading" role="status" aria-live="polite">
+    <div><strong>載入中…</strong><p>正在取得可預約時段</p><div class="calendarLoadingDots" aria-hidden="true"><i></i><i></i><i></i></div></div>
   </div>
-  <div id="calendar"></div>
+  <div id="calendarContent" class="calendarContent">
+    <div class="legend calendarLegend" aria-label="月曆狀態說明">
+      <span class="legendMark open">✓</span><span>開放</span>
+      <span class="legendMark tight">△</span><span>少量</span>
+      <span class="legendMark full">✕</span><span>額滿／不開放</span>
+    </div>
+    <div id="calendar"></div>
+  </div>
 </section>
 </div>
 
@@ -837,8 +855,10 @@ function buildMonthPicker(){
   const select = document.getElementById('monthSelect');
   if (!select) return;
   select.innerHTML = '';
-  for (let offset = 0; offset < 24; offset++) {
+  const lastOpenMonth = new Date(2027, 7, 1);
+  for (let offset = 0; ; offset++) {
     const date = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    if (date > lastOpenMonth) break;
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     const option = document.createElement('option');
@@ -870,11 +890,18 @@ function syncMonthPicker(){
 
 function setCalendarLoading(isLoading){
   const calendarEl = document.getElementById('calendar');
+  const calendarPanel = document.querySelector('.calendarPanel');
+  const calendarContent = document.getElementById('calendarContent');
   const monthSelect = document.getElementById('monthSelect');
 
   if (calendarEl) {
     calendarEl.classList.toggle('is-loading', isLoading);
   }
+  if (calendarPanel) {
+    calendarPanel.classList.toggle('is-loading', isLoading);
+    calendarPanel.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+  }
+  if (calendarContent) calendarContent.setAttribute('aria-hidden', isLoading ? 'true' : 'false');
   if (monthSelect) monthSelect.disabled = isLoading;
 }
 // UI init
@@ -904,7 +931,8 @@ calendar = new FullCalendar.Calendar(el, {
 
   // 最早只能顯示目前月份，不能滑到過去月份
   validRange: {
-    start: minMonthStr
+    start: minMonthStr,
+    end: '2027-09-01'
   },
 
   height: 'auto',
