@@ -5,7 +5,7 @@
 - Git 分支：`preview/admin-b-v0.4-formal-base`
 - 基底 Git：正式網站 `main`，提交 `125ead8`
 - 功能來源：`管理者後台_正確Google登入版` 的 Apps Script 正式後台
-- 正式版：未修改、未推送、未部署
+- GitHub：預覽分支已推送；正式 `main` 未修改、未推送、未部署
 - 核准條件：使用者檢查預覽並明確同意後，才另行規劃正式置換
 - 預覽網址：https://temporary-spry-banjo-jibry3t.vercel.app
 - 網址期限：2026-10-11 18:09（Asia/Taipei，臨時部署）
