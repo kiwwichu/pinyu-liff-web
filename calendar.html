@@ -123,6 +123,7 @@ line-height: 1.55;
 .policyTitle{display:block;margin-bottom:3px;color:var(--text);font-size:13px;font-weight:850}
 .policyText{color:#526177}
 .policyFootnote{color:#7b8798;font-size:11px}
+.policyFootnote--alert{margin-top:5px;color:var(--red);font-weight:850}
 .monthPicker{margin-bottom:12px;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;box-shadow:var(--shadow)}
 .monthSelectRow{display:flex;align-items:center;gap:12px}
 .monthSelectLabel{flex:0 0 auto;color:var(--text);font-size:14px;font-weight:900}
@@ -580,14 +581,16 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
 <div class="title">可預約時間表</div>
 <div class="sub">
   點擊日期可查看「早上 / 下午 / 晚上」詳細資訊。
-     <div class="policyText">
-  平日以晚間為主；週末與國定假日原則上全天開放。<br>
-  若有其他時段想預約，也歡迎直接洽詢保母；部分地區時段可視當日行程彈性安排，即使預約表顯示無法預約，也可以先詢問確認。
-</div>
-
-<div class="policyFootnote policyFootnote--alert">
-  實際可預約名額與服務時間，以保母最後確認為準。
-</div>
+     <div class="availabilityPolicy">
+       <strong class="policyTitle">時段說明</strong>
+       <div class="policyText">
+         平日以晚間為主；週末與國定假日原則上全天開放。<br>
+         部分地區、時段可視當日行程彈性安排，即使預約表顯示無法預約，也可以先詢問確認。
+       </div>
+       <div class="policyFootnote policyFootnote--alert">
+         實際可預約名額與服務時間，以保母最後確認為準。
+       </div>
+     </div>
 
 </div>
    
@@ -640,8 +643,7 @@ padding-bottom: calc(16px + env(safe-area-inset-bottom));
 
 若有指定到府時間的需求，<br>
 請於服務日前半個月至一個月提前預約唷～ <br>
-<span class="hl"> 若需指定於尖峰時段（17:00–19:00）到府<br>
-將酌收 NT$200／次 之時段補貼。 </span><br><br>
+<br>
 
 ＊本網頁目前仍為測試階段，若有任何疑問或發現錯誤，歡迎隨時告訴 Pinyu，謝謝您的體諒與配合 🤍<br><br>
 ＊實際服務時間仍以 Pinyu 最終確認為準。

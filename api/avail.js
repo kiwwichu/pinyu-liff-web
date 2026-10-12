@@ -1,3 +1,67 @@
+const OFFICIAL_HOLIDAYS = {
+  2026: [
+    ["2026-01-01", "中華民國開國紀念日"],
+    ["2026-02-15", "除夕前一日"],
+    ["2026-02-16", "除夕"],
+    ["2026-02-17", "春節"],
+    ["2026-02-18", "春節"],
+    ["2026-02-19", "春節"],
+    ["2026-02-20", "春節補假"],
+    ["2026-02-27", "和平紀念日補假"],
+    ["2026-02-28", "和平紀念日"],
+    ["2026-04-03", "兒童節補假"],
+    ["2026-04-04", "兒童節"],
+    ["2026-04-05", "清明節"],
+    ["2026-04-06", "清明節補假"],
+    ["2026-05-01", "勞動節"],
+    ["2026-06-19", "端午節"],
+    ["2026-09-25", "中秋節"],
+    ["2026-09-28", "孔子誕辰紀念日／教師節"],
+    ["2026-10-09", "國慶日補假"],
+    ["2026-10-10", "國慶日"],
+    ["2026-10-25", "臺灣光復暨金門古寧頭大捷紀念日"],
+    ["2026-10-26", "臺灣光復暨金門古寧頭大捷紀念日補假"],
+    ["2026-12-25", "行憲紀念日"]
+  ],
+  2027: [
+    ["2027-01-01", "中華民國開國紀念日"],
+    ["2027-02-04", "除夕前一日"],
+    ["2027-02-05", "除夕"],
+    ["2027-02-06", "春節"],
+    ["2027-02-07", "春節"],
+    ["2027-02-08", "春節"],
+    ["2027-02-09", "春節補假"],
+    ["2027-02-10", "春節補假"],
+    ["2027-02-28", "和平紀念日"],
+    ["2027-03-01", "和平紀念日補假"],
+    ["2027-04-04", "兒童節"],
+    ["2027-04-05", "清明節"],
+    ["2027-04-06", "兒童節補假"],
+    ["2027-04-30", "勞動節補假"],
+    ["2027-05-01", "勞動節"],
+    ["2027-06-09", "端午節"],
+    ["2027-09-15", "中秋節"],
+    ["2027-09-28", "孔子誕辰紀念日／教師節"],
+    ["2027-10-10", "國慶日"],
+    ["2027-10-11", "國慶日補假"],
+    ["2027-10-25", "臺灣光復暨金門古寧頭大捷紀念日"],
+    ["2027-12-24", "行憲紀念日補假"],
+    ["2027-12-25", "行憲紀念日"],
+    ["2027-12-31", "2028 年開國紀念日補假"]
+  ]
+};
+
+function mergeOfficialHolidays(year, upstreamHolidays) {
+  const merged = new Map();
+  for (const [date, name] of (OFFICIAL_HOLIDAYS[Number(year)] || [])) {
+    merged.set(date, { date, name });
+  }
+  for (const holiday of (Array.isArray(upstreamHolidays) ? upstreamHolidays : [])) {
+    if (holiday && holiday.date) merged.set(holiday.date, holiday);
+  }
+  return [...merged.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 export default async function handler(req, res) {
   try {
     const { year, month } = req.query;
@@ -33,7 +97,7 @@ export default async function handler(req, res) {
     }
 
     const source = Array.isArray(raw) ? raw : (Array.isArray(raw.avail) ? raw.avail : []);
-    const holidays = Array.isArray(raw?.holidays) ? raw.holidays : [];
+    const holidays = mergeOfficialHolidays(year, raw?.holidays);
 
     // 2️⃣ 整理成 date -> slot -> item
     const map = new Map();
