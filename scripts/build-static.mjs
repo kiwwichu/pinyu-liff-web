@@ -14,7 +14,7 @@ const files = [
   "review.html",
 ];
 
-const directories = ["admin", "admin-login", "admin-preview", "design-admin", "security", "client-preview", "sitter-preview"];
+const directories = ["admin", "admin-login", "admin-preview", "admin-preview-v015", "design-admin", "security", "client-preview", "sitter-preview"];
 
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
