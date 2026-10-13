@@ -19,3 +19,13 @@ dist/
 *.xls
 *.csv
 .migration-output/
+
+# Local Wrangler diagnostics and generated review bundles.
+.tmp-wrangler/
+.tmp-wrangler-config/
+design-sandbox/
+visual-demo/
+visual-demo.zip
+
+# Empty local skill scratchpad; project skills live under .agents/.
+pinyu-dev-orchestrator/

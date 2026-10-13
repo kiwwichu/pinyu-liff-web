@@ -1,0 +1,36 @@
+{
+  "name": "pinyu-liff-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-static.mjs",
+    "cf:types": "wrangler types",
+    "cf:check": "npm run build && wrangler deploy --dry-run",
+    "audit:rwd": "npm run build && node scripts/audit-client-rwd.mjs",
+    "audit:seo": "npm run build && node scripts/audit-seo.mjs",
+    "audit:seo-rwd": "npm run build && node scripts/audit-seo-rwd.mjs",
+    "test:schedule": "node scripts/test-availability-core.mjs && node scripts/smoke-admin-ui.mjs",
+    "test:orders": "node scripts/test-order-calculation.mjs",
+    "test:ledger": "node --test scripts/test-order-ledger.mjs",
+    "typecheck": "tsc --noEmit",
+    "migration:inspect": "node scripts/inspect-workbook.mjs",
+    "migration:dry-run": "node scripts/migrate-google-sheet.mjs --dry-run",
+    "migration:generate-sql": "node scripts/migrate-google-sheet.mjs --generate-sql"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.112.3",
+    "exceljs": "4.4.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260823.1",
+    "typescript": "7.0.2",
+    "wrangler": "^4.125.0"
+  },
+  "overrides": {
+    "uuid": "11.1.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

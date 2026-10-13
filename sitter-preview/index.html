@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#48a2e8" />
+  <title>Pinyu｜保姆工作台測試版</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header>
+    <div><b>Pinyu</b><span>保姆工作台 DEMO</span></div>
+    <button id="accountState" type="button" disabled>正在確認 LINE…</button>
+  </header>
+  <main>
+    <section id="authPanel" class="auth-panel" aria-live="polite">
+      <span>安全登入</span>
+      <h1 id="authTitle">正在使用 LINE 驗證身分</h1>
+      <p id="authMessage">第一次使用時，請從 Pinyu 私下傳送的單次邀請連結進入。家庭編號不能用來登入。</p>
+      <button id="loginButton" type="button" hidden>使用 LINE 登入</button>
+    </section>
+
+    <div id="workspace" hidden>
+      <section class="welcome">
+        <span>我的工作台</span>
+        <h1>早安，<b id="sitterName">合作保姆</b></h1>
+        <p>這裡只顯示你被指派的服務，以及 Pinyu 管理端核准你查看的資料。</p>
+      </section>
+
+      <section>
+        <div class="heading"><div><span>被指派服務</span><h2>我的服務</h2></div><b id="assignmentCount">0 個服務</b></div>
+        <div id="assignmentList"><p class="empty">目前沒有被指派的服務</p></div>
+      </section>
+
+      <section class="access">
+        <span>我的資料權限</span>
+        <h2>由 Pinyu 管理端設定</h2>
+        <ul id="permissionList"></ul>
+        <p class="help">家庭編號不是登入憑證；所有敏感資料僅在被指派服務且權限開放時提供。</p>
+      </section>
+    </div>
+  </main>
+  <nav><button type="button">首頁</button><button type="button">服務</button><button type="button">排班</button><button type="button">我的</button></nav>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

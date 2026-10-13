@@ -319,13 +319,12 @@
   <div class="page">
     <header>歷史訂單</header>
     <div id="root">載入中...</div>
-    <footer>若資料有疑問，歡迎私訊快樂小狗 Pinyu 🐾</footer>
+    <footer>若資料有疑問，歡迎私訊快樂小狗 Pinyu 🐾｜<a href="/security/" target="_blank" rel="noopener">隱私與安全說明</a></footer>
   </div>
 
 <script>
-  const LIFF_ID = '2008600362-O4V8Aq10';
+  const LIFF_ID = '2008600362-7BIXux43';
 
-  let gLineUserId = '';
   let gOrdersAll  = [];
 
   // -----------------------------
@@ -389,25 +388,19 @@
     // 2) 在 LINE 內才初始化 LIFF
     await liff.init({ liffId: LIFF_ID });
 
-    // 3) 優先用 getContext 拿 userId
-    const ctx = liff.getContext();
-    gLineUserId = ctx && ctx.userId ? ctx.userId : '';
+    // 3) 使用短效 access token，交由伺服器向 LINE 驗證身分。
+    // 不再相信瀏覽器自行回報的 userId。
+    const accessToken = liff.getAccessToken();
 
-    // 4) 備案：再試一次用 ID Token 拿
-    if (!gLineUserId) {
-      const decoded = liff.getDecodedIDToken();
-      gLineUserId = decoded && decoded.sub ? decoded.sub : '';
-    }
-
-    if (!gLineUserId) {
+    if (!accessToken) {
       document.getElementById('root').innerText =
         '目前無法取得您的帳號資訊，請關閉此頁面後再從快樂小狗 Pinyu 官方帳號的選單重新開啟一次～';
       return;
     }
 
-    // 5) 畫畫面＋抓歷史訂單
+    // 4) 畫畫面＋抓歷史訂單
     buildLayout();
-    await fetchOrdersFromServer();
+    await fetchOrdersFromServer(accessToken);
 
   } catch (err) {
     console.error('init error:', err);
@@ -424,10 +417,6 @@
   function buildLayout() {
     const root = document.getElementById('root');
     root.innerHTML = `
-      <div style="font-size:10px;color:#aaa;margin-bottom:4px;">
-        Debug userId：${gLineUserId}
-      </div>
-
       <div class="filter-bar">
         <div class="filter-row">
           <span class="filter-label">搜尋日期</span>
@@ -489,7 +478,7 @@
   // -----------------------------
   // 從 Apps Script 抓歷史訂單
   // -----------------------------
-async function fetchOrdersFromServer() {
+async function fetchOrdersFromServer(accessToken) {
   const listEl = document.getElementById('orderList');
   showLoading();
 
@@ -498,7 +487,7 @@ async function fetchOrdersFromServer() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        lineUserId: gLineUserId,
+        accessToken,
       }),
     });
 
@@ -752,7 +741,7 @@ async function fetchOrdersFromServer() {
     });
   }
 
-const LIFF_BASE_URL = "https://liff.line.me/2008600362-O4V8Aq10";
+const LIFF_BASE_URL = "https://liff.line.me/2008600362-7BIXux43";
 
 function openOrderHistory() {
   if (typeof liff !== 'undefined' && liff.isInClient()) {

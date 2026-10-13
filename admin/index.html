@@ -4,113 +4,96 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#48a2e8" />
-  <title>快樂小狗｜管理後台</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Pinyu｜Supabase 測試後台</title>
   <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./style.css" />
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
   <div class="app-shell">
-    <header class="topbar">
-      <div>
-        <div class="brand">快樂小狗 Pinyu</div>
-        <div class="subtitle">管理後台</div>
+    <aside class="sidebar" aria-label="主要選單">
+      <div class="brand-block">
+        <div class="brand-mark">P</div>
+        <div>
+          <div class="brand">快樂小狗 Pinyu</div>
+          <div class="brand-subtitle">寵物保姆管理後台</div>
+        </div>
       </div>
-      <button id="btnRefresh" class="icon-btn" type="button" aria-label="重新整理">↻</button>
-    </header>
+      <div class="demo-banner">Supabase 測試版</div>
+      <nav class="side-nav">
+        <button class="nav-item active" data-page="dashboard" type="button"><span>⌂</span>概覽</button>
+        <button class="nav-item" data-page="orders" type="button"><span>▤</span>訂單</button>
+        <button class="nav-item create-nav-item" data-page="create" type="button"><span>＋</span><b>新增訂單</b><em>V2 DEV</em></button>
+        <button class="nav-item" data-page="families" type="button"><span>♙</span>家庭與毛孩</button>
+        <button class="nav-item" data-page="sitters" type="button"><span>♟</span>保姆與排班</button>
+        <button class="nav-item" data-page="reviews" type="button"><span>★</span>服務評價</button>
+        <button class="nav-item" data-page="finance" type="button"><span>＄</span>財務／保母結算</button>
+      </nav>
+      <p class="safety-note">這裡不會發送 LINE 通知，也不會修改 Google Sheet。<br><a href="/security/" target="_blank" rel="noopener">隱私與安全說明</a></p>
+      <nav class="side-nav side-nav-secondary" aria-label="個人與設定">
+        <button class="nav-item" data-page="profile" type="button"><span>◎</span>我的資料</button>
+        <button class="nav-item" data-page="services" type="button"><span>⚙</span>服務選單設定</button>
+        <a class="nav-item" href="/design-admin/" target="_blank" rel="noopener"><span>▧</span>網站版面設計</a>
+      </nav>
+    </aside>
 
-    <main id="app">
-      <section class="state-card">
-        <div class="spinner"></div>
-        <p>正在驗證管理員身分…</p>
-      </section>
-    </main>
+    <div class="main-column">
+      <header class="topbar">
+        <div class="topbar-heading">
+          <button id="openMobileMenu" class="mobile-menu-toggle icon-btn" type="button" aria-label="開啟功能選單" aria-controls="mobileMenu" aria-expanded="false" disabled><span aria-hidden="true">☰</span></button>
+          <div class="topbar-titles">
+          <div id="mobileUserName" class="mobile-brand">管理後台</div>
+          <div id="pageTitle" class="page-title">概覽</div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="bookingBell" class="booking-bell" type="button" aria-label="查看新預約需求"><span aria-hidden="true">🔔</span><b id="bookingBellCount" hidden>0</b></button>
+          <button id="quickCreateOrder" class="topbar-create" type="button">＋ 新增訂單 <small>V2 DEV</small></button>
+          <button id="userProfileButton" class="topbar-profile" type="button" aria-label="開啟我的資料"><span id="userAvatar" class="topbar-avatar">P</span><span id="userName" class="user-name"></span></button>
+          <button id="btnRefresh" class="icon-btn" type="button" aria-label="重新整理">↻</button>
+        </div>
+      </header>
 
-    <nav class="bottom-nav">
-      <button class="nav-item active" data-page="dashboard">首頁</button>
-      <button class="nav-item" data-page="orders">訂單</button>
-      <button class="nav-item" data-page="notifications">通知</button>
-      <button class="nav-item" data-page="create">新增</button>
-      <button class="nav-item" data-page="visits">到府</button>
+      <main id="app" tabindex="-1">
+        <section class="state-card">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>正在驗證管理員身分並讀取 Supabase…</p>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" aria-label="手機版主要選單">
+      <button class="nav-item active" data-page="dashboard" type="button"><span>⌂</span>概覽</button>
+      <button class="nav-item" data-page="orders" type="button"><span>▤</span>訂單</button>
+      <button class="nav-item create-nav-item" data-page="create" type="button"><span>＋</span><b>新增</b></button>
+      <button class="nav-item" data-page="families" type="button"><span>♙</span>家庭</button>
     </nav>
   </div>
 
-  <template id="dashboardTemplate">
-    <section class="summary-grid">
-      <button class="summary-card" data-open="orders">
-        <span class="summary-number" id="recentCount">0</span>
-        <span>未來 14 天訂單</span>
-      </button>
-      <button class="summary-card" data-open="notifications">
-        <span class="summary-number" id="pendingCount">0</span>
-        <span>待發送通知</span>
-      </button>
-    </section>
+  <dialog id="mobileMenu" class="mobile-menu" aria-labelledby="mobileMenuTitle">
+    <header class="mobile-menu-header"><h2 id="mobileMenuTitle">功能選單</h2><button id="closeMobileMenu" class="icon-btn" type="button" aria-label="關閉功能選單" autofocus>×</button></header>
+    <nav aria-label="手機版其他功能">
+      <button data-mobile-page="profile" type="button">我的／個人資料</button>
+      <button data-mobile-page="finance" data-mobile-permission="canViewMoney" type="button" hidden>財務／保母結算</button>
+      <button data-mobile-page="sitters" data-mobile-permission="canManageSitters" type="button" hidden>保母與排班</button>
+      <button data-mobile-page="families" data-mobile-permission="canManageHomeVisits" type="button" hidden>家訪 <small>由家庭進入紀錄</small></button>
+      <button data-mobile-page="reviews" type="button">服務評價</button>
+      <button type="button" disabled>通知紀錄 <small>尚未開放</small></button>
+      <button data-mobile-page="services" data-mobile-permission="canEditOrders" type="button" hidden>服務設定</button>
+      <button type="button" disabled>系統管理 <small>尚未開放</small></button>
+    </nav>
+    <p class="privacy-note">複雜排班與設定建議使用桌機。通知紀錄尚未接通正式 LINE。</p>
+  </dialog>
 
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <h2>近期訂單</h2>
-          <p>排除完成與未付訂金</p>
-        </div>
-        <button class="text-btn" data-open="orders">查看全部</button>
-      </div>
-      <div id="recentOrders" class="card-list"></div>
-    </section>
+  <dialog id="orderDialog" class="order-dialog">
+    <button id="closeDialog" class="dialog-close" type="button" aria-label="關閉">×</button>
+    <div id="dialogContent"></div>
+  </dialog>
 
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <h2>待發送通知</h2>
-          <p>通知狀態以 ⚠️ 開頭</p>
-        </div>
-        <button class="text-btn" data-open="notifications">查看全部</button>
-      </div>
-      <div id="pendingNotifications" class="card-list"></div>
-    </section>
-  </template>
-
-  <template id="ordersTemplate">
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <h2>訂單搜尋</h2>
-          <p>可輸入家庭編號、姓名、毛孩、狀態、日期等文字</p>
-        </div>
-      </div>
-      <label class="search-box">
-        <span>⌕</span>
-        <input id="orderSearch" type="search" placeholder="搜尋任何訂單文字" autocomplete="off" />
-      </label>
-      <div class="filter-row">
-        <button class="chip active" data-order-filter="current">目前訂單</button>
-        <button class="chip" data-order-filter="other">完成／未付訂金</button>
-        <button class="chip" data-order-filter="all">全部</button>
-      </div>
-      <div id="orderResults" class="card-list"></div>
-    </section>
-  </template>
-
-  <template id="notificationsTemplate">
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <h2>待發送通知</h2>
-          <p>只顯示通知狀態以 ⚠️ 開頭的訂單</p>
-        </div>
-      </div>
-      <div id="notificationResults" class="card-list"></div>
-    </section>
-  </template>
-
-  <template id="placeholderTemplate">
-    <section class="state-card">
-      <h2 id="placeholderTitle">功能建置中</h2>
-      <p id="placeholderText">這個頁面會在下一階段接上資料與操作。</p>
-    </section>
-  </template>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="./config.js"></script>
-  <script src="./app.js"></script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

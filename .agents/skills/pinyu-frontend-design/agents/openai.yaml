@@ -1,0 +1,7 @@
+interface:
+  display_name: "Pinyu 前端設計守門員"
+  short_description: "依 Pinyu 品牌與 Figma 規格安全實作前端"
+  default_prompt: "使用 $pinyu-frontend-design，依本輪指令與 Figma 參考，只在 design-sandbox 內完成指定的視覺實作與多裝置驗收。"
+
+policy:
+  allow_implicit_invocation: false

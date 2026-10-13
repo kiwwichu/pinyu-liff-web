@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Pinyu 網站版面管理</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <header><div><span>OWNER 專用</span><h1>網站版面設計</h1><p>修改首頁主視覺文字、按鈕與品牌色，右側會即時預覽。</p></div><a href="/admin/">返回後臺</a></header>
+  <main>
+    <section class="editor-card">
+      <div id="loading">正在驗證管理員並讀取目前版面…</div>
+      <form id="designForm" hidden>
+        <fieldset><legend>品牌與主標</legend>
+          <label>頁首品牌名稱<input name="headerBrand" maxlength="80" required /></label>
+          <label>藍色區塊上方文字<input name="heroBrandline" maxlength="80" required /></label>
+          <div class="two"><label>主標第一行<input name="heroTitleLine1" maxlength="40" required /></label><label>主標第二行<input name="heroTitleLine2" maxlength="80" required /></label></div>
+          <label>主視覺說明<textarea name="heroDescription" maxlength="500" required></textarea></label>
+        </fieldset>
+        <fieldset><legend>按鈕</legend><div class="two"><label>主要按鈕<input name="primaryButtonLabel" maxlength="30" required /></label><label>次要按鈕<input name="secondaryButtonLabel" maxlength="40" required /></label></div></fieldset>
+        <fieldset><legend>配色與圓角</legend><div class="color-grid">
+          <label>品牌主色<input name="primaryColor" type="color" /></label><label>漸層亮色<input name="accentColor" type="color" /></label><label>頁面底色<input name="pageBackground" type="color" /></label><label>內文字色<input name="textColor" type="color" /></label>
+        </div><label>卡片圓角 <output id="radiusValue"></output><input name="borderRadius" type="range" min="8" max="40" step="1" /></label></fieldset>
+        <div class="actions"><button id="resetPreview" type="button">還原尚未儲存的修改</button><button class="primary" type="submit">儲存並套用到測試首頁</button></div>
+        <p id="message" role="status"></p>
+      </form>
+    </section>
+    <section class="preview-card" aria-label="首頁主視覺預覽"><span>即時預覽</span><div id="previewHero"><small id="previewBrandline"></small><h2><b id="previewTitle1"></b><b id="previewTitle2"></b></h2><p id="previewDescription"></p><div><button id="previewPrimary" type="button"></button><button id="previewSecondary" type="button"></button></div></div><p class="preview-note">這裡預覽主視覺；儲存後重新整理測試首頁即可看到完整效果。</p></section>
+  </main>
+  <script src="./config.js"></script><script src="./app.js"></script>
+</body>
+</html>

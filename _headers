@@ -1,0 +1,56 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=(), usb=()
+
+/admin/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.line-scdn.net; style-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://api.line.me https://*.line.me https://*.line-scdn.net; frame-src https://*.line.me; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+/admin-login/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://accounts.google.com; frame-src https://accounts.google.com; base-uri 'self'; form-action https://script.google.com; frame-ancestors 'none'
+
+/security/*
+  Content-Security-Policy: default-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
+
+/client-preview/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+/sitter-preview/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.line-scdn.net; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https://api.line.me https://*.line.me https://*.line-scdn.net; frame-src https://*.line.me; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+/design-admin/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/booking.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.line-scdn.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://api.line.me https://*.line.me; frame-src https://*.line.me; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+/history.html
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.line-scdn.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://api.line.me https://*.line.me; frame-src https://*.line.me; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+/bound.html
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.line-scdn.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://api.line.me https://*.line.me; frame-src https://*.line.me; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+/calendar.html
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.line-scdn.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://api.line.me https://*.line.me; frame-src https://*.line.me; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+/review.html
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.line-scdn.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://api.line.me https://*.line.me; frame-src https://*.line.me; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
